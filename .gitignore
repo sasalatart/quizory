@@ -1,0 +1,17 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build
+/bin/
+/pkg/
+/out/
+
+# IDE
+.idea/
+
+# macOS
+.DS_Store
