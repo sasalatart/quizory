@@ -7,7 +7,7 @@ import (
 
 	"github.com/sasalatart.com/quizory/db/testutil"
 	"github.com/sasalatart.com/quizory/question"
-	"github.com/sasalatart.com/quizory/question/internal/repo"
+	"github.com/sasalatart.com/quizory/question/repo"
 	"github.com/stretchr/testify/suite"
 )
 

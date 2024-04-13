@@ -1,15 +1,16 @@
-package question
+package service
 
 import (
-	"github.com/sasalatart.com/quizory/question"
-	"github.com/sasalatart.com/quizory/question/internal/repo"
+	"github.com/sasalatart.com/quizory/question/repo"
+	"github.com/sashabaranov/go-openai"
 )
 
 type Service struct {
-	repo repo.QuestionRepo
+	repo         *repo.QuestionRepo
+	openaiClient *openai.Client
 }
 
-// TODO: implement with AI
-func (s Service) GenerateMany() ([]question.Question, error) {
-	return nil, nil
+// New creates a new instance of Service.
+func New(repo *repo.QuestionRepo, openaiClient *openai.Client) Service {
+	return Service{repo: repo, openaiClient: openaiClient}
 }

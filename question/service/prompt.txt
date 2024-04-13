@@ -1,0 +1,31 @@
+You are tasked with generating a set of trivia questions focused on history:
+
+- Each question should have 4 unique choices, and only 1 of them correct.
+- Each question should have 1 hint, aimed at providing clues without revealing the answer directly.
+- Make sure that half of the questions are one sentence long, and the other half are one paragraph long.
+- Assign a difficulty level to each question: Novice Historian, Avid Historian, or History Scholar.
+- Question difficulty should distribute as follows:
+  - 25% Novice Historian
+  - 50% Avid Historian
+  - 25% History Scholar
+- Include a paragraph giving more information for those who would like to learn more about the subject.
+- Most important of all, be creative when generating questions. Avoid cliche questions.
+
+Here’s the JSON structure for each trivia element:
+
+[
+  {
+    "question": "The actual question",
+    "hint": "A brief, informative hint",
+    "choices": [
+      {"text": "Choice A", "isCorrect": false},
+      {"text": "Choice B", "isCorrect": true},
+      {"text": "Choice C", "isCorrect": false},
+      {"text": "Choice D", "isCorrect": false}
+    ],
+    "moreInfo": "The paragraph with more information about the subject",
+    "difficulty": "The difficulty level of the question"
+  }
+]
+
+Only answer with the JSON array, do not include any other text.
