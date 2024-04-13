@@ -39,14 +39,18 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 	ctx := context.Background()
 
 	q1 := question.
-		New("Test Question 1", "Test Hint 1").
+		New("Test Question 1", "Test Hint 1", "Test More Info 1").
+		WithTopic(question.TopicAncientRome).
+		WithDifficulty(question.DifficultyAvidHistorian).
 		WithChoice("Choice 11", false).
 		WithChoice("Choice 12", true)
 	err := s.r.Insert(ctx, *q1)
 	s.Require().NoError(err)
 
 	q2 := question.
-		New("Test Question 2", "Test Hint 2").
+		New("Test Question 2", "Test Hint 2", "Test More Info 2").
+		WithTopic(question.TopicAncientEgypt).
+		WithDifficulty(question.DifficultyNoviceHistorian).
 		WithChoice("Choice 21", true).
 		WithChoice("Choice 22", false).
 		WithChoice("Choice 23", false)
@@ -61,8 +65,11 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 	for i, w := range want {
 		g := got[i]
 		s.Equal(w.ID.String(), g.ID.String())
+		s.Equal(w.Topic, g.Topic)
 		s.Equal(w.Question, g.Question)
 		s.Equal(w.Hint, g.Hint)
+		s.Equal(w.MoreInfo, g.MoreInfo)
+		s.Equal(w.Difficulty, g.Difficulty)
 		s.Require().Len(g.Choices, len(w.Choices))
 		for j, c := range w.Choices {
 			s.Equal(c.ID.String(), g.Choices[j].ID.String())
@@ -74,7 +81,9 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 
 func (s *QuestionRepoTestSuite) TestInsert() {
 	ctx := context.Background()
-	q := question.New("Test Question 1", "Test Hint 1").
+	q := question.New("Test Question 1", "Test Hint 1", "Test More Info 1").
+		WithTopic(question.TopicAncientRome).
+		WithDifficulty(question.DifficultyAvidHistorian).
 		WithChoice("Choice 11", false).
 		WithChoice("Choice 12", true)
 
@@ -87,8 +96,11 @@ func (s *QuestionRepoTestSuite) TestInsert() {
 	got := questions[0]
 
 	s.Equal(q.ID.String(), got.ID.String())
+	s.Equal(q.Topic, got.Topic)
 	s.Equal(q.Question, got.Question)
 	s.Equal(q.Hint, got.Hint)
+	s.Equal(q.MoreInfo, got.MoreInfo)
+	s.Equal(q.Difficulty, got.Difficulty)
 	for _, c := range q.Choices {
 		s.Contains(got.Choices, c)
 	}

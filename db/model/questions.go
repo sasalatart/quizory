@@ -23,51 +23,72 @@ import (
 
 // Question is an object representing the database table.
 type Question struct {
-	ID        string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Question  string    `boil:"question" json:"question" toml:"question" yaml:"question"`
-	Hint      string    `boil:"hint" json:"hint" toml:"hint" yaml:"hint"`
-	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID         string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Question   string    `boil:"question" json:"question" toml:"question" yaml:"question"`
+	Hint       string    `boil:"hint" json:"hint" toml:"hint" yaml:"hint"`
+	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Difficulty string    `boil:"difficulty" json:"difficulty" toml:"difficulty" yaml:"difficulty"`
+	Topic      string    `boil:"topic" json:"topic" toml:"topic" yaml:"topic"`
+	MoreInfo   string    `boil:"more_info" json:"more_info" toml:"more_info" yaml:"more_info"`
 
 	R *questionR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L questionL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var QuestionColumns = struct {
-	ID        string
-	Question  string
-	Hint      string
-	CreatedAt string
+	ID         string
+	Question   string
+	Hint       string
+	CreatedAt  string
+	Difficulty string
+	Topic      string
+	MoreInfo   string
 }{
-	ID:        "id",
-	Question:  "question",
-	Hint:      "hint",
-	CreatedAt: "created_at",
+	ID:         "id",
+	Question:   "question",
+	Hint:       "hint",
+	CreatedAt:  "created_at",
+	Difficulty: "difficulty",
+	Topic:      "topic",
+	MoreInfo:   "more_info",
 }
 
 var QuestionTableColumns = struct {
-	ID        string
-	Question  string
-	Hint      string
-	CreatedAt string
+	ID         string
+	Question   string
+	Hint       string
+	CreatedAt  string
+	Difficulty string
+	Topic      string
+	MoreInfo   string
 }{
-	ID:        "questions.id",
-	Question:  "questions.question",
-	Hint:      "questions.hint",
-	CreatedAt: "questions.created_at",
+	ID:         "questions.id",
+	Question:   "questions.question",
+	Hint:       "questions.hint",
+	CreatedAt:  "questions.created_at",
+	Difficulty: "questions.difficulty",
+	Topic:      "questions.topic",
+	MoreInfo:   "questions.more_info",
 }
 
 // Generated where
 
 var QuestionWhere = struct {
-	ID        whereHelperstring
-	Question  whereHelperstring
-	Hint      whereHelperstring
-	CreatedAt whereHelpertime_Time
+	ID         whereHelperstring
+	Question   whereHelperstring
+	Hint       whereHelperstring
+	CreatedAt  whereHelpertime_Time
+	Difficulty whereHelperstring
+	Topic      whereHelperstring
+	MoreInfo   whereHelperstring
 }{
-	ID:        whereHelperstring{field: "\"questions\".\"id\""},
-	Question:  whereHelperstring{field: "\"questions\".\"question\""},
-	Hint:      whereHelperstring{field: "\"questions\".\"hint\""},
-	CreatedAt: whereHelpertime_Time{field: "\"questions\".\"created_at\""},
+	ID:         whereHelperstring{field: "\"questions\".\"id\""},
+	Question:   whereHelperstring{field: "\"questions\".\"question\""},
+	Hint:       whereHelperstring{field: "\"questions\".\"hint\""},
+	CreatedAt:  whereHelpertime_Time{field: "\"questions\".\"created_at\""},
+	Difficulty: whereHelperstring{field: "\"questions\".\"difficulty\""},
+	Topic:      whereHelperstring{field: "\"questions\".\"topic\""},
+	MoreInfo:   whereHelperstring{field: "\"questions\".\"more_info\""},
 }
 
 // QuestionRels is where relationship names are stored.
@@ -98,8 +119,8 @@ func (r *questionR) GetChoices() ChoiceSlice {
 type questionL struct{}
 
 var (
-	questionAllColumns            = []string{"id", "question", "hint", "created_at"}
-	questionColumnsWithoutDefault = []string{"question", "hint"}
+	questionAllColumns            = []string{"id", "question", "hint", "created_at", "difficulty", "topic", "more_info"}
+	questionColumnsWithoutDefault = []string{"question", "hint", "difficulty", "topic", "more_info"}
 	questionColumnsWithDefault    = []string{"id", "created_at"}
 	questionPrimaryKeyColumns     = []string{"id"}
 	questionGeneratedColumns      = []string{}

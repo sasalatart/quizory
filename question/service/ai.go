@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math/rand"
 	"time"
 
 	"github.com/pkg/errors"
@@ -21,22 +20,23 @@ func (s Service) StartGeneration(
 	freq time.Duration,
 	amountPerBatch int,
 	cancel <-chan struct{},
-) error {
+) {
 	slog.Info("Starting generation loop", slog.Duration("freq", freq))
 	ticker := time.NewTicker(freq)
 	for {
 		select {
 		case <-cancel:
-			return nil
+			return
 		case <-ticker.C:
-			topic := topics[rand.Intn(len(topics))]
+			topic := question.RandomTopic()
 			slog.Info(
 				"Generating questions",
-				slog.String("topic", topic),
+				slog.String("topic", topic.String()),
 				slog.Int("amount", amountPerBatch),
 			)
 			if err := s.generateQuestionSet(ctx, topic, amountPerBatch); err != nil {
-				return errors.Wrap(err, "generating question set")
+				slog.Error("Error generating question set", err)
+				return
 			}
 		}
 	}
@@ -46,7 +46,7 @@ func (s Service) StartGeneration(
 var aiSystemPrompt string
 
 // generateQuestionSet generates and stores a set of questions about a given topic.
-func (s Service) generateQuestionSet(ctx context.Context, topic string, amount int) error {
+func (s Service) generateQuestionSet(ctx context.Context, topic question.Topic, amount int) error {
 	var seed int = time.Now().Nanosecond()
 	resp, err := s.openaiClient.CreateChatCompletion(
 		ctx,
@@ -76,7 +76,11 @@ func (s Service) generateQuestionSet(ctx context.Context, topic string, amount i
 	}
 	for _, q := range questions {
 		slog.Info("Inserting question", slog.String("question", q.Question))
-		if err := s.repo.Insert(ctx, q.toQuestion()); err != nil {
+		parsedQuestion, err := q.toQuestion(topic)
+		if err != nil {
+			return errors.Wrap(err, "parsing question")
+		}
+		if err := s.repo.Insert(ctx, *parsedQuestion); err != nil {
 			return errors.Wrap(err, "creating question")
 		}
 	}
@@ -99,10 +103,17 @@ type aiQuestion struct {
 }
 
 // aiQuestion.toQuestion converts an aiQuestion to a question.Question.
-func (a aiQuestion) toQuestion() question.Question {
-	q := question.New(a.Question, a.Hint)
+func (a aiQuestion) toQuestion(topic question.Topic) (*question.Question, error) {
+	difficulty, err := question.DifficultyString(a.Difficulty)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing difficulty")
+	}
+
+	q := question.New(a.Question, a.Hint, a.MoreInfo).
+		WithTopic(topic).
+		WithDifficulty(difficulty)
 	for _, c := range a.Choices {
 		q.WithChoice(c.Text, c.IsCorrect)
 	}
-	return *q
+	return q, nil
 }

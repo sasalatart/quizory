@@ -34,11 +34,17 @@ func main() {
 	os.Setenv("PSQL_PORT", psqlPort)
 	os.Setenv("PSQL_DBNAME", strings.TrimPrefix(u.Path, "/"))
 
-	cmd := exec.Command("sqlboiler", "psql", "-c", "./cmd/codegen/sqlboiler.toml")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	sqlboilerCmd := exec.Command("sqlboiler", "psql", "-c", "./cmd/codegen/sqlboiler.toml")
+	sqlboilerCmd.Stdout = os.Stdout
+	sqlboilerCmd.Stderr = os.Stderr
+	if err := sqlboilerCmd.Run(); err != nil {
+		log.Fatal(err)
+	}
 
-	if err := cmd.Run(); err != nil {
+	codegenCmd := exec.Command("go", "generate", "./...")
+	codegenCmd.Stdout = os.Stdout
+	codegenCmd.Stderr = os.Stderr
+	if err := codegenCmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

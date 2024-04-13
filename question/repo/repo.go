@@ -68,12 +68,23 @@ func (r *QuestionRepo) fromDB(q *models.Question) (*question.Question, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question ID")
 	}
+	topic, err := question.TopicString(q.Topic)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing question topic")
+	}
+	difficulty, err := question.DifficultyString(q.Difficulty)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing question difficulty")
+	}
 
 	result := question.Question{
-		ID:        id,
-		Question:  q.Question,
-		Hint:      q.Hint,
-		CreatedAt: q.CreatedAt,
+		ID:         id,
+		Topic:      topic,
+		Question:   q.Question,
+		Hint:       q.Hint,
+		MoreInfo:   q.MoreInfo,
+		Difficulty: difficulty,
+		CreatedAt:  q.CreatedAt,
 	}
 	for _, c := range q.R.Choices {
 		choiceID, err := uuid.Parse(c.ID)
@@ -105,9 +116,12 @@ func (r *QuestionRepo) toDB(q question.Question) (*models.Question, models.Choic
 	}
 
 	return &models.Question{
-		ID:        q.ID.String(),
-		Question:  q.Question,
-		Hint:      q.Hint,
-		CreatedAt: q.CreatedAt,
+		ID:         q.ID.String(),
+		Topic:      q.Topic.String(),
+		Question:   q.Question,
+		Hint:       q.Hint,
+		MoreInfo:   q.MoreInfo,
+		Difficulty: q.Difficulty.String(),
+		CreatedAt:  q.CreatedAt,
 	}, choices, nil
 }
