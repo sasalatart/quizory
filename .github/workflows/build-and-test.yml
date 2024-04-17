@@ -1,0 +1,55 @@
+name: build-and-test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: false
+
+      - name: Check for dirty git
+        run: |
+          go mod tidy
+          go install github.com/volatiletech/sqlboiler/v4@latest
+          go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest
+          go run ./cmd/migrate
+          go run ./cmd/codegen
+          git diff --exit-code
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...

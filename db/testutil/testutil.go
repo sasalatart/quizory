@@ -26,7 +26,7 @@ func NewDB() (*sql.DB, func(), error) {
 	}
 
 	teardown := func() {
-		database.Stop()
+		_ = database.Stop()
 	}
 
 	db, err := sql.Open("postgres", dbConnString)

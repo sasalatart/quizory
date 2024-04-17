@@ -2,19 +2,19 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
+	slog.Info("Running code generation...")
+	defer slog.Info("Code generation complete.")
 
 	u, err := url.Parse(os.Getenv("DB_URL"))
 	if err != nil {

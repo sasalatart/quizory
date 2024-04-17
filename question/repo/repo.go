@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	models "github.com/sasalatart.com/quizory/db/model"
 	"github.com/sasalatart.com/quizory/question"
@@ -52,13 +53,16 @@ func (r *QuestionRepo) Insert(ctx context.Context, q question.Question) error {
 		return errors.Wrap(err, "beginning transaction")
 	}
 	if err := dbQuestion.Insert(ctx, txn, boil.Infer()); err != nil {
-		txn.Rollback()
-		return errors.Wrapf(err, "inserting question %v", q)
+		return multierror.Append(
+			errors.Wrapf(err, "inserting question %v", q),
+			txn.Rollback(),
+		)
 	}
 	if err := dbQuestion.AddChoices(ctx, txn, true, dbChoices...); err != nil {
-		txn.Rollback()
-		return errors.Wrapf(err, "adding choices to question %v", q)
-
+		return multierror.Append(
+			errors.Wrapf(err, "adding choices to question %v", q),
+			txn.Rollback(),
+		)
 	}
 	return txn.Commit()
 }

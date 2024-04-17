@@ -28,7 +28,7 @@ func (s *QuestionRepoTestSuite) SetupSuite() {
 }
 
 func (s *QuestionRepoTestSuite) TearDownTest() {
-	testutil.WipeDB(context.Background(), s.db)
+	_ = testutil.WipeDB(context.Background(), s.db)
 }
 
 func TestQuestionRepoTestSuite(t *testing.T) {

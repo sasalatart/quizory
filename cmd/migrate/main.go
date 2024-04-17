@@ -2,16 +2,17 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"os"
 
-	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/sasalatart.com/quizory/db/migrations"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
+	slog.Info("Running migrations...")
+	defer slog.Info("Migrations complete.")
+
 	if err := migrations.Up(os.Getenv("DB_URL")); err != nil {
 		log.Fatal(err)
 	}
