@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 	"github.com/sasalatart.com/quizory/question/repo"
 	"github.com/sasalatart.com/quizory/question/service"
@@ -16,10 +16,6 @@ import (
 
 func main() {
 	ctx := context.Background()
-
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
 
 	db, err := sql.Open("postgres", os.Getenv("DB_URL"))
 	if err != nil {

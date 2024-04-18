@@ -6,3 +6,4 @@ add-enum-types = true
 [psql]
 schema = "public"
 blacklist = ["schema_migrations"]
+sslmode = "disable"
