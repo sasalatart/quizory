@@ -80,12 +80,16 @@ func (q *Question) Validate() error {
 		return errors.New("invalid difficulty")
 	}
 
+	seenChoices := make(map[string]struct{})
 	hasAtLeastOneCorrectChoice := false
 	for _, c := range q.Choices {
+		seenChoices[c.Choice] = struct{}{}
 		if c.IsCorrect {
 			hasAtLeastOneCorrectChoice = true
-			break
 		}
+	}
+	if len(seenChoices) != len(q.Choices) {
+		return errors.New("choices must be unique")
 	}
 	if !hasAtLeastOneCorrectChoice {
 		return errors.New("at least one choice must be correct")
