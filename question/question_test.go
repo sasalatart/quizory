@@ -31,12 +31,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestQuestion_Validate(t *testing.T) {
-	validQuestion := *question.
-		New("Test Question", "Test Hint", "Test More Info").
-		WithTopic(question.TopicAncientRome).
-		WithDifficulty(question.DifficultyAvidHistorian).
-		WithChoice("Choice 1", false).
-		WithChoice("Choice 2", true)
+	validQuestion := question.Mock(nil)
 
 	testCases := []struct {
 		name    string

@@ -18,6 +18,10 @@ type QuestionRepoTestSuite struct {
 	r  *repo.QuestionRepo
 }
 
+func TestQuestionRepoTestSuite(t *testing.T) {
+	suite.Run(t, new(QuestionRepoTestSuite))
+}
+
 func (s *QuestionRepoTestSuite) SetupSuite() {
 	db, teardown, err := testutil.NewDB()
 	s.Require().NoError(err)
@@ -31,37 +35,30 @@ func (s *QuestionRepoTestSuite) TearDownTest() {
 	_ = testutil.WipeDB(context.Background(), s.db)
 }
 
-func TestQuestionRepoTestSuite(t *testing.T) {
-	suite.Run(t, new(QuestionRepoTestSuite))
-}
-
 func (s *QuestionRepoTestSuite) TestGetMany() {
 	ctx := context.Background()
 
-	q1 := question.
-		New("Test Question 1", "Test Hint 1", "Test More Info 1").
-		WithTopic(question.TopicAncientRome).
-		WithDifficulty(question.DifficultyAvidHistorian).
-		WithChoice("Choice 11", false).
-		WithChoice("Choice 12", true)
-	err := s.r.Insert(ctx, *q1)
+	q1 := question.Mock(func(q *question.Question) {
+		q.Question = "Test Question 1"
+		q.Hint = "Test Hint 1"
+		q.MoreInfo = "Test More Info 1"
+	})
+	err := s.r.Insert(ctx, q1)
 	s.Require().NoError(err)
 
-	q2 := question.
-		New("Test Question 2", "Test Hint 2", "Test More Info 2").
-		WithTopic(question.TopicAncientEgypt).
-		WithDifficulty(question.DifficultyNoviceHistorian).
-		WithChoice("Choice 21", true).
-		WithChoice("Choice 22", false).
-		WithChoice("Choice 23", false)
-	err = s.r.Insert(ctx, *q2)
+	q2 := question.Mock(func(q *question.Question) {
+		q.Question = "Test Question 2"
+		q.Hint = "Test Hint 2"
+		q.MoreInfo = "Test More Info 2"
+	})
+	err = s.r.Insert(ctx, q2)
 	s.Require().NoError(err)
 
 	got, err := s.r.GetMany(ctx, repo.OrderByCreatedAtDesc())
 	s.Require().NoError(err)
-	s.Require().Len(got, 2)
 
-	want := []question.Question{*q2, *q1}
+	want := []question.Question{q2, q1}
+	s.Require().Len(got, len(want))
 	for i, w := range want {
 		g := got[i]
 		s.Equal(w.ID.String(), g.ID.String())
@@ -81,13 +78,9 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 
 func (s *QuestionRepoTestSuite) TestInsert() {
 	ctx := context.Background()
-	q := question.New("Test Question 1", "Test Hint 1", "Test More Info 1").
-		WithTopic(question.TopicAncientRome).
-		WithDifficulty(question.DifficultyAvidHistorian).
-		WithChoice("Choice 11", false).
-		WithChoice("Choice 12", true)
+	q := question.Mock(nil)
 
-	err := s.r.Insert(ctx, *q)
+	err := s.r.Insert(ctx, q)
 	s.Require().NoError(err)
 
 	questions, err := s.r.GetMany(ctx)
