@@ -1,6 +1,3 @@
-# Makefile for Quizory
-
-# Variables
 GOCMD = go
 GOBUILD = $(GOCMD) build
 GOTEST = $(GOCMD) test
@@ -16,23 +13,18 @@ help:
 	@echo "test     : Runs tests."
 	@echo "infra    : Starts the infrastructure (docker-compose)."
 
-# Build the project
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
 
-# Clean the project
 clean:
 	rm -f $(BINARY_NAME)
 
-# Run database migrations
 migrate:
 	$(GOCMD) run ./cmd/migrate
 
-# Generate code
 codegen:
 	$(GOCMD) run ./cmd/codegen
 
-# Run tests
 test:
 	$(GOTEST) -v ./...
 
