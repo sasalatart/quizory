@@ -2,7 +2,6 @@ package repo_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/google/uuid"
@@ -17,7 +16,7 @@ import (
 type AnswerRepoTestSuite struct {
 	suite.Suite
 
-	db           *sql.DB
+	testDB       *testutil.TestDB
 	answerRepo   *repo.AnswerRepo
 	questionRepo *questionrepo.QuestionRepo
 }
@@ -27,17 +26,21 @@ func TestAnswerRepoTestSuite(t *testing.T) {
 }
 
 func (s *AnswerRepoTestSuite) SetupSuite() {
-	db, teardown, err := testutil.NewDB()
+	ctx := context.Background()
+	testDB, err := testutil.NewTestDB(ctx)
 	s.Require().NoError(err)
-	s.T().Cleanup(teardown)
 
-	s.db = db
-	s.answerRepo = repo.New(db)
-	s.questionRepo = questionrepo.New(db)
+	s.testDB = testDB
+	s.answerRepo = repo.New(testDB.DB())
+	s.questionRepo = questionrepo.New(testDB.DB())
+}
+
+func (s *AnswerRepoTestSuite) TearDownSuite() {
+	_ = s.testDB.Teardown()
 }
 
 func (s *AnswerRepoTestSuite) TearDownTest() {
-	_ = testutil.WipeDB(context.Background(), s.db)
+	_ = s.testDB.DeleteData(context.Background())
 }
 
 func (s *AnswerRepoTestSuite) TestGetMany() {

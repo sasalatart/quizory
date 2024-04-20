@@ -3,6 +3,7 @@ package migrations
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"strings"
 
@@ -18,7 +19,13 @@ func Up(dbUrl string) error {
 	if err != nil {
 		return errors.Wrap(err, "getting module root")
 	}
+
 	m, err := migrate.New(fmt.Sprintf("file://%s/db/migrations", moduleRoot), dbUrl)
+	defer func() {
+		if _, err := m.Close(); err != nil {
+			slog.Error("closing migrations instance", err)
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "creating migrations instance")
 	}
