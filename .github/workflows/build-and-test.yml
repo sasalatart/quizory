@@ -43,12 +43,12 @@ jobs:
           go mod tidy
           go install github.com/volatiletech/sqlboiler/v4@latest
           go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest
-          go run ./cmd/migrate
-          go run ./cmd/codegen
+          make migrate
+          make codegen
           git diff --exit-code
 
       - name: Build
-        run: go build ./...
+        run: make build
 
       - name: Test
-        run: go test ./...
+        run: make test
