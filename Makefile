@@ -8,7 +8,7 @@ BINARY_NAME = out/quizory
 
 all: help
 
-help :
+help:
 	@echo "build    : Builds the project."
 	@echo "clean    : Removes the outputs from running the build command."
 	@echo "migrate  : Runs database migrations."
