@@ -100,6 +100,18 @@ func TestQuestion_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "With Duplicate Choices",
+			factory: func() question.Question {
+				q := validQuestion
+				q.Choices = []question.Choice{}
+				q.WithChoice("Choice 1", true).
+					WithChoice("Choice 1", false).
+					WithChoice("Choice 2", false)
+				return q
+			},
+			wantErr: true,
+		},
+		{
 			name: "Without Correct Choices",
 			factory: func() question.Question {
 				q := validQuestion
