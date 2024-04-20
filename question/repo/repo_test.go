@@ -2,7 +2,6 @@ package repo_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/sasalatart.com/quizory/db/testutil"
@@ -14,8 +13,8 @@ import (
 type QuestionRepoTestSuite struct {
 	suite.Suite
 
-	db *sql.DB
-	r  *repo.QuestionRepo
+	testDB *testutil.TestDB
+	r      *repo.QuestionRepo
 }
 
 func TestQuestionRepoTestSuite(t *testing.T) {
@@ -23,16 +22,20 @@ func TestQuestionRepoTestSuite(t *testing.T) {
 }
 
 func (s *QuestionRepoTestSuite) SetupSuite() {
-	db, teardown, err := testutil.NewDB()
+	ctx := context.Background()
+	testDB, err := testutil.NewTestDB(ctx)
 	s.Require().NoError(err)
-	s.T().Cleanup(teardown)
 
-	s.db = db
-	s.r = repo.New(db)
+	s.testDB = testDB
+	s.r = repo.New(testDB.DB())
+}
+
+func (s *QuestionRepoTestSuite) TearDownSuite() {
+	_ = s.testDB.Teardown()
 }
 
 func (s *QuestionRepoTestSuite) TearDownTest() {
-	_ = testutil.WipeDB(context.Background(), s.db)
+	_ = s.testDB.DeleteData(context.Background())
 }
 
 func (s *QuestionRepoTestSuite) TestGetMany() {

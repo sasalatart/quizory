@@ -21,7 +21,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
-          - 5432:5432
+          - 5433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -29,7 +29,7 @@ jobs:
           --health-retries 5
 
     env:
-      DB_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+      DB_URL: postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
     steps:
       - uses: actions/checkout@v4
@@ -51,4 +51,4 @@ jobs:
         run: go build ./...
 
       - name: Test
-        run: go test -p 1 ./...
+        run: go test ./...
