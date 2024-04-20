@@ -12,7 +12,7 @@ help:
 	@echo "codegen  	: Runs codegen tools."
 	@echo "test     	: Runs tests."
 	@echo "infra    	: Starts the local Docker infra."
-	@echo "infra-down : Drops the local Docker infra."
+	@echo "infra-down	: Drops the local Docker infra."
 
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
