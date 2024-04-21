@@ -2,31 +2,56 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/lib/pq"
+	"github.com/sasalatart.com/quizory/config"
+	"github.com/sasalatart.com/quizory/db"
 	"github.com/sasalatart.com/quizory/question"
-	"github.com/sashabaranov/go-openai"
+	"go.uber.org/fx"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	db, err := sql.Open("postgres", os.Getenv("DB_URL"))
-	if err != nil {
-		log.Fatal(err)
+	app := fx.New(
+		fx.Provide(config.NewConfig),
+		db.Module,
+		question.Module,
+		fx.Invoke(func(lc fx.Lifecycle, service *question.Service) {
+			lc.Append(fx.Hook{
+				OnStart: func(context.Context) error {
+					service.StartGeneration(ctx)
+					return nil
+				},
+				OnStop: func(context.Context) error {
+					cancel()
+					return nil
+				},
+			})
+		}),
+	)
+
+	go func() {
+		if err := app.Start(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	handleStop := func() {
+		if err := app.Stop(ctx); err != nil {
+			panic(err)
+		}
 	}
 
-	questionRepo := question.NewRepository(db)
-	questionService := question.NewService(questionRepo, openai.NewClient(os.Getenv("OPENAI_API_KEY")))
-
-	cancel := make(chan struct{})
-	go questionService.StartGeneration(ctx, 5*time.Second, 5, cancel)
-
-	<-time.After(4 * time.Minute)
-	close(cancel)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-sig:
+		handleStop()
+	case <-time.After(4 * time.Minute):
+		handleStop()
+	}
 }
