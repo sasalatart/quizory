@@ -2,19 +2,26 @@ package question_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/sasalatart.com/quizory/answer"
-	"github.com/sasalatart.com/quizory/db/testutil"
 	"github.com/sasalatart.com/quizory/question"
+	"github.com/sasalatart.com/quizory/testutil"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/fx"
 )
+
+type questionRepoTestSuiteParams struct {
+	fx.In
+	DB   *sql.DB
+	Repo *question.Repository
+}
 
 type QuestionRepoTestSuite struct {
 	suite.Suite
-
-	testDB *testutil.TestDB
-	r      *question.Repository
+	questionRepoTestSuiteParams
+	app *fx.App
 }
 
 func TestQuestionRepoTestSuite(t *testing.T) {
@@ -22,20 +29,22 @@ func TestQuestionRepoTestSuite(t *testing.T) {
 }
 
 func (s *QuestionRepoTestSuite) SetupSuite() {
-	ctx := context.Background()
-	testDB, err := testutil.NewTestDB(ctx)
+	s.app = fx.New(
+		fx.NopLogger,
+		testutil.Module,
+		fx.Provide(question.NewRepository),
+		fx.Populate(&s.questionRepoTestSuiteParams),
+	)
+	err := s.app.Start(context.Background())
 	s.Require().NoError(err)
-
-	s.testDB = testDB
-	s.r = question.NewRepository(testDB.DB())
 }
 
 func (s *QuestionRepoTestSuite) TearDownSuite() {
-	_ = s.testDB.Teardown()
+	_ = s.app.Stop(context.Background())
 }
 
 func (s *QuestionRepoTestSuite) TearDownTest() {
-	_ = s.testDB.DeleteData(context.Background())
+	_ = testutil.DeleteData(context.Background(), s.DB)
 }
 
 func (s *QuestionRepoTestSuite) TestGetMany() {
@@ -46,7 +55,7 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 		q.Hint = "Test Hint 1"
 		q.MoreInfo = "Test More Info 1"
 	})
-	err := s.r.Insert(ctx, q1)
+	err := s.Repo.Insert(ctx, q1)
 	s.Require().NoError(err)
 
 	q2 := question.Mock(func(q *question.Question) {
@@ -54,10 +63,10 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 		q.Hint = "Test Hint 2"
 		q.MoreInfo = "Test More Info 2"
 	})
-	err = s.r.Insert(ctx, q2)
+	err = s.Repo.Insert(ctx, q2)
 	s.Require().NoError(err)
 
-	got, err := s.r.GetMany(ctx, answer.OrderByCreatedAtDesc())
+	got, err := s.Repo.GetMany(ctx, answer.OrderByCreatedAtDesc())
 	s.Require().NoError(err)
 
 	want := []question.Question{q2, q1}
@@ -83,10 +92,10 @@ func (s *QuestionRepoTestSuite) TestInsert() {
 	ctx := context.Background()
 	q := question.Mock(nil)
 
-	err := s.r.Insert(ctx, q)
+	err := s.Repo.Insert(ctx, q)
 	s.Require().NoError(err)
 
-	questions, err := s.r.GetMany(ctx)
+	questions, err := s.Repo.GetMany(ctx)
 	s.Require().NoError(err)
 	s.Require().Len(questions, 1)
 	got := questions[0]

@@ -2,21 +2,28 @@ package answer_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/answer"
-	"github.com/sasalatart.com/quizory/db/testutil"
 	"github.com/sasalatart.com/quizory/question"
+	"github.com/sasalatart.com/quizory/testutil"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/fx"
 )
+
+type answerRepoTestSuiteParams struct {
+	fx.In
+	DB           *sql.DB
+	AnswerRepo   *answer.Repository
+	QuestionRepo *question.Repository
+}
 
 type AnswerRepoTestSuite struct {
 	suite.Suite
-
-	testDB       *testutil.TestDB
-	answerRepo   *answer.Repository
-	questionRepo *question.Repository
+	answerRepoTestSuiteParams
+	app *fx.App
 }
 
 func TestAnswerRepoTestSuite(t *testing.T) {
@@ -24,21 +31,23 @@ func TestAnswerRepoTestSuite(t *testing.T) {
 }
 
 func (s *AnswerRepoTestSuite) SetupSuite() {
-	ctx := context.Background()
-	testDB, err := testutil.NewTestDB(ctx)
+	s.app = fx.New(
+		fx.NopLogger,
+		testutil.Module,
+		fx.Provide(answer.NewRepository),
+		fx.Provide(question.NewRepository),
+		fx.Populate(&s.answerRepoTestSuiteParams),
+	)
+	err := s.app.Start(context.Background())
 	s.Require().NoError(err)
-
-	s.testDB = testDB
-	s.answerRepo = answer.NewRepository(testDB.DB())
-	s.questionRepo = question.NewRepository(testDB.DB())
 }
 
 func (s *AnswerRepoTestSuite) TearDownSuite() {
-	_ = s.testDB.Teardown()
+	_ = s.app.Stop(context.Background())
 }
 
 func (s *AnswerRepoTestSuite) TearDownTest() {
-	_ = s.testDB.DeleteData(context.Background())
+	_ = testutil.DeleteData(context.Background(), s.DB)
 }
 
 func (s *AnswerRepoTestSuite) TestGetMany() {
@@ -48,25 +57,25 @@ func (s *AnswerRepoTestSuite) TestGetMany() {
 	userID2 := uuid.New()
 
 	q1 := question.Mock(nil)
-	err := s.questionRepo.Insert(ctx, q1)
+	err := s.QuestionRepo.Insert(ctx, q1)
 	s.Require().NoError(err)
 
 	a1q1 := answer.New(userID1, q1.Choices[0].ID)
-	err = s.answerRepo.Insert(ctx, *a1q1)
+	err = s.AnswerRepo.Insert(ctx, *a1q1)
 	s.Require().NoError(err)
 
 	q2 := question.Mock(nil)
-	err = s.questionRepo.Insert(ctx, q2)
+	err = s.QuestionRepo.Insert(ctx, q2)
 	s.Require().NoError(err)
 
 	a1q2 := answer.New(userID2, q2.Choices[1].ID)
-	err = s.answerRepo.Insert(ctx, *a1q2)
+	err = s.AnswerRepo.Insert(ctx, *a1q2)
 	s.Require().NoError(err)
 	a2q2 := answer.New(userID1, q2.Choices[0].ID)
-	err = s.answerRepo.Insert(ctx, *a2q2)
+	err = s.AnswerRepo.Insert(ctx, *a2q2)
 	s.Require().NoError(err)
 
-	answers, err := s.answerRepo.GetMany(
+	answers, err := s.AnswerRepo.GetMany(
 		ctx,
 		answer.WhereUserID(userID1),
 		answer.OrderByCreatedAtDesc(),
@@ -86,15 +95,15 @@ func (s *AnswerRepoTestSuite) TestInsert() {
 	ctx := context.Background()
 
 	q := question.Mock(nil)
-	err := s.questionRepo.Insert(ctx, q)
+	err := s.QuestionRepo.Insert(ctx, q)
 	s.Require().NoError(err)
 
 	userID := uuid.New()
 	a := answer.New(userID, q.Choices[1].ID)
-	err = s.answerRepo.Insert(ctx, *a)
+	err = s.AnswerRepo.Insert(ctx, *a)
 	s.Require().NoError(err)
 
-	answers, err := s.answerRepo.GetMany(ctx)
+	answers, err := s.AnswerRepo.GetMany(ctx)
 	s.Require().NoError(err)
 	s.Require().Len(answers, 1)
 	got := answers[0]
