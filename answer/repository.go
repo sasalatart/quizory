@@ -1,4 +1,4 @@
-package repo
+package answer
 
 import (
 	"context"
@@ -6,27 +6,26 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/answer"
 	models "github.com/sasalatart.com/quizory/db/model"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type AnswerRepo struct {
+type Repository struct {
 	db *sql.DB
 }
 
-func New(db *sql.DB) *AnswerRepo {
-	return &AnswerRepo{db: db}
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *AnswerRepo) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]answer.Answer, error) {
+func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Answer, error) {
 	answers, err := models.Answers(qms...).All(ctx, r.db)
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving answers")
 	}
 
-	var result []answer.Answer
+	var result []Answer
 	for _, a := range answers {
 		answer, err := r.fromDB(a)
 		if err != nil {
@@ -37,7 +36,7 @@ func (r *AnswerRepo) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]answer.
 	return result, nil
 }
 
-func (r *AnswerRepo) Insert(ctx context.Context, a answer.Answer) error {
+func (r *Repository) Insert(ctx context.Context, a Answer) error {
 	dbAnswer, err := r.toDB(a)
 	if err != nil {
 		return errors.Wrap(err, "mapping answer to DB")
@@ -48,7 +47,7 @@ func (r *AnswerRepo) Insert(ctx context.Context, a answer.Answer) error {
 	return nil
 }
 
-func (r *AnswerRepo) fromDB(a *models.Answer) (*answer.Answer, error) {
+func (r *Repository) fromDB(a *models.Answer) (*Answer, error) {
 	id, err := uuid.Parse(a.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing answer ID")
@@ -62,7 +61,7 @@ func (r *AnswerRepo) fromDB(a *models.Answer) (*answer.Answer, error) {
 		return nil, errors.Wrap(err, "parsing choice ID")
 	}
 
-	return &answer.Answer{
+	return &Answer{
 		ID:        id,
 		UserID:    userID,
 		ChoiceID:  choiceID,
@@ -70,7 +69,7 @@ func (r *AnswerRepo) fromDB(a *models.Answer) (*answer.Answer, error) {
 	}, nil
 }
 
-func (r *AnswerRepo) toDB(a answer.Answer) (*models.Answer, error) {
+func (r *Repository) toDB(a Answer) (*models.Answer, error) {
 	if err := a.Validate(); err != nil {
 		return nil, errors.Wrap(err, "validating answer")
 	}
@@ -81,4 +80,12 @@ func (r *AnswerRepo) toDB(a answer.Answer) (*models.Answer, error) {
 		ChoiceID:  a.ChoiceID.String(),
 		CreatedAt: a.CreatedAt,
 	}, nil
+}
+
+func OrderByCreatedAtDesc() qm.QueryMod {
+	return qm.OrderBy(models.AnswerColumns.CreatedAt + " DESC")
+}
+
+func WhereUserID(userID uuid.UUID) qm.QueryMod {
+	return models.AnswerWhere.UserID.EQ(userID.String())
 }

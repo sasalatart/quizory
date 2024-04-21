@@ -2,6 +2,15 @@ package question
 
 import "golang.org/x/exp/rand"
 
+//go:generate go run github.com/dmarkham/enumer -type=Difficulty -trimprefix=Difficulty -transform=whitespace
+type Difficulty int
+
+const (
+	DifficultyNoviceHistorian Difficulty = iota
+	DifficultyAvidHistorian
+	DifficultyHistoryScholar
+)
+
 //go:generate go run github.com/dmarkham/enumer -type=Topic -trimprefix=Topic -transform=whitespace
 type Topic int
 
@@ -28,7 +37,7 @@ const (
 	TopicColdWar
 )
 
-// RandomTopic returns a random topic.
-func RandomTopic() Topic {
+// randomTopic returns a random topic.
+func randomTopic() Topic {
 	return Topic(rand.Intn(len(TopicValues())))
 }

@@ -1,12 +1,12 @@
-package repo_test
+package question_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/db/testutil"
 	"github.com/sasalatart.com/quizory/question"
-	"github.com/sasalatart.com/quizory/question/repo"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -14,7 +14,7 @@ type QuestionRepoTestSuite struct {
 	suite.Suite
 
 	testDB *testutil.TestDB
-	r      *repo.QuestionRepo
+	r      *question.Repository
 }
 
 func TestQuestionRepoTestSuite(t *testing.T) {
@@ -27,7 +27,7 @@ func (s *QuestionRepoTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.testDB = testDB
-	s.r = repo.New(testDB.DB())
+	s.r = question.NewRepository(testDB.DB())
 }
 
 func (s *QuestionRepoTestSuite) TearDownSuite() {
@@ -57,7 +57,7 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 	err = s.r.Insert(ctx, q2)
 	s.Require().NoError(err)
 
-	got, err := s.r.GetMany(ctx, repo.OrderByCreatedAtDesc())
+	got, err := s.r.GetMany(ctx, answer.OrderByCreatedAtDesc())
 	s.Require().NoError(err)
 
 	want := []question.Question{q2, q1}

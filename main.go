@@ -9,8 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
-	"github.com/sasalatart.com/quizory/question/repo"
-	"github.com/sasalatart.com/quizory/question/service"
+	"github.com/sasalatart.com/quizory/question"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -22,8 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	questionRepo := repo.New(db)
-	questionService := service.New(questionRepo, openai.NewClient(os.Getenv("OPENAI_API_KEY")))
+	questionRepo := question.NewRepository(db)
+	questionService := question.NewService(questionRepo, openai.NewClient(os.Getenv("OPENAI_API_KEY")))
 
 	cancel := make(chan struct{})
 	go questionService.StartGeneration(ctx, 5*time.Second, 5, cancel)

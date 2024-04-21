@@ -1,4 +1,4 @@
-package repo_test
+package answer_test
 
 import (
 	"context"
@@ -6,10 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/answer"
-	"github.com/sasalatart.com/quizory/answer/repo"
 	"github.com/sasalatart.com/quizory/db/testutil"
 	"github.com/sasalatart.com/quizory/question"
-	questionrepo "github.com/sasalatart.com/quizory/question/repo"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -17,8 +15,8 @@ type AnswerRepoTestSuite struct {
 	suite.Suite
 
 	testDB       *testutil.TestDB
-	answerRepo   *repo.AnswerRepo
-	questionRepo *questionrepo.QuestionRepo
+	answerRepo   *answer.Repository
+	questionRepo *question.Repository
 }
 
 func TestAnswerRepoTestSuite(t *testing.T) {
@@ -31,8 +29,8 @@ func (s *AnswerRepoTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.testDB = testDB
-	s.answerRepo = repo.New(testDB.DB())
-	s.questionRepo = questionrepo.New(testDB.DB())
+	s.answerRepo = answer.NewRepository(testDB.DB())
+	s.questionRepo = question.NewRepository(testDB.DB())
 }
 
 func (s *AnswerRepoTestSuite) TearDownSuite() {
@@ -70,8 +68,8 @@ func (s *AnswerRepoTestSuite) TestGetMany() {
 
 	answers, err := s.answerRepo.GetMany(
 		ctx,
-		repo.WhereUserID(userID1),
-		repo.OrderByCreatedAtDesc(),
+		answer.WhereUserID(userID1),
+		answer.OrderByCreatedAtDesc(),
 	)
 	s.Require().NoError(err)
 
