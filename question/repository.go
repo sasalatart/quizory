@@ -1,4 +1,4 @@
-package repo
+package question
 
 import (
 	"context"
@@ -8,20 +8,19 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	models "github.com/sasalatart.com/quizory/db/model"
-	"github.com/sasalatart.com/quizory/question"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type QuestionRepo struct {
+type Repository struct {
 	db *sql.DB
 }
 
-func New(db *sql.DB) *QuestionRepo {
-	return &QuestionRepo{db: db}
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *QuestionRepo) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]question.Question, error) {
+func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Question, error) {
 	queryMods := append(
 		[]qm.QueryMod{qm.Load(models.QuestionRels.Choices)},
 		qms...,
@@ -31,7 +30,7 @@ func (r *QuestionRepo) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]quest
 		return nil, errors.Wrap(err, "retrieving questions")
 	}
 
-	var result []question.Question
+	var result []Question
 	for _, q := range questions {
 		question, err := r.fromDB(q)
 		if err != nil {
@@ -42,7 +41,7 @@ func (r *QuestionRepo) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]quest
 	return result, nil
 }
 
-func (r *QuestionRepo) Insert(ctx context.Context, q question.Question) error {
+func (r *Repository) Insert(ctx context.Context, q Question) error {
 	dbQuestion, dbChoices, err := r.toDB(q)
 	if err != nil {
 		return errors.Wrap(err, "mapping question to DB")
@@ -67,21 +66,21 @@ func (r *QuestionRepo) Insert(ctx context.Context, q question.Question) error {
 	return txn.Commit()
 }
 
-func (r *QuestionRepo) fromDB(q *models.Question) (*question.Question, error) {
+func (r *Repository) fromDB(q *models.Question) (*Question, error) {
 	id, err := uuid.Parse(q.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question ID")
 	}
-	topic, err := question.TopicString(q.Topic)
+	topic, err := TopicString(q.Topic)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question topic")
 	}
-	difficulty, err := question.DifficultyString(q.Difficulty)
+	difficulty, err := DifficultyString(q.Difficulty)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question difficulty")
 	}
 
-	result := question.Question{
+	result := Question{
 		ID:         id,
 		Topic:      topic,
 		Question:   q.Question,
@@ -95,7 +94,7 @@ func (r *QuestionRepo) fromDB(q *models.Question) (*question.Question, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "parsing choice ID")
 		}
-		result.Choices = append(result.Choices, question.Choice{
+		result.Choices = append(result.Choices, Choice{
 			ID:        choiceID,
 			Choice:    c.Choice,
 			IsCorrect: c.IsCorrect,
@@ -104,7 +103,7 @@ func (r *QuestionRepo) fromDB(q *models.Question) (*question.Question, error) {
 	return &result, nil
 }
 
-func (r *QuestionRepo) toDB(q question.Question) (*models.Question, models.ChoiceSlice, error) {
+func (r *Repository) toDB(q Question) (*models.Question, models.ChoiceSlice, error) {
 	if err := q.Validate(); err != nil {
 		return nil, nil, errors.Wrap(err, "validating question")
 	}
@@ -128,4 +127,8 @@ func (r *QuestionRepo) toDB(q question.Question) (*models.Question, models.Choic
 		Difficulty: q.Difficulty.String(),
 		CreatedAt:  q.CreatedAt,
 	}, choices, nil
+}
+
+func OrderByCreatedAtDesc() qm.QueryMod {
+	return qm.OrderBy(models.QuestionColumns.CreatedAt + " DESC")
 }
