@@ -3,6 +3,7 @@ package testutil
 import (
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db"
+	"github.com/sasalatart.com/quizory/llm"
 	"go.uber.org/fx"
 )
 
@@ -12,4 +13,5 @@ var Module = fx.Module(
 	"testutil",
 	fx.Provide(config.NewConfig),
 	db.TestModule,
+	llm.TestModule,
 )

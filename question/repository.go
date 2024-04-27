@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	models "github.com/sasalatart.com/quizory/db/model"
+	"github.com/sasalatart.com/quizory/question/enums"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -71,11 +72,11 @@ func (r *Repository) fromDB(q *models.Question) (*Question, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question ID")
 	}
-	topic, err := TopicString(q.Topic)
+	topic, err := enums.TopicString(q.Topic)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question topic")
 	}
-	difficulty, err := DifficultyString(q.Difficulty)
+	difficulty, err := enums.DifficultyString(q.Difficulty)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing question difficulty")
 	}

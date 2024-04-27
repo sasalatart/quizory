@@ -9,6 +9,7 @@ import (
 
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db"
+	"github.com/sasalatart.com/quizory/llm"
 	"github.com/sasalatart.com/quizory/question"
 	"go.uber.org/fx"
 )
@@ -19,11 +20,14 @@ func main() {
 	app := fx.New(
 		fx.Provide(config.NewConfig),
 		db.Module,
+		llm.Module,
 		question.Module,
-		fx.Invoke(func(lc fx.Lifecycle, service *question.Service) {
+		fx.Invoke(func(lc fx.Lifecycle, cfg config.Config, service *question.Service) {
 			lc.Append(fx.Hook{
-				OnStart: func(context.Context) error {
-					service.StartGeneration(ctx)
+				OnStart: func(ctx context.Context) error {
+					freq := cfg.QuestionGeneration.Frequency
+					batchSize := cfg.QuestionGeneration.BatchSize
+					service.StartGeneration(ctx, freq, batchSize)
 					return nil
 				},
 				OnStop: func(context.Context) error {

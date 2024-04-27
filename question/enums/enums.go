@@ -1,4 +1,4 @@
-package question
+package enums
 
 import "golang.org/x/exp/rand"
 
@@ -37,7 +37,7 @@ const (
 	TopicColdWar
 )
 
-// randomTopic returns a random topic.
-func randomTopic() Topic {
+// RandomTopic returns a random topic.
+func RandomTopic() Topic {
 	return Topic(rand.Intn(len(TopicValues())))
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"log/slog"
 
 	"github.com/sasalatart.com/quizory/config"
@@ -13,6 +14,6 @@ func main() {
 
 	dbCfg := config.NewConfig().Database
 	if err := migrations.Up(dbCfg); err != nil {
-		slog.Error("Error running migrations", err)
+		log.Fatal(err)
 	}
 }

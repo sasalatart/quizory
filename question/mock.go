@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/sasalatart.com/quizory/question/enums"
 )
 
 // Mock creates a new random Question for testing purposes with the specified overrides.
@@ -13,8 +14,8 @@ func Mock(applyOverrides func(*Question)) Question {
 		"Test Hint",
 		"Test More Info",
 	).
-		WithTopic(TopicAncientRome).
-		WithDifficulty(DifficultyAvidHistorian).
+		WithTopic(enums.TopicAncientRome).
+		WithDifficulty(enums.DifficultyAvidHistorian).
 		WithChoice("Choice 1", false).
 		WithChoice("Choice 2", true).
 		WithChoice("Choice 3", false).
