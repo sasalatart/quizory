@@ -5,16 +5,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sasalatart.com/quizory/question/enums"
 )
 
 // Question represents a question about history that users need to answer.
 type Question struct {
 	ID         uuid.UUID
-	Topic      Topic
+	Topic      enums.Topic
 	Question   string
 	Hint       string
 	MoreInfo   string
-	Difficulty Difficulty
+	Difficulty enums.Difficulty
 	Choices    []Choice
 	CreatedAt  time.Time
 }
@@ -38,13 +39,13 @@ func New(question, hint, moreInfo string) *Question {
 }
 
 // WithTopic sets the topic of a question.
-func (q *Question) WithTopic(topic Topic) *Question {
+func (q *Question) WithTopic(topic enums.Topic) *Question {
 	q.Topic = topic
 	return q
 }
 
 // WithDifficulty sets the difficulty of a question.
-func (q *Question) WithDifficulty(difficulty Difficulty) *Question {
+func (q *Question) WithDifficulty(difficulty enums.Difficulty) *Question {
 	q.Difficulty = difficulty
 	return q
 }

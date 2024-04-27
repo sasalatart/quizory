@@ -6,25 +6,28 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sashabaranov/go-openai"
+	"github.com/pkg/errors"
+	"github.com/sasalatart.com/quizory/llm"
+	"github.com/sasalatart.com/quizory/question/enums"
+	"github.com/sasalatart.com/quizory/question/internal/ai"
 )
 
+// Service represents the service that manages questions.
 type Service struct {
-	cfg          config.Config
-	repo         *Repository
-	openaiClient *openai.Client
+	repo       *Repository
+	llmService llm.ChatCompletioner
 }
 
 // NewService creates a new instance of question.Service.
-func NewService(cfg config.Config, repo *Repository) *Service {
-	return &Service{cfg: cfg, repo: repo, openaiClient: openai.NewClient(cfg.OpenAIKey)}
+func NewService(repo *Repository, llmService llm.ChatCompletioner) *Service {
+	return &Service{
+		repo:       repo,
+		llmService: llmService,
+	}
 }
 
 // StartGeneration generates questions about random topics at a given frequency.
-func (s Service) StartGeneration(ctx context.Context) {
-	freq := s.cfg.QuestionGeneration.Frequency
-	batchSize := s.cfg.QuestionGeneration.BatchSize
+func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchSize int) {
 	slog.Info("Starting generation loop", slog.Duration("freq", freq))
 
 	ticker := time.NewTicker(freq)
@@ -33,16 +36,62 @@ func (s Service) StartGeneration(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			topic := randomTopic()
+			topic := enums.RandomTopic()
 			slog.Info(
 				"Generating questions",
 				slog.String("topic", topic.String()),
 				slog.Int("amount", batchSize),
 			)
-			if err := s.generateQuestionSet(ctx, topic, batchSize); err != nil {
-				slog.Error("Error generating question set", err)
+			if err := s.handleGeneration(ctx, topic, batchSize); err != nil {
+				if !errors.Is(err, context.Canceled) {
+					slog.Error("Error generating question set", err)
+				}
 				return
 			}
 		}
 	}
+}
+
+// handleGeneration generates and stores a set of questions about a given topic.
+func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount int) error {
+	results := make(chan ai.Result)
+	defer close(results)
+
+	go ai.Generate(ctx, s.llmService, topic, amount, results)
+
+	select {
+	case <-ctx.Done():
+		return nil
+	case result := <-results:
+		if result.Err != nil {
+			return result.Err
+		}
+		for _, aiQuestion := range result.Questions {
+			q, err := parseAIQuestion(aiQuestion, topic)
+			if err != nil {
+				return errors.Wrap(err, "parsing AI question")
+			}
+			slog.Info("Creating question", slog.String("question", q.Question))
+			if err := s.repo.Insert(ctx, *q); err != nil {
+				return errors.Wrap(err, "creating question")
+			}
+		}
+	}
+	return nil
+}
+
+// parseAIQuestion converts an ai.Question to a Question.
+func parseAIQuestion(aiQuestion ai.Question, topic enums.Topic) (*Question, error) {
+	difficulty, err := enums.DifficultyString(aiQuestion.Difficulty)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing difficulty")
+	}
+
+	q := New(aiQuestion.Question, aiQuestion.Hint, aiQuestion.MoreInfo).
+		WithTopic(topic).
+		WithDifficulty(difficulty)
+	for _, c := range aiQuestion.Choices {
+		q.WithChoice(c.Text, c.IsCorrect)
+	}
+	return q, nil
 }

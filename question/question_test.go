@@ -4,22 +4,23 @@ import (
 	"testing"
 
 	"github.com/sasalatart.com/quizory/question"
+	"github.com/sasalatart.com/quizory/question/enums"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
 	q := question.
 		New("Test Question", "Test Hint", "Test More Info").
-		WithTopic(question.TopicAncientRome).
-		WithDifficulty(question.DifficultyAvidHistorian).
+		WithTopic(enums.TopicAncientRome).
+		WithDifficulty(enums.DifficultyAvidHistorian).
 		WithChoice("Choice 1", false).
 		WithChoice("Choice 2", true)
 
-	assert.Equal(t, question.TopicAncientRome, q.Topic)
+	assert.Equal(t, enums.TopicAncientRome, q.Topic)
 	assert.Equal(t, "Test Question", q.Question)
 	assert.Equal(t, "Test Hint", q.Hint)
 	assert.Equal(t, "Test More Info", q.MoreInfo)
-	assert.Equal(t, question.DifficultyAvidHistorian, q.Difficulty)
+	assert.Equal(t, enums.DifficultyAvidHistorian, q.Difficulty)
 
 	assert.Len(t, q.Choices, 2)
 
