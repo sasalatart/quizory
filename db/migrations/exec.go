@@ -13,7 +13,7 @@ import (
 
 // Up runs the migrations on the database specified by dbUrl.
 func Up(dbCfg config.DBConfig) error {
-	m, err := migrate.New(fmt.Sprintf("file://%s", dbCfg.MigrationsDir), dbCfg.URL)
+	m, err := migrate.New(fmt.Sprintf("file://%s", dbCfg.MigrationsDir), dbCfg.URL())
 	defer func() {
 		if _, err := m.Close(); err != nil {
 			slog.Error("Failed to close migrations instance", err)

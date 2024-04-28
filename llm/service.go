@@ -12,7 +12,7 @@ type Service struct {
 	openaiClient *openai.Client
 }
 
-func NewService(cfg config.Config) *Service {
+func NewService(cfg config.LLMConfig) *Service {
 	return &Service{
 		openaiClient: openai.NewClient(cfg.OpenAIKey),
 	}

@@ -5,10 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
+	"go.uber.org/fx"
 )
 
 func init() {
@@ -30,25 +30,17 @@ func mustLoadEnvVars() {
 
 // Config represents the configuration of the application.
 type Config struct {
-	Database           DBConfig
-	OpenAIKey          string
-	QuestionGeneration questionGenerationConfig
-}
+	fx.Out
 
-type questionGenerationConfig struct {
-	Frequency time.Duration
-	BatchSize int
+	DB  DBConfig
+	LLM LLMConfig
 }
 
 // NewConfig returns a new Config instance with values loaded from environment variables.
 func NewConfig() Config {
 	return Config{
-		Database:  NewDBConfig("postgres"),
-		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
-		QuestionGeneration: questionGenerationConfig{
-			Frequency: 5 * time.Second,
-			BatchSize: 5,
-		},
+		DB:  NewDBConfig("postgres"),
+		LLM: NewLLMConfig(),
 	}
 }
 

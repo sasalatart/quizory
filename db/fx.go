@@ -18,8 +18,8 @@ var Module = fx.Module(
 	fx.Provide(newDB),
 )
 
-func newDB(lc fx.Lifecycle, cfg config.Config) *sql.DB {
-	rootDB := mustOpen(cfg.Database.URL)
+func newDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
+	rootDB := mustOpen(cfg.URL())
 	lc.Append(fx.Hook{
 		OnStop: func(context.Context) error {
 			return rootDB.Close()
@@ -41,8 +41,8 @@ var TestModule = fx.Module(
 	fx.Provide(newTempDB),
 )
 
-func newTempDB(lc fx.Lifecycle, cfg config.Config) *sql.DB {
-	rootDB := mustOpen(cfg.Database.URL)
+func newTempDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
+	rootDB := mustOpen(cfg.URL())
 	db, dbName := mustCreateTempDB(rootDB)
 	lc.Append(fx.Hook{
 		OnStop: func(context.Context) error {
@@ -66,5 +66,5 @@ func mustCreateTempDB(rootDB *sql.DB) (*sql.DB, string) {
 	if err := migrations.Up(cfg); err != nil {
 		panic(errors.Wrapf(err, "running migrations for db %s", dbName))
 	}
-	return mustOpen(cfg.URL), dbName
+	return mustOpen(cfg.URL()), dbName
 }

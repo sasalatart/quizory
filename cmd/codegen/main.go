@@ -13,7 +13,7 @@ func main() {
 	slog.Info("Running code generation...")
 	defer slog.Info("Code generation complete.")
 
-	dbCfg := config.NewConfig().Database
+	dbCfg := config.NewConfig().DB
 
 	os.Setenv("PSQL_USER", dbCfg.User)
 	os.Setenv("PSQL_PASS", dbCfg.Password)
