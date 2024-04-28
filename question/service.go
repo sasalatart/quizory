@@ -57,7 +57,12 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 	results := make(chan ai.Result)
 	defer close(results)
 
-	go ai.Generate(ctx, s.llmService, topic, amount, results)
+	recentlyGenerated, err := s.getRecentlyGenerated(ctx, topic, 100)
+	if err != nil {
+		return errors.Wrapf(err, "getting recently generated questions about %s", topic)
+	}
+
+	go ai.Generate(ctx, s.llmService, topic, recentlyGenerated, amount, results)
 
 	select {
 	case <-ctx.Done():
@@ -71,13 +76,35 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 			if err != nil {
 				return errors.Wrap(err, "parsing AI question")
 			}
-			slog.Info("Creating question", slog.String("question", q.Question))
+			slog.Info("Inserting question", slog.String("q", q.Question))
 			if err := s.repo.Insert(ctx, *q); err != nil {
-				return errors.Wrap(err, "creating question")
+				return errors.Wrap(err, "inserting question")
 			}
 		}
 	}
 	return nil
+}
+
+// getRecentlyGenerated returns the most recent questions generated about a given topic.
+func (s Service) getRecentlyGenerated(
+	ctx context.Context,
+	topic enums.Topic,
+	amount int,
+) ([]string, error) {
+	questions, err := s.repo.GetMany(
+		ctx,
+		WhereTopicIs(topic),
+		OrderByCreatedAtDesc(),
+		Limit(amount),
+	)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, q := range questions {
+		result = append(result, q.Question)
+	}
+	return result, nil
 }
 
 // parseAIQuestion converts an ai.Question to a Question.

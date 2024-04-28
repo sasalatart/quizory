@@ -130,6 +130,14 @@ func (r *Repository) toDB(q Question) (*models.Question, models.ChoiceSlice, err
 	}, choices, nil
 }
 
+func WhereTopicIs(topic enums.Topic) qm.QueryMod {
+	return models.QuestionWhere.Topic.EQ(topic.String())
+}
+
 func OrderByCreatedAtDesc() qm.QueryMod {
 	return qm.OrderBy(models.QuestionColumns.CreatedAt + " DESC")
+}
+
+func Limit(n int) qm.QueryMod {
+	return qm.Limit(n)
 }
