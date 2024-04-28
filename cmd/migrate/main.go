@@ -12,7 +12,7 @@ func main() {
 	slog.Info("Running migrations...")
 	defer slog.Info("Migrations complete.")
 
-	dbCfg := config.NewConfig().Database
+	dbCfg := config.NewConfig().DB
 	if err := migrations.Up(dbCfg); err != nil {
 		log.Fatal(err)
 	}

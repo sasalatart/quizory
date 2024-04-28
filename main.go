@@ -22,12 +22,10 @@ func main() {
 		db.Module,
 		llm.Module,
 		question.Module,
-		fx.Invoke(func(lc fx.Lifecycle, cfg config.Config, service *question.Service) {
+		fx.Invoke(func(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.Service) {
 			lc.Append(fx.Hook{
 				OnStart: func(ctx context.Context) error {
-					freq := cfg.QuestionGeneration.Frequency
-					batchSize := cfg.QuestionGeneration.BatchSize
-					service.StartGeneration(ctx, freq, batchSize)
+					service.StartGeneration(ctx, llmCfg.Frequency, llmCfg.BatchSize)
 					return nil
 				},
 				OnStop: func(context.Context) error {

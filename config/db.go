@@ -11,7 +11,6 @@ import (
 
 // DBCOnfig represents the configuration of the database.
 type DBConfig struct {
-	URL           string
 	MigrationsDir string
 	User          string
 	Password      string
@@ -38,10 +37,6 @@ func NewDBConfig(dbName string) DBConfig {
 	}
 
 	return DBConfig{
-		URL: fmt.Sprintf(
-			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			psqlUser, psqlPassword, psqlHost, psqlPort, dbName,
-		),
 		MigrationsDir: mustGetModuleRoot() + "/db/migrations",
 		User:          psqlUser,
 		Password:      psqlPassword,
@@ -49,4 +44,12 @@ func NewDBConfig(dbName string) DBConfig {
 		Port:          psqlPort,
 		Name:          dbName,
 	}
+}
+
+// URL returns the URL representation of the database configuration.
+func (c DBConfig) URL() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		c.User, c.Password, c.Host, c.Port, c.Name,
+	)
 }
