@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sasalatart.com/quizory/llm"
 	"github.com/sasalatart.com/quizory/question/enums"
@@ -44,7 +45,7 @@ func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchS
 			)
 			if err := s.handleGeneration(ctx, topic, batchSize); err != nil {
 				if !errors.Is(err, context.Canceled) {
-					slog.Error("Error generating question set", err)
+					slog.Error("Error generating question set", "error", err)
 				}
 				return
 			}
@@ -57,7 +58,7 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 	results := make(chan ai.Result)
 	defer close(results)
 
-	recentlyGenerated, err := s.getRecentlyGenerated(ctx, topic, 100)
+	recentlyGenerated, err := s.recentlyGenerated(ctx, topic, 100)
 	if err != nil {
 		return errors.Wrapf(err, "getting recently generated questions about %s", topic)
 	}
@@ -77,7 +78,7 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 				return errors.Wrap(err, "parsing AI question")
 			}
 			slog.Info("Inserting question", slog.String("q", q.Question))
-			if err := s.repo.Insert(ctx, *q); err != nil {
+			if err := s.repo.Insert(context.WithoutCancel(ctx), *q); err != nil {
 				return errors.Wrap(err, "inserting question")
 			}
 		}
@@ -85,8 +86,8 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 	return nil
 }
 
-// getRecentlyGenerated returns the most recent questions generated about a given topic.
-func (s Service) getRecentlyGenerated(
+// recentlyGenerated returns the most recent questions generated about a given topic.
+func (s Service) recentlyGenerated(
 	ctx context.Context,
 	topic enums.Topic,
 	amount int,
@@ -105,6 +106,11 @@ func (s Service) getRecentlyGenerated(
 		result = append(result, q.Question)
 	}
 	return result, nil
+}
+
+// FromChoice returns the question associated with a given choice.
+func (s Service) FromChoice(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
+	return s.repo.GetByChoiceID(ctx, choiceID)
 }
 
 // parseAIQuestion converts an ai.Question to a Question.

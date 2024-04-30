@@ -110,3 +110,16 @@ func (s *QuestionRepoTestSuite) TestInsert() {
 		s.Contains(got.Choices, c)
 	}
 }
+
+func (s *QuestionRepoTestSuite) TestGetByChoiceID() {
+	ctx := context.Background()
+	q := question.Mock(nil)
+
+	err := s.Repo.Insert(ctx, q)
+	s.Require().NoError(err)
+
+	choiceID := q.Choices[0].ID
+	got, err := s.Repo.GetByChoiceID(ctx, choiceID)
+	s.Require().NoError(err)
+	s.Equal(q.ID.String(), got.ID.String())
+}

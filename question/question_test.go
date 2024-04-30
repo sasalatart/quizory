@@ -6,6 +6,7 @@ import (
 	"github.com/sasalatart.com/quizory/question"
 	"github.com/sasalatart.com/quizory/question/enums"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -134,4 +135,20 @@ func TestQuestion_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestQuestion_CorrectChoices(t *testing.T) {
+	q := question.Mock(func(q *question.Question) {
+		q.Choices = []question.Choice{}
+		q.
+			WithChoice("Choice 1", false).
+			WithChoice("Choice 2", true).
+			WithChoice("Choice 3", false).
+			WithChoice("Choice 4", true)
+	})
+
+	got := q.CorrectChoices()
+	require.Len(t, got, 2)
+	assert.Equal(t, "Choice 2", got[0].Choice)
+	assert.Equal(t, "Choice 4", got[1].Choice)
 }

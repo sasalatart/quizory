@@ -22,11 +22,7 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Question, error) {
-	queryMods := append(
-		[]qm.QueryMod{qm.Load(models.QuestionRels.Choices)},
-		qms...,
-	)
-	questions, err := models.Questions(queryMods...).All(ctx, r.db)
+	questions, err := models.Questions(r.withChoices(qms)...).All(ctx, r.db)
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving questions")
 	}
@@ -40,6 +36,18 @@ func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Questio
 		result = append(result, *question)
 	}
 	return result, nil
+}
+
+func (r *Repository) GetByChoiceID(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
+	c, err := models.FindChoice(ctx, r.db, choiceID.String())
+	if err != nil {
+		return nil, errors.Wrap(err, "retrieving choice")
+	}
+	q, err := c.Question(r.withChoices(nil)...).One(ctx, r.db)
+	if err != nil {
+		return nil, errors.Wrapf(err, "retrieving question for choice %s", choiceID)
+	}
+	return r.fromDB(q)
 }
 
 func (r *Repository) Insert(ctx context.Context, q Question) error {
@@ -65,6 +73,10 @@ func (r *Repository) Insert(ctx context.Context, q Question) error {
 		)
 	}
 	return txn.Commit()
+}
+
+func (r *Repository) withChoices(qms []qm.QueryMod) []qm.QueryMod {
+	return append(qms, qm.Load(models.QuestionRels.Choices))
 }
 
 func (r *Repository) fromDB(q *models.Question) (*Question, error) {

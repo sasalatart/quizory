@@ -97,3 +97,14 @@ func (q *Question) Validate() error {
 	}
 	return nil
 }
+
+// CorrectChoices returns the choices that are correct.
+func (q *Question) CorrectChoices() []Choice {
+	var choices []Choice
+	for _, c := range q.Choices {
+		if c.IsCorrect {
+			choices = append(choices, c)
+		}
+	}
+	return choices
+}
