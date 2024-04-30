@@ -89,6 +89,5 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 		for i, q := range questions {
 			assert.Equal(c, fmt.Sprintf("Test question %d", len(questions)-i), q.Question)
 		}
-
 	}, 5*time.Second, 500*time.Millisecond)
 }
