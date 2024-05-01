@@ -38,6 +38,14 @@ func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Questio
 	return result, nil
 }
 
+func (r *Repository) GetOne(ctx context.Context, qms ...qm.QueryMod) (*Question, error) {
+	q, err := models.Questions(r.withChoices(qms)...).One(ctx, r.db)
+	if err != nil {
+		return nil, errors.Wrap(err, "retrieving question")
+	}
+	return r.fromDB(q)
+}
+
 func (r *Repository) GetByChoiceID(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
 	c, err := models.FindChoice(ctx, r.db, choiceID.String())
 	if err != nil {
@@ -144,6 +152,22 @@ func (r *Repository) toDB(q Question) (*models.Question, models.ChoiceSlice, err
 
 func WhereTopicIs(topic enums.Topic) qm.QueryMod {
 	return models.QuestionWhere.Topic.EQ(topic.String())
+}
+
+func WhereNotAnsweredBy(userID uuid.UUID) qm.QueryMod {
+	return qm.Where(`
+		NOT EXISTS (
+			SELECT 1
+			FROM answers a
+			JOIN choices c ON a.choice_id = c.id
+			WHERE c.question_id = questions.id AND a.user_id = ?
+		)
+		`, userID.String(),
+	)
+}
+
+func OrderByCreatedAtAsc() qm.QueryMod {
+	return qm.OrderBy(models.QuestionColumns.CreatedAt + " ASC")
 }
 
 func OrderByCreatedAtDesc() qm.QueryMod {

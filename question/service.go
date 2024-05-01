@@ -2,6 +2,7 @@ package question
 
 import (
 	"context"
+	"database/sql"
 	_ "embed"
 	"log/slog"
 	"time"
@@ -12,6 +13,9 @@ import (
 	"github.com/sasalatart.com/quizory/question/enums"
 	"github.com/sasalatart.com/quizory/question/internal/ai"
 )
+
+// ErrNoQuestionsLeft is returned when there are no questions left to be answered for a user.
+var ErrNoQuestionsLeft = errors.New("no questions left")
 
 // Service represents the service that manages questions.
 type Service struct {
@@ -111,6 +115,22 @@ func (s Service) recentlyGenerated(
 // FromChoice returns the question associated with a given choice.
 func (s Service) FromChoice(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
 	return s.repo.GetByChoiceID(ctx, choiceID)
+}
+
+// NextFor returns the next question that a user should answer.
+func (s Service) NextFor(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*Question, error) {
+	q, err := s.repo.GetOne(
+		ctx,
+		WhereNotAnsweredBy(userID),
+		OrderByCreatedAtAsc(),
+	)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, errors.Wrapf(ErrNoQuestionsLeft, "getting next question for %s", userID)
+	}
+	return q, err
 }
 
 // parseAIQuestion converts an ai.Question to a Question.
