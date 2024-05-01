@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_unique_correct_choice_on_question;

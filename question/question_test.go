@@ -96,7 +96,7 @@ func TestQuestion_Validate(t *testing.T) {
 			name: "Without Choices",
 			factory: func() question.Question {
 				q := validQuestion
-				q.Choices = []question.Choice{}
+				q.Choices = nil
 				return q
 			},
 			wantErr: true,
@@ -105,7 +105,7 @@ func TestQuestion_Validate(t *testing.T) {
 			name: "With Duplicate Choices",
 			factory: func() question.Question {
 				q := validQuestion
-				q.Choices = []question.Choice{}
+				q.Choices = nil
 				q.WithChoice("Choice 1", true).
 					WithChoice("Choice 1", false).
 					WithChoice("Choice 2", false)
@@ -117,8 +117,20 @@ func TestQuestion_Validate(t *testing.T) {
 			name: "Without Correct Choices",
 			factory: func() question.Question {
 				q := validQuestion
-				q.Choices = []question.Choice{}
+				q.Choices = nil
 				q.WithChoice("Choice 1", false).WithChoice("Choice 2", false)
+				return q
+			},
+			wantErr: true,
+		},
+		{
+			name: "With More Than One Correct Choice",
+			factory: func() question.Question {
+				q := validQuestion
+				q.Choices = nil
+				q.WithChoice("Choice 1", true).
+					WithChoice("Choice 2", true).
+					WithChoice("Choice 3", false)
 				return q
 			},
 			wantErr: true,
@@ -137,18 +149,51 @@ func TestQuestion_Validate(t *testing.T) {
 	}
 }
 
-func TestQuestion_CorrectChoices(t *testing.T) {
-	q := question.Mock(func(q *question.Question) {
-		q.Choices = []question.Choice{}
-		q.
-			WithChoice("Choice 1", false).
-			WithChoice("Choice 2", true).
-			WithChoice("Choice 3", false).
-			WithChoice("Choice 4", true)
-	})
-
-	got := q.CorrectChoices()
-	require.Len(t, got, 2)
-	assert.Equal(t, "Choice 2", got[0].Choice)
-	assert.Equal(t, "Choice 4", got[1].Choice)
+func TestQuestion_CorrectChoice(t *testing.T) {
+	testCases := []struct {
+		name    string
+		q       question.Question
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "With Two Choices",
+			q: question.Mock(func(q *question.Question) {
+				q.Choices = nil
+				q.WithChoice("Choice 1", false).WithChoice("Choice 2", true)
+			}),
+			want: "Choice 2",
+		},
+		{
+			name: "With Four Choices",
+			q: question.Mock(func(q *question.Question) {
+				q.Choices = nil
+				q.WithChoice("Choice 1", false).
+					WithChoice("Choice 2", false).
+					WithChoice("Choice 3", true).
+					WithChoice("Choice 4", false)
+			}),
+			want: "Choice 3",
+		},
+		{
+			name: "Without Correct Choice",
+			q: question.Mock(func(q *question.Question) {
+				q.Choices = nil
+				q.WithChoice("Choice 1", false).WithChoice("Choice 2", false)
+			}),
+			wantErr: true,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			c, err := tt.q.CorrectChoice()
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Nil(t, c)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, c.Choice)
+		})
+	}
 }
