@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/llm"
 	"github.com/sasalatart.com/quizory/question"
 	"github.com/sasalatart.com/quizory/testutil"
@@ -17,10 +19,11 @@ import (
 
 type questionServiceTestSuiteParams struct {
 	fx.In
-	DB         *sql.DB
-	LLMService llm.ChatCompletioner
-	Repo       *question.Repository
-	Service    *question.Service
+	DB           *sql.DB
+	LLMService   llm.ChatCompletioner
+	AnswerRepo   *answer.Repository
+	QuestionRepo *question.Repository
+	Service      *question.Service
 }
 
 type QuestionServiceTestSuite struct {
@@ -38,6 +41,7 @@ func (s *QuestionServiceTestSuite) SetupSuite() {
 		fx.NopLogger,
 		testutil.Module,
 		question.Module,
+		fx.Provide(answer.NewRepository),
 		fx.Provide(question.NewRepository),
 		fx.Populate(&s.questionServiceTestSuiteParams),
 	)
@@ -82,7 +86,7 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 	go s.Service.StartGeneration(ctx, freq, batchSize)
 
 	s.EventuallyWithT(func(c *assert.CollectT) {
-		questions, err := s.Repo.GetMany(ctx, question.OrderByCreatedAtDesc())
+		questions, err := s.QuestionRepo.GetMany(ctx, question.OrderByCreatedAtDesc())
 		assert.NoError(c, err)
 		assert.Len(c, questions, 2)
 
@@ -90,4 +94,36 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 			assert.Equal(c, fmt.Sprintf("Test question %d", len(questions)-i), q.Question)
 		}
 	}, 5*time.Second, 500*time.Millisecond)
+}
+
+func (s *QuestionServiceTestSuite) TestNextFor() {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	q1 := question.Mock(nil)
+	err := s.QuestionRepo.Insert(ctx, q1)
+	s.Require().NoError(err)
+
+	q2 := question.Mock(nil)
+	err = s.QuestionRepo.Insert(ctx, q2)
+	s.Require().NoError(err)
+
+	got, err := s.Service.NextFor(ctx, userID)
+	s.Require().NoError(err)
+	s.Equal(q1.ID, got.ID)
+
+	a1 := answer.New(userID, q1.Choices[0].ID)
+	err = s.AnswerRepo.Insert(ctx, *a1)
+	s.Require().NoError(err)
+
+	got, err = s.Service.NextFor(ctx, userID)
+	s.Require().NoError(err)
+	s.Equal(q2.ID, got.ID)
+
+	a2 := answer.New(userID, q2.Choices[0].ID)
+	err = s.AnswerRepo.Insert(ctx, *a2)
+	s.Require().NoError(err)
+
+	_, err = s.Service.NextFor(ctx, userID)
+	s.Require().ErrorIs(err, question.ErrNoQuestionsLeft)
 }
