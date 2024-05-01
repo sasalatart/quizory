@@ -30,7 +30,7 @@ clean:
 	rm -f $(BINARIES_DIR)
 
 test:
-	$(GOTEST) -v ./...
+	$(GOTEST) ./...
 
 aigen-dev:
 	GO_ENV=dev $(GOCMD) run ./cmd/aigen

@@ -36,6 +36,14 @@ func (r *Repository) GetMany(ctx context.Context, qms ...qm.QueryMod) ([]Answer,
 	return result, nil
 }
 
+func (r *Repository) GetOne(ctx context.Context, qms ...qm.QueryMod) (*Answer, error) {
+	a, err := models.Answers(qms...).One(ctx, r.db)
+	if err != nil {
+		return nil, errors.Wrap(err, "retrieving answer")
+	}
+	return r.fromDB(a)
+}
+
 func (r *Repository) Insert(ctx context.Context, a Answer) error {
 	dbAnswer, err := r.toDB(a)
 	if err != nil {
@@ -82,10 +90,22 @@ func (r *Repository) toDB(a Answer) (*models.Answer, error) {
 	}, nil
 }
 
+func WhereIDEq(id uuid.UUID) qm.QueryMod {
+	return models.AnswerWhere.ID.EQ(id.String())
+}
+
+func WhereUserIDEq(userID uuid.UUID) qm.QueryMod {
+	return models.AnswerWhere.UserID.EQ(userID.String())
+}
+
 func OrderByCreatedAtDesc() qm.QueryMod {
 	return qm.OrderBy(models.AnswerColumns.CreatedAt + " DESC")
 }
 
-func WhereUserID(userID uuid.UUID) qm.QueryMod {
-	return models.AnswerWhere.UserID.EQ(userID.String())
+func Offset(n int) qm.QueryMod {
+	return qm.Offset(n)
+}
+
+func Limit(n int) qm.QueryMod {
+	return qm.Limit(n)
 }

@@ -3,6 +3,7 @@ package question
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
@@ -42,18 +43,6 @@ func (r *Repository) GetOne(ctx context.Context, qms ...qm.QueryMod) (*Question,
 	q, err := models.Questions(r.withChoices(qms)...).One(ctx, r.db)
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving question")
-	}
-	return r.fromDB(q)
-}
-
-func (r *Repository) GetByChoiceID(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
-	c, err := models.FindChoice(ctx, r.db, choiceID.String())
-	if err != nil {
-		return nil, errors.Wrap(err, "retrieving choice")
-	}
-	q, err := c.Question(r.withChoices(nil)...).One(ctx, r.db)
-	if err != nil {
-		return nil, errors.Wrapf(err, "retrieving question for choice %s", choiceID)
 	}
 	return r.fromDB(q)
 }
@@ -150,7 +139,25 @@ func (r *Repository) toDB(q Question) (*models.Question, models.ChoiceSlice, err
 	}, choices, nil
 }
 
-func WhereTopicIs(topic enums.Topic) qm.QueryMod {
+func WhereChoiceIDIn(ids ...uuid.UUID) qm.QueryMod {
+	strIDs := make([]interface{}, len(ids))
+	placeholders := make([]string, len(ids))
+
+	for i, id := range ids {
+		strIDs[i] = id.String()
+		placeholders[i] = "?"
+	}
+
+	return qm.Where(`
+		questions.id IN (
+			SELECT DISTINCT(c.question_id)
+			FROM choices c
+			WHERE c.id IN (`+strings.Join(placeholders, ", ")+`)
+		)
+	`, strIDs...)
+}
+
+func WhereTopicEq(topic enums.Topic) qm.QueryMod {
 	return models.QuestionWhere.Topic.EQ(topic.String())
 }
 

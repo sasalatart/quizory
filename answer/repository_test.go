@@ -77,7 +77,7 @@ func (s *AnswerRepoTestSuite) TestGetMany() {
 
 	answers, err := s.AnswerRepo.GetMany(
 		ctx,
-		answer.WhereUserID(userID1),
+		answer.WhereUserIDEq(userID1),
 		answer.OrderByCreatedAtDesc(),
 	)
 	s.Require().NoError(err)
@@ -89,6 +89,26 @@ func (s *AnswerRepoTestSuite) TestGetMany() {
 		s.Equal(want[i].UserID.String(), got.UserID.String())
 		s.Equal(want[i].ChoiceID.String(), got.ChoiceID.String())
 	}
+}
+
+func (s *AnswerRepoTestSuite) TestGetOne() {
+	ctx := context.Background()
+
+	q := question.Mock(nil)
+	err := s.QuestionRepo.Insert(ctx, q)
+	s.Require().NoError(err)
+
+	a1 := answer.New(uuid.New(), q.Choices[0].ID)
+	err = s.AnswerRepo.Insert(ctx, *a1)
+	s.Require().NoError(err)
+
+	a2 := answer.New(uuid.New(), q.Choices[0].ID)
+	err = s.AnswerRepo.Insert(ctx, *a2)
+	s.Require().NoError(err)
+
+	got, err := s.AnswerRepo.GetOne(ctx, answer.WhereIDEq(a1.ID))
+	s.Require().NoError(err)
+	s.Equal(a1.ID.String(), got.ID.String())
 }
 
 func (s *AnswerRepoTestSuite) TestInsert() {
