@@ -82,29 +82,28 @@ func (q *Question) Validate() error {
 	}
 
 	seenChoices := make(map[string]struct{})
-	hasAtLeastOneCorrectChoice := false
+	correctChoices := 0
 	for _, c := range q.Choices {
 		seenChoices[c.Choice] = struct{}{}
 		if c.IsCorrect {
-			hasAtLeastOneCorrectChoice = true
+			correctChoices++
 		}
 	}
 	if len(seenChoices) != len(q.Choices) {
 		return errors.New("choices must be unique")
 	}
-	if !hasAtLeastOneCorrectChoice {
-		return errors.New("at least one choice must be correct")
+	if correctChoices != 1 {
+		return errors.New("one choice must be correct")
 	}
 	return nil
 }
 
 // CorrectChoices returns the choices that are correct.
-func (q *Question) CorrectChoices() []Choice {
-	var choices []Choice
+func (q *Question) CorrectChoice() (*Choice, error) {
 	for _, c := range q.Choices {
 		if c.IsCorrect {
-			choices = append(choices, c)
+			return &c, nil
 		}
 	}
-	return choices
+	return nil, errors.New("no correct choice found")
 }

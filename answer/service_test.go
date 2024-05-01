@@ -56,18 +56,21 @@ func (s *AnswerServiceTestSuite) TearDownTest() {
 func (s *AnswerServiceTestSuite) TestSubmit() {
 	ctx := context.Background()
 
-	q := question.Mock(nil)
+	q := question.Mock(func(q *question.Question) {
+		q.Choices = nil
+		q.WithChoice("Choice 1", false).WithChoice("Choice 2", true)
+		q.MoreInfo = "Test Some More Info"
+	})
 	err := s.QuestionRepo.Insert(ctx, q)
 	s.Require().NoError(err)
 
 	userID := uuid.New()
 	choiceID := q.Choices[0].ID
 
-	gotCorrectChoices, gotMoreInfo, err := s.AnswerService.Submit(ctx, userID, choiceID)
+	resp, err := s.AnswerService.Submit(ctx, userID, choiceID)
 	s.Require().NoError(err)
-
-	s.Equal(q.CorrectChoices(), gotCorrectChoices)
-	s.Equal(q.MoreInfo, gotMoreInfo)
+	s.Equal(q.Choices[1].ID, resp.CorrectChoiceID)
+	s.Equal(q.MoreInfo, resp.MoreInfo)
 
 	answers, err := s.AnswerRepo.GetMany(ctx, answer.WhereUserID(userID))
 	s.Require().NoError(err)
