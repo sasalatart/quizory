@@ -88,6 +88,22 @@ func (s *QuestionRepoTestSuite) TestGetMany() {
 	}
 }
 
+func (s *QuestionRepoTestSuite) TestGetOne() {
+	ctx := context.Background()
+
+	q1 := question.Mock(nil)
+	err := s.Repo.Insert(ctx, q1)
+	s.Require().NoError(err)
+
+	q2 := question.Mock(nil)
+	err = s.Repo.Insert(ctx, q2)
+	s.Require().NoError(err)
+
+	got, err := s.Repo.GetOne(ctx, question.WhereChoiceIDIn(q1.Choices[0].ID))
+	s.Require().NoError(err)
+	s.Equal(q1.ID.String(), got.ID.String())
+}
+
 func (s *QuestionRepoTestSuite) TestInsert() {
 	ctx := context.Background()
 	q := question.Mock(nil)
@@ -109,17 +125,4 @@ func (s *QuestionRepoTestSuite) TestInsert() {
 	for _, c := range q.Choices {
 		s.Contains(got.Choices, c)
 	}
-}
-
-func (s *QuestionRepoTestSuite) TestGetByChoiceID() {
-	ctx := context.Background()
-	q := question.Mock(nil)
-
-	err := s.Repo.Insert(ctx, q)
-	s.Require().NoError(err)
-
-	choiceID := q.Choices[0].ID
-	got, err := s.Repo.GetByChoiceID(ctx, choiceID)
-	s.Require().NoError(err)
-	s.Equal(q.ID.String(), got.ID.String())
 }

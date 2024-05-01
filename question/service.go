@@ -98,7 +98,7 @@ func (s Service) recentlyGenerated(
 ) ([]string, error) {
 	questions, err := s.repo.GetMany(
 		ctx,
-		WhereTopicIs(topic),
+		WhereTopicEq(topic),
 		OrderByCreatedAtDesc(),
 		Limit(amount),
 	)
@@ -114,7 +114,12 @@ func (s Service) recentlyGenerated(
 
 // FromChoice returns the question associated with a given choice.
 func (s Service) FromChoice(ctx context.Context, choiceID uuid.UUID) (*Question, error) {
-	return s.repo.GetByChoiceID(ctx, choiceID)
+	return s.repo.GetOne(ctx, WhereChoiceIDIn(choiceID))
+}
+
+// FromChoices returns the questions associated with a given set of choices.
+func (s Service) FromChoices(ctx context.Context, ids ...uuid.UUID) ([]Question, error) {
+	return s.repo.GetMany(ctx, WhereChoiceIDIn(ids...))
 }
 
 // NextFor returns the next question that a user should answer.
