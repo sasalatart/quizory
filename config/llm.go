@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"time"
 )
 
@@ -18,9 +17,9 @@ type LLMConfig struct {
 }
 
 // NewLLMConfig returns a new LLMConfig instance with values loaded from environment variables.
-func NewLLMConfig() LLMConfig {
+func NewLLMConfig(openAIKey string) LLMConfig {
 	return LLMConfig{
-		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
+		OpenAIKey: openAIKey,
 		Frequency: 5 * time.Second,
 		BatchSize: 5,
 	}

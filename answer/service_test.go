@@ -36,10 +36,6 @@ func (s *AnswerServiceTestSuite) SetupSuite() {
 	s.app = fx.New(
 		fx.NopLogger,
 		testutil.Module,
-		answer.Module,
-		question.Module,
-		fx.Provide(answer.NewRepository),
-		fx.Provide(question.NewRepository),
 		fx.Populate(&s.answerServiceTestSuiteParams),
 	)
 	err := s.app.Start(context.Background())
