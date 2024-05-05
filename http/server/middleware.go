@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -15,6 +16,7 @@ import (
 
 // applyDefaultMiddleware applies default middleware to an app according to a given server config.
 func applyDefaultMiddleware(app *fiber.App, cfg config.ServerConfig) {
+	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(cors.New())
 
