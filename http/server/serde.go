@@ -1,12 +1,12 @@
 package server
 
 import (
+	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/http/oapi"
 	"github.com/sasalatart.com/quizory/question"
 	"github.com/sasalatart.com/quizory/question/enums"
 )
 
-// toUnansweredQuestion converts a question.Question to an oapi.UnansweredQuestion.
 func toUnansweredQuestion(q question.Question) oapi.UnansweredQuestion {
 	choices := make([]oapi.UnansweredChoice, len(q.Choices))
 	for _, c := range q.Choices {
@@ -22,7 +22,6 @@ func toUnansweredQuestion(q question.Question) oapi.UnansweredQuestion {
 	}
 }
 
-// toDifficulty converts a enums.Difficulty to an oapi.Difficulty.
 func toDifficulty(d enums.Difficulty) oapi.Difficulty {
 	switch d {
 	case enums.DifficultyNoviceHistorian:
@@ -36,10 +35,17 @@ func toDifficulty(d enums.Difficulty) oapi.Difficulty {
 	}
 }
 
-// toUnansweredChoice converts a question.Choice to an oapi.UnansweredChoice.
 func toUnansweredChoice(c question.Choice) oapi.UnansweredChoice {
 	return oapi.UnansweredChoice{
 		Id:     c.ID,
 		Choice: c.Choice,
+	}
+}
+
+func toSubmitAnswerResult(r answer.SubmissionResponse) oapi.SubmitAnswerResult {
+	return oapi.SubmitAnswerResult{
+		Id:              r.ID,
+		CorrectChoiceId: r.CorrectChoiceID,
+		MoreInfo:        r.MoreInfo,
 	}
 }

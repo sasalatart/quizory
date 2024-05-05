@@ -27,6 +27,7 @@ require (
 require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/getkin/kin-openapi v0.122.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect

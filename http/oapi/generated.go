@@ -4,6 +4,7 @@
 package oapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -26,10 +28,25 @@ const (
 // Difficulty defines model for Difficulty.
 type Difficulty string
 
+// SubmitAnswerRequest defines model for SubmitAnswerRequest.
+type SubmitAnswerRequest struct {
+	ChoiceId UUID `json:"choiceId"`
+}
+
+// SubmitAnswerResult defines model for SubmitAnswerResult.
+type SubmitAnswerResult struct {
+	CorrectChoiceId UUID   `json:"correctChoiceId"`
+	Id              UUID   `json:"id"`
+	MoreInfo        string `json:"moreInfo"`
+}
+
+// UUID defines model for UUID.
+type UUID = openapi_types.UUID
+
 // UnansweredChoice defines model for UnansweredChoice.
 type UnansweredChoice struct {
-	Choice string             `json:"choice"`
-	Id     openapi_types.UUID `json:"id"`
+	Choice string `json:"choice"`
+	Id     UUID   `json:"id"`
 }
 
 // UnansweredQuestion defines model for UnansweredQuestion.
@@ -37,10 +54,13 @@ type UnansweredQuestion struct {
 	Choices    []UnansweredChoice `json:"choices"`
 	Difficulty Difficulty         `json:"difficulty"`
 	Hint       string             `json:"hint"`
-	Id         openapi_types.UUID `json:"id"`
+	Id         UUID               `json:"id"`
 	Question   string             `json:"question"`
 	Topic      string             `json:"topic"`
 }
+
+// SubmitAnswerJSONRequestBody defines body for SubmitAnswer for application/json ContentType.
+type SubmitAnswerJSONRequestBody = SubmitAnswerRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -115,12 +135,17 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetQuestionsNext request
-	GetQuestionsNext(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNextQuestion request
+	GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SubmitAnswerWithBody request with any body
+	SubmitAnswerWithBody(ctx context.Context, questionId UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SubmitAnswer(ctx context.Context, questionId UUID, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetQuestionsNext(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetQuestionsNextRequest(c.Server)
+func (c *Client) GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNextQuestionRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +156,32 @@ func (c *Client) GetQuestionsNext(ctx context.Context, reqEditors ...RequestEdit
 	return c.Client.Do(req)
 }
 
-// NewGetQuestionsNextRequest generates requests for GetQuestionsNext
-func NewGetQuestionsNextRequest(server string) (*http.Request, error) {
+func (c *Client) SubmitAnswerWithBody(ctx context.Context, questionId UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitAnswerRequestWithBody(c.Server, questionId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubmitAnswer(ctx context.Context, questionId UUID, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitAnswerRequest(c.Server, questionId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewGetNextQuestionRequest generates requests for GetNextQuestion
+func NewGetNextQuestionRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -154,6 +203,53 @@ func NewGetQuestionsNextRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewSubmitAnswerRequest calls the generic SubmitAnswer builder with application/json body
+func NewSubmitAnswerRequest(server string, questionId UUID, body SubmitAnswerJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSubmitAnswerRequestWithBody(server, questionId, "application/json", bodyReader)
+}
+
+// NewSubmitAnswerRequestWithBody generates requests for SubmitAnswer with any type of body
+func NewSubmitAnswerRequestWithBody(server string, questionId UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "questionId", runtime.ParamLocationPath, questionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/questions/%s/answers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -201,18 +297,23 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetQuestionsNextWithResponse request
-	GetQuestionsNextWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetQuestionsNextResponse, error)
+	// GetNextQuestionWithResponse request
+	GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
+
+	// SubmitAnswerWithBodyWithResponse request with any body
+	SubmitAnswerWithBodyWithResponse(ctx context.Context, questionId UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error)
+
+	SubmitAnswerWithResponse(ctx context.Context, questionId UUID, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error)
 }
 
-type GetQuestionsNextResponse struct {
+type GetNextQuestionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *UnansweredQuestion
 }
 
 // Status returns HTTPResponse.Status
-func (r GetQuestionsNextResponse) Status() string {
+func (r GetNextQuestionResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -220,31 +321,70 @@ func (r GetQuestionsNextResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetQuestionsNextResponse) StatusCode() int {
+func (r GetNextQuestionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetQuestionsNextWithResponse request returning *GetQuestionsNextResponse
-func (c *ClientWithResponses) GetQuestionsNextWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetQuestionsNextResponse, error) {
-	rsp, err := c.GetQuestionsNext(ctx, reqEditors...)
+type SubmitAnswerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *SubmitAnswerResult
+}
+
+// Status returns HTTPResponse.Status
+func (r SubmitAnswerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SubmitAnswerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// GetNextQuestionWithResponse request returning *GetNextQuestionResponse
+func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error) {
+	rsp, err := c.GetNextQuestion(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetQuestionsNextResponse(rsp)
+	return ParseGetNextQuestionResponse(rsp)
 }
 
-// ParseGetQuestionsNextResponse parses an HTTP response from a GetQuestionsNextWithResponse call
-func ParseGetQuestionsNextResponse(rsp *http.Response) (*GetQuestionsNextResponse, error) {
+// SubmitAnswerWithBodyWithResponse request with arbitrary body returning *SubmitAnswerResponse
+func (c *ClientWithResponses) SubmitAnswerWithBodyWithResponse(ctx context.Context, questionId UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error) {
+	rsp, err := c.SubmitAnswerWithBody(ctx, questionId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubmitAnswerResponse(rsp)
+}
+
+func (c *ClientWithResponses) SubmitAnswerWithResponse(ctx context.Context, questionId UUID, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error) {
+	rsp, err := c.SubmitAnswer(ctx, questionId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubmitAnswerResponse(rsp)
+}
+
+// ParseGetNextQuestionResponse parses an HTTP response from a GetNextQuestionWithResponse call
+func ParseGetNextQuestionResponse(rsp *http.Response) (*GetNextQuestionResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetQuestionsNextResponse{
+	response := &GetNextQuestionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -262,11 +402,40 @@ func ParseGetQuestionsNextResponse(rsp *http.Response) (*GetQuestionsNextRespons
 	return response, nil
 }
 
+// ParseSubmitAnswerResponse parses an HTTP response from a SubmitAnswerWithResponse call
+func ParseSubmitAnswerResponse(rsp *http.Response) (*SubmitAnswerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SubmitAnswerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SubmitAnswerResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (GET /questions/next)
-	GetQuestionsNext(c *fiber.Ctx) error
+	GetNextQuestion(c *fiber.Ctx) error
+
+	// (POST /questions/{questionId}/answers)
+	SubmitAnswer(c *fiber.Ctx, questionId UUID) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -276,10 +445,26 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc fiber.Handler
 
-// GetQuestionsNext operation middleware
-func (siw *ServerInterfaceWrapper) GetQuestionsNext(c *fiber.Ctx) error {
+// GetNextQuestion operation middleware
+func (siw *ServerInterfaceWrapper) GetNextQuestion(c *fiber.Ctx) error {
 
-	return siw.Handler.GetQuestionsNext(c)
+	return siw.Handler.GetNextQuestion(c)
+}
+
+// SubmitAnswer operation middleware
+func (siw *ServerInterfaceWrapper) SubmitAnswer(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "questionId" -------------
+	var questionId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "questionId", c.Params("questionId"), &questionId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter questionId: %w", err).Error())
+	}
+
+	return siw.Handler.SubmitAnswer(c, questionId)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -303,6 +488,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(m)
 	}
 
-	router.Get(options.BaseURL+"/questions/next", wrapper.GetQuestionsNext)
+	router.Get(options.BaseURL+"/questions/next", wrapper.GetNextQuestion)
+
+	router.Post(options.BaseURL+"/questions/:questionId/answers", wrapper.SubmitAnswer)
 
 }
