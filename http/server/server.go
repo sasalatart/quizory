@@ -6,6 +6,8 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/http/oapi"
 	"github.com/sasalatart.com/quizory/question"
@@ -17,12 +19,18 @@ var _ oapi.ServerInterface = (*Server)(nil)
 type Server struct {
 	*fiber.App
 	cfg             config.ServerConfig
+	answerService   *answer.Service
 	questionService *question.Service
 }
 
-func NewServer(cfg config.ServerConfig, questionService *question.Service) *Server {
+func NewServer(
+	cfg config.ServerConfig,
+	answerService *answer.Service,
+	questionService *question.Service,
+) *Server {
 	return &Server{
 		cfg:             cfg,
+		answerService:   answerService,
 		questionService: questionService,
 	}
 }
@@ -40,8 +48,8 @@ func (s *Server) Start() {
 	}
 }
 
-// GetQuestionsNext returns the next question for a user to answer.
-func (s *Server) GetQuestionsNext(c *fiber.Ctx) error {
+// GetNextQuestion returns the next question for a user to answer.
+func (s *Server) GetNextQuestion(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	userID, err := GetUserID(c)
@@ -57,4 +65,27 @@ func (s *Server) GetQuestionsNext(c *fiber.Ctx) error {
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(toUnansweredQuestion(*q))
+}
+
+// SubmitAnswer registers the choice made by a user for a specific question, and returns the correct
+// choice for it, plus some more info for the user to know how they did.
+func (s *Server) SubmitAnswer(c *fiber.Ctx, questionId uuid.UUID) error {
+	ctx := c.Context()
+
+	req := new(oapi.SubmitAnswerRequest)
+	if err := c.BodyParser(req); err != nil {
+		slog.Error("Failed to parse request body", "error", err)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	userID, err := GetUserID(c)
+	if err != nil {
+		return err
+	}
+
+	submissionResponse, err := s.answerService.Submit(ctx, userID, req.ChoiceId)
+	if err != nil {
+		return err
+	}
+	return c.Status(fiber.StatusCreated).JSON(toSubmitAnswerResult(*submissionResponse))
 }

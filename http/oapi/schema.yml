@@ -6,18 +6,52 @@ info:
 paths:
   /questions/next:
     get:
+      operationId: getNextQuestion
+      description: >
+        Returns the next question that a user should answer.
       responses:
-        '200':
+        200:
           description: The next question that a user should answer.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnansweredQuestion'
-        '204':
+        204:
           description: No more questions to answer.
+
+  /questions/{questionId}/answers:
+    post:
+      operationId: submitAnswer
+      description: >
+        Registers the choice made by a user for a specific question, and returns the correct
+        choice for it, plus some more info for the user to know how they did.
+      parameters:
+        - in: path
+          name: questionId
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+      responses:
+        201:
+          description: The answer was submitted. Includes the ID of the correct choice and more info.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitAnswerResult'
 
 components:
   schemas:
+    UUID:
+      type: string
+      format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+
     UnansweredQuestion:
       type: object
       required:
@@ -29,18 +63,16 @@ components:
         - choices
       properties:
         id:
-          type: string
-          format: uuid
-          example: 123e4567-e89b-12d3-a456-426614174000""
+          $ref: '#/components/schemas/UUID'
         topic:
           type: string
-          example: crusades
+          example: ancient greece
         question:
           type: string
-          example: Who was the pope during the first crusade?
+          example: In Ancient Greece, what was the Agora?
         hint:
           type: string
-          example: This pope was known for his role in the Investiture Controversy.
+          example: It was not just a place for shopping but also for democracy and discussion.
         difficulty:
           $ref: '#/components/schemas/Difficulty'
         choices:
@@ -63,9 +95,34 @@ components:
         - choice
       properties:
         id:
-          type: string
-          format: uuid
-          example: 123e4567-e89b-12d3-a456-426614174000
+          $ref: '#/components/schemas/UUID'
         choice:
           type: string
-          example: Urban II
+          example: A marketplace and public square
+
+    SubmitAnswerRequest:
+      type: object
+      required:
+        - choiceId
+      properties:
+        choiceId:
+          $ref: '#/components/schemas/UUID'
+
+    SubmitAnswerResult:
+      type: object
+      required:
+        - id
+        - correctChoiceId
+        - moreInfo
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        correctChoiceId:
+          $ref: '#/components/schemas/UUID'
+        moreInfo:
+          type: string
+          example: >
+            The Agora was central to ancient Greek city-states, notably Athens. This area served as
+            the heart of public life, where citizens gathered not only to buy and sell goods but
+            also to discuss politics, philosophy, and current events, highlighting the deeply
+            democratic and societal nature of spaces in ancient Greek urban planning.

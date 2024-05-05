@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/http/oapi"
 	"github.com/sasalatart.com/quizory/http/server"
 	"github.com/sasalatart.com/quizory/question"
@@ -28,6 +29,9 @@ type ServerTestSuite struct {
 	suite.Suite
 	serverTestSuiteParams
 	app *fx.App
+
+	q1 question.Question
+	q2 question.Question
 }
 
 func TestServer(t *testing.T) {
@@ -65,29 +69,66 @@ func (s *ServerTestSuite) TearDownTest() {
 
 func (s *ServerTestSuite) TestIntegration() {
 	ctx := context.Background()
-	res, err := s.Client.GetQuestionsNext(ctx)
+
+	s.mustNotHaveNextQuestion(ctx)
+
+	s.seedQuestions(ctx)
+
+	s.mustGetNextQuestion(ctx, s.q1)
+	s.mustSubmitAnswer(ctx, s.q1, s.q1.Choices[0].ID)
+
+	s.mustGetNextQuestion(ctx, s.q2)
+	s.mustSubmitAnswer(ctx, s.q2, s.q2.Choices[1].ID)
+
+	s.mustNotHaveNextQuestion(ctx)
+}
+
+func (s *ServerTestSuite) mustNotHaveNextQuestion(ctx context.Context) {
+	s.T().Helper()
+	res, err := s.Client.GetNextQuestion(ctx)
 	s.Require().NoError(err)
-	s.Equal(http.StatusNoContent, res.StatusCode)
+	s.Require().Equal(http.StatusNoContent, res.StatusCode)
+}
 
-	q1 := question.Mock(func(q *question.Question) {
-		q.Question = "When was Napoleon born?"
-		q.Choices = nil
-		q.WithChoice("1769", true).WithChoice("1770", false)
-	})
-	s.Require().NoError(s.QuestionRepo.Insert(ctx, q1))
-
-	q2 := question.Mock(func(q *question.Question) {
-		q.Question = "When did Napoleon die?"
-		q.Choices = nil
-		q.WithChoice("1821", true).WithChoice("1870", false)
-	})
-	s.Require().NoError(s.QuestionRepo.Insert(ctx, q2))
-
-	res, err = s.Client.GetQuestionsNext(ctx)
+func (s *ServerTestSuite) mustGetNextQuestion(ctx context.Context, wantQuestion question.Question) {
+	s.T().Helper()
+	res, err := s.Client.GetNextQuestion(ctx)
 	s.Require().NoError(err)
-	s.Equal(http.StatusOK, res.StatusCode)
+	s.Require().Equal(http.StatusOK, res.StatusCode)
 	got := parseResponse[oapi.UnansweredQuestion](s.T(), res)
-	s.Equal(q1.ID.String(), got.Id.String())
+	s.Equal(wantQuestion.ID.String(), got.Id.String())
+}
+
+func (s *ServerTestSuite) mustSubmitAnswer(
+	ctx context.Context,
+	q question.Question,
+	selectedChoice uuid.UUID,
+) {
+	s.T().Helper()
+
+	correctChoice, err := q.CorrectChoice()
+	s.Require().NoError(err)
+
+	res, err := s.Client.SubmitAnswer(ctx, q.ID, oapi.SubmitAnswerJSONRequestBody{
+		ChoiceId: selectedChoice,
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(http.StatusCreated, res.StatusCode)
+	got := parseResponse[oapi.SubmitAnswerResult](s.T(), res)
+	s.Equal(correctChoice.ID.String(), got.CorrectChoiceId.String())
+	s.Equal(q.MoreInfo, got.MoreInfo)
+}
+
+func (s *ServerTestSuite) seedQuestions(ctx context.Context) {
+	s.q1 = question.Mock(func(q *question.Question) {
+		q.Question = "Question 1"
+	})
+	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.q1))
+
+	s.q2 = question.Mock(func(q *question.Question) {
+		q.Question = "Question 2"
+	})
+	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.q2))
 }
 
 func parseResponse[T any](t *testing.T, res *http.Response) T {

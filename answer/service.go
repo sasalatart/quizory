@@ -22,18 +22,18 @@ func NewService(repo *Repository, questionService *question.Service) *Service {
 	}
 }
 
-type submissionResponse struct {
+type SubmissionResponse struct {
 	ID              uuid.UUID
 	CorrectChoiceID uuid.UUID
 	MoreInfo        string
 }
 
 // Submit registers the choice made by a user for a specific question, and returns the correct
-// choices for it, plus some more info for the user to know how they did.
+// choice for it, plus some more info for the user to know how they did.
 func (s Service) Submit(
 	ctx context.Context,
 	userID, choiceID uuid.UUID,
-) (*submissionResponse, error) {
+) (*SubmissionResponse, error) {
 	q, err := s.questionService.FromChoice(ctx, choiceID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "getting question for choice %s", choiceID)
@@ -49,7 +49,7 @@ func (s Service) Submit(
 		return nil, errors.Wrapf(err, "getting correct choice for question %s", q.ID)
 	}
 
-	return &submissionResponse{
+	return &SubmissionResponse{
 		ID:              a.ID,
 		CorrectChoiceID: correctChoice.ID,
 		MoreInfo:        q.MoreInfo,

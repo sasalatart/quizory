@@ -16,7 +16,10 @@ import (
 
 // applyDefaultMiddleware applies default middleware to an app according to a given server config.
 func applyDefaultMiddleware(app *fiber.App, cfg config.ServerConfig) {
-	app.Use(recover.New())
+	app.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+	}))
+
 	app.Use(helmet.New())
 	app.Use(cors.New())
 
