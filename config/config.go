@@ -32,15 +32,28 @@ func mustLoadEnvVars() {
 type Config struct {
 	fx.Out
 
-	DB  DBConfig
-	LLM LLMConfig
+	DB     DBConfig
+	LLM    LLMConfig
+	Server ServerConfig
 }
 
 // NewConfig returns a new Config instance with values loaded from environment variables.
 func NewConfig() Config {
+	openAIKey := os.Getenv("OPENAI_API_KEY")
+
 	return Config{
-		DB:  NewDBConfig("postgres"),
-		LLM: NewLLMConfig(),
+		DB:     NewDBConfig("postgres"),
+		LLM:    NewLLMConfig(openAIKey),
+		Server: NewServerConfig("localhost", 8080),
+	}
+}
+
+// NewTestConfig returns a Config instance intended for testing.
+func NewTestConfig() Config {
+	return Config{
+		DB:     NewDBConfig("postgres"),
+		LLM:    NewLLMConfig("test"),
+		Server: NewServerConfig("localhost", 8081),
 	}
 }
 

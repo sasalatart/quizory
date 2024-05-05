@@ -1,2 +1,3 @@
 /db/model/*.go linguist-generated=true
+/http/oapi/generated.go linguist-generated=true
 /**/*_enumer.go linguist-generated=true

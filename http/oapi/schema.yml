@@ -1,0 +1,71 @@
+openapi: '3.0.0'
+info:
+  version: 1.0.0
+  title: AI Generated Questions
+
+paths:
+  /questions/next:
+    get:
+      responses:
+        '200':
+          description: The next question that a user should answer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnansweredQuestion'
+        '204':
+          description: No more questions to answer.
+
+components:
+  schemas:
+    UnansweredQuestion:
+      type: object
+      required:
+        - id
+        - topic
+        - question
+        - hint
+        - difficulty
+        - choices
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000""
+        topic:
+          type: string
+          example: crusades
+        question:
+          type: string
+          example: Who was the pope during the first crusade?
+        hint:
+          type: string
+          example: This pope was known for his role in the Investiture Controversy.
+        difficulty:
+          $ref: '#/components/schemas/Difficulty'
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnansweredChoice'
+
+    Difficulty:
+      type: string
+      enum:
+        - DifficultyNoviceHistorian
+        - DifficultyAvidHistorian
+        - DifficultyHistoryScholar
+      example: DifficultyNoviceHistorian
+
+    UnansweredChoice:
+      type: object
+      required:
+        - id
+        - choice
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        choice:
+          type: string
+          example: Urban II
