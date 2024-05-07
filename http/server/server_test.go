@@ -109,7 +109,7 @@ func (s *ServerTestSuite) mustSubmitAnswer(
 	correctChoice, err := q.CorrectChoice()
 	s.Require().NoError(err)
 
-	res, err := s.Client.SubmitAnswer(ctx, q.ID, oapi.SubmitAnswerJSONRequestBody{
+	res, err := s.Client.SubmitAnswer(ctx, oapi.SubmitAnswerJSONRequestBody{
 		ChoiceId: selectedChoice,
 	})
 	s.Require().NoError(err)
