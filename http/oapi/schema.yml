@@ -19,18 +19,12 @@ paths:
         204:
           description: No more questions to answer.
 
-  /questions/{questionId}/answers:
+  /answers:
     post:
       operationId: submitAnswer
       description: >
         Registers the choice made by a user for a specific question, and returns the correct
         choice for it, plus some more info for the user to know how they did.
-      parameters:
-        - in: path
-          name: questionId
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
       requestBody:
         required: true
         content:

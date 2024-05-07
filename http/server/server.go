@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/http/oapi"
@@ -69,7 +68,7 @@ func (s *Server) GetNextQuestion(c *fiber.Ctx) error {
 
 // SubmitAnswer registers the choice made by a user for a specific question, and returns the correct
 // choice for it, plus some more info for the user to know how they did.
-func (s *Server) SubmitAnswer(c *fiber.Ctx, questionId uuid.UUID) error {
+func (s *Server) SubmitAnswer(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	req := new(oapi.SubmitAnswerRequest)
