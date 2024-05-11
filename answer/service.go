@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sasalatart.com/quizory/pagination"
 	"github.com/sasalatart.com/quizory/question"
 )
 
@@ -58,16 +59,24 @@ func (s Service) Submit(
 
 // LogItem represents a previous attempt at answering a question.
 type LogItem struct {
-	Question     question.Question
-	ChoiceID     uuid.UUID
-	IsSuccessful bool
+	ID       uuid.UUID
+	Question question.Question
+	ChoiceID uuid.UUID
+}
+
+// IsSuccessful returns whether the answer was correct or not.
+func (l LogItem) IsSuccessful() (bool, error) {
+	correctChoice, err := l.Question.CorrectChoice()
+	if err != nil {
+		return false, errors.Wrapf(err, "getting correct choice for question %s", l.Question.ID)
+	}
+	return l.ChoiceID == correctChoice.ID, nil
 }
 
 // LogRequest has the parameters for retrieving a user's history of answers.
 type LogRequest struct {
-	UserID  uuid.UUID
-	Page    int
-	PerPage int
+	UserID     uuid.UUID
+	Pagination pagination.Pagination
 }
 
 // LogFor returns the paginated history of answers for a user.
@@ -76,8 +85,8 @@ func (s Service) LogFor(ctx context.Context, req LogRequest) ([]LogItem, error) 
 		ctx,
 		WhereUserIDEq(req.UserID),
 		OrderByCreatedAtDesc(),
-		Offset(req.Page*req.PerPage),
-		Limit(req.PerPage),
+		Offset(req.Pagination.Offset()),
+		Limit(req.Pagination.PageSize),
 	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "getting answers for %+v", req)
@@ -123,15 +132,10 @@ func (s Service) composeLog(answers []Answer, questions []question.Question) ([]
 			return nil, errors.Wrapf(err, "finding question for answer %s", a.ID)
 		}
 
-		correctChoice, err := q.CorrectChoice()
-		if err != nil {
-			return nil, errors.Wrapf(err, "getting correct choice for question %s", q.ID)
-		}
-
 		result = append(result, LogItem{
-			Question:     *q,
-			ChoiceID:     a.ChoiceID,
-			IsSuccessful: a.ChoiceID == correctChoice.ID,
+			ID:       a.ID,
+			Question: *q,
+			ChoiceID: a.ChoiceID,
 		})
 	}
 	return result, nil
