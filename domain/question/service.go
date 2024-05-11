@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sasalatart.com/quizory/domain/question/enums"
+	"github.com/sasalatart.com/quizory/domain/question/internal/ai"
 	"github.com/sasalatart.com/quizory/llm"
-	"github.com/sasalatart.com/quizory/question/enums"
-	"github.com/sasalatart.com/quizory/question/internal/ai"
 )
 
 // ErrNoQuestionsLeft is returned when there are no questions left to be answered for a user.

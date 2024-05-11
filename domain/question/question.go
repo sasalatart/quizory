@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sasalatart.com/quizory/question/enums"
+	"github.com/sasalatart.com/quizory/domain/question/enums"
 )
 
 // Question represents a question about history that users need to answer.
