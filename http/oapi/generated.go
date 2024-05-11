@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -24,8 +25,33 @@ const (
 	DifficultyNoviceHistorian Difficulty = "DifficultyNoviceHistorian"
 )
 
+// AnswersLogItem A past attempt from a user to answer a question.
+type AnswersLogItem struct {
+	ChoiceId UUID     `json:"choiceId"`
+	Id       UUID     `json:"id"`
+	Question Question `json:"question"`
+}
+
+// Choice defines model for Choice.
+type Choice struct {
+	Choice    string `json:"choice"`
+	Id        UUID   `json:"id"`
+	IsCorrect bool   `json:"isCorrect"`
+}
+
 // Difficulty defines model for Difficulty.
 type Difficulty string
+
+// Question defines model for Question.
+type Question struct {
+	Choices    []Choice   `json:"choices"`
+	Difficulty Difficulty `json:"difficulty"`
+	Hint       string     `json:"hint"`
+	Id         UUID       `json:"id"`
+	MoreInfo   string     `json:"moreInfo"`
+	Question   string     `json:"question"`
+	Topic      string     `json:"topic"`
+}
 
 // SubmitAnswerRequest defines model for SubmitAnswerRequest.
 type SubmitAnswerRequest struct {
@@ -56,6 +82,15 @@ type UnansweredQuestion struct {
 	Id         UUID               `json:"id"`
 	Question   string             `json:"question"`
 	Topic      string             `json:"topic"`
+}
+
+// GetAnswersLogParams defines parameters for GetAnswersLog.
+type GetAnswersLogParams struct {
+	// Page The page number to retrieve (index starts at 0).
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize The number of items per page.
+	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
 // SubmitAnswerJSONRequestBody defines body for SubmitAnswer for application/json ContentType.
@@ -141,6 +176,9 @@ type ClientInterface interface {
 
 	// GetNextQuestion request
 	GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAnswersLog request
+	GetAnswersLog(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) SubmitAnswerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -169,6 +207,18 @@ func (c *Client) SubmitAnswer(ctx context.Context, body SubmitAnswerJSONRequestB
 
 func (c *Client) GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNextQuestionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAnswersLog(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAnswersLogRequest(c.Server, userId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -246,6 +296,78 @@ func NewGetNextQuestionRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetAnswersLogRequest generates requests for GetAnswersLog
+func NewGetAnswersLogRequest(server string, userId UUID, params *GetAnswersLogParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userId", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users/%s/answers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -296,6 +418,9 @@ type ClientWithResponsesInterface interface {
 
 	// GetNextQuestionWithResponse request
 	GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
+
+	// GetAnswersLogWithResponse request
+	GetAnswersLogWithResponse(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error)
 }
 
 type SubmitAnswerResponse struct {
@@ -342,6 +467,28 @@ func (r GetNextQuestionResponse) StatusCode() int {
 	return 0
 }
 
+type GetAnswersLogResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]AnswersLogItem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAnswersLogResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAnswersLogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // SubmitAnswerWithBodyWithResponse request with arbitrary body returning *SubmitAnswerResponse
 func (c *ClientWithResponses) SubmitAnswerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error) {
 	rsp, err := c.SubmitAnswerWithBody(ctx, contentType, body, reqEditors...)
@@ -366,6 +513,15 @@ func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, r
 		return nil, err
 	}
 	return ParseGetNextQuestionResponse(rsp)
+}
+
+// GetAnswersLogWithResponse request returning *GetAnswersLogResponse
+func (c *ClientWithResponses) GetAnswersLogWithResponse(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error) {
+	rsp, err := c.GetAnswersLog(ctx, userId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAnswersLogResponse(rsp)
 }
 
 // ParseSubmitAnswerResponse parses an HTTP response from a SubmitAnswerWithResponse call
@@ -420,6 +576,32 @@ func ParseGetNextQuestionResponse(rsp *http.Response) (*GetNextQuestionResponse,
 	return response, nil
 }
 
+// ParseGetAnswersLogResponse parses an HTTP response from a GetAnswersLogWithResponse call
+func ParseGetAnswersLogResponse(rsp *http.Response) (*GetAnswersLogResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAnswersLogResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AnswersLogItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
@@ -428,6 +610,9 @@ type ServerInterface interface {
 
 	// (GET /questions/next)
 	GetNextQuestion(c *fiber.Ctx) error
+
+	// (GET /users/{userId}/answers)
+	GetAnswersLog(c *fiber.Ctx, userId UUID, params GetAnswersLogParams) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -447,6 +632,45 @@ func (siw *ServerInterfaceWrapper) SubmitAnswer(c *fiber.Ctx) error {
 func (siw *ServerInterfaceWrapper) GetNextQuestion(c *fiber.Ctx) error {
 
 	return siw.Handler.GetNextQuestion(c)
+}
+
+// GetAnswersLog operation middleware
+func (siw *ServerInterfaceWrapper) GetAnswersLog(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", c.Params("userId"), &userId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter userId: %w", err).Error())
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAnswersLogParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", query, &params.Page)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter page: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "pageSize", query, &params.PageSize)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+	}
+
+	return siw.Handler.GetAnswersLog(c, userId, params)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -473,5 +697,7 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Post(options.BaseURL+"/answers", wrapper.SubmitAnswer)
 
 	router.Get(options.BaseURL+"/questions/next", wrapper.GetNextQuestion)
+
+	router.Get(options.BaseURL+"/users/:userId/answers", wrapper.GetAnswersLog)
 
 }

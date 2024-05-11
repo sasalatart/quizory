@@ -22,14 +22,16 @@ var Module = fx.Module(
 var TestModule = fx.Module(
 	"test-server",
 	fx.Provide(NewServer),
-	fx.Provide(newTestClient),
+	fx.Provide(newTestClientFactory),
 )
 
-func newTestClient(cfg config.ServerConfig) *oapi.ClientWithResponses {
-	userID := uuid.New()
-	client, err := oapi.NewClientWithResponses(
-		fmt.Sprintf("http://%s", cfg.Address()),
-		func(c *oapi.Client) error {
+// TestClientFactory is a factory function that creates a new oapi.ClientWithResponses for a given
+// user ID.
+type TestClientFactory func(userID uuid.UUID) (*oapi.ClientWithResponses, error)
+
+func newTestClientFactory(cfg config.ServerConfig) TestClientFactory {
+	return func(userID uuid.UUID) (*oapi.ClientWithResponses, error) {
+		authUserClientOption := func(c *oapi.Client) error {
 			c.RequestEditors = append(
 				c.RequestEditors,
 				func(ctx context.Context, req *http.Request) error {
@@ -40,12 +42,13 @@ func newTestClient(cfg config.ServerConfig) *oapi.ClientWithResponses {
 					return nil
 				})
 			return nil
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
+		}
+
+		return oapi.NewClientWithResponses(
+			fmt.Sprintf("http://%s", cfg.Address()),
+			authUserClientOption,
+		)
 	}
-	return client
 }
 
 func newTestJWT(userID uuid.UUID, secret string) string {

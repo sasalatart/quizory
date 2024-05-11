@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/answer"
+	"github.com/sasalatart.com/quizory/pagination"
 	"github.com/sasalatart.com/quizory/question"
 	"github.com/sasalatart.com/quizory/testutil"
 	"github.com/stretchr/testify/suite"
@@ -107,6 +108,8 @@ func (s *AnswerServiceTestSuite) TestLogFor() {
 	mustSubmitAnswer(userID, q2.Choices[1].ID)
 	mustSubmitAnswer(userID, q3.Choices[0].ID)
 
+	toPtr := func(i int) *int { return &i }
+
 	testCases := []struct {
 		name string
 		req  answer.LogRequest
@@ -114,50 +117,61 @@ func (s *AnswerServiceTestSuite) TestLogFor() {
 	}{
 		{
 			name: "First Page Full",
-			req:  answer.LogRequest{UserID: userID, Page: 0, PerPage: 2},
+			req: answer.LogRequest{
+				UserID:     userID,
+				Pagination: pagination.New(toPtr(0), toPtr(2)),
+			},
 			want: []answer.LogItem{
 				{
-					ChoiceID:     q3.Choices[0].ID,
-					Question:     q3,
-					IsSuccessful: false,
+					ChoiceID: q3.Choices[0].ID,
+					Question: q3,
 				},
 				{
-					ChoiceID:     q2.Choices[1].ID,
-					Question:     q2,
-					IsSuccessful: true,
+					ChoiceID: q2.Choices[1].ID,
+					Question: q2,
 				},
 			},
 		},
 		{
 			name: "Second Page With Some Results",
-			req:  answer.LogRequest{UserID: userID, Page: 1, PerPage: 2},
+			req: answer.LogRequest{
+				UserID:     userID,
+				Pagination: pagination.New(toPtr(1), toPtr(2)),
+			},
 			want: []answer.LogItem{
 				{
-					ChoiceID:     q1.Choices[0].ID,
-					Question:     q1,
-					IsSuccessful: false,
+					ChoiceID: q1.Choices[0].ID,
+					Question: q1,
 				},
 			},
 		},
 		{
 			name: "Third Page Empty",
-			req:  answer.LogRequest{UserID: userID, Page: 2, PerPage: 2},
+			req: answer.LogRequest{
+				UserID:     userID,
+				Pagination: pagination.New(toPtr(2), toPtr(2)),
+			},
 			want: []answer.LogItem{},
 		},
 		{
 			name: "Another User's Log",
-			req:  answer.LogRequest{UserID: anotherUserID, Page: 0, PerPage: 2},
+			req: answer.LogRequest{
+				UserID:     anotherUserID,
+				Pagination: pagination.New(toPtr(0), toPtr(2)),
+			},
 			want: []answer.LogItem{
 				{
-					ChoiceID:     q1.Choices[0].ID,
-					Question:     q1,
-					IsSuccessful: false,
+					ChoiceID: q1.Choices[0].ID,
+					Question: q1,
 				},
 			},
 		},
 		{
 			name: "Without Any Answers",
-			req:  answer.LogRequest{UserID: uuid.New(), Page: 0, PerPage: 2},
+			req: answer.LogRequest{
+				UserID:     uuid.New(),
+				Pagination: pagination.New(toPtr(0), toPtr(2)),
+			},
 			want: []answer.LogItem{},
 		},
 	}
@@ -166,7 +180,13 @@ func (s *AnswerServiceTestSuite) TestLogFor() {
 			got, err := s.AnswerService.LogFor(ctx, tt.req)
 			s.Require().NoError(err)
 			s.Require().Len(got, len(tt.want))
+
 			for i, want := range tt.want {
+				s.NotEqual(
+					uuid.Nil.String(),
+					got[i].ID.String(),
+					"ID at index %d", i,
+				)
 				s.Equalf(
 					want.ChoiceID.String(),
 					got[i].ChoiceID.String(),
@@ -176,11 +196,6 @@ func (s *AnswerServiceTestSuite) TestLogFor() {
 					want.Question.ID.String(),
 					got[i].Question.ID.String(),
 					"Question ID at index %d", i,
-				)
-				s.Equal(
-					want.IsSuccessful,
-					got[i].IsSuccessful,
-					"IsSuccessful at index %d", i,
 				)
 			}
 		})

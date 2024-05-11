@@ -6,9 +6,11 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/http/oapi"
+	"github.com/sasalatart.com/quizory/pagination"
 	"github.com/sasalatart.com/quizory/question"
 )
 
@@ -61,6 +63,7 @@ func (s *Server) GetNextQuestion(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 	if err != nil {
+		slog.Error("Failed to get next question", "error", err)
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(toUnansweredQuestion(*q))
@@ -74,7 +77,7 @@ func (s *Server) SubmitAnswer(c *fiber.Ctx) error {
 	req := new(oapi.SubmitAnswerRequest)
 	if err := c.BodyParser(req); err != nil {
 		slog.Error("Failed to parse request body", "error", err)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
 	userID, err := GetUserID(c)
@@ -84,7 +87,38 @@ func (s *Server) SubmitAnswer(c *fiber.Ctx) error {
 
 	submissionResponse, err := s.answerService.Submit(ctx, userID, req.ChoiceId)
 	if err != nil {
+		slog.Error("Failed to submit answer", "error", err)
 		return err
 	}
 	return c.Status(fiber.StatusCreated).JSON(toSubmitAnswerResult(*submissionResponse))
+}
+
+// GetAnswersLog returns a list of previous attempts at answering questions from the specified user.
+func (s *Server) GetAnswersLog(
+	c *fiber.Ctx,
+	userID uuid.UUID,
+	params oapi.GetAnswersLogParams,
+) error {
+	ctx := c.Context()
+
+	p := pagination.New(params.Page, params.PageSize)
+	if err := p.Validate(); err != nil {
+		slog.Error("Invalid pagination", "error", err)
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid pagination")
+	}
+
+	logItems, err := s.answerService.LogFor(ctx, answer.LogRequest{
+		UserID:     userID,
+		Pagination: p,
+	})
+	if err != nil {
+		slog.Error("Failed to get answers log", "error", err)
+		return err
+	}
+
+	var result []oapi.AnswersLogItem
+	for _, logItem := range logItems {
+		result = append(result, toAnswersLogItem(logItem))
+	}
+	return c.Status(fiber.StatusOK).JSON(result)
 }

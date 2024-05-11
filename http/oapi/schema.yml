@@ -7,8 +7,7 @@ paths:
   /questions/next:
     get:
       operationId: getNextQuestion
-      description: >
-        Returns the next question that a user should answer.
+      description: Returns the next question that a user should answer.
       responses:
         200:
           description: The next question that a user should answer.
@@ -39,12 +38,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubmitAnswerResult'
 
+  /users/{userId}/answers:
+    get:
+      operationId: getAnswersLog
+      description: Returns the paginated log of all answers submitted by the user.
+      parameters:
+        - name: userId
+          in: path
+          description: The ID of the user whose answers are being retrieved.
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: page
+          in: query
+          description: The page number to retrieve (index starts at 0).
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 0
+        - name: pageSize
+          in: query
+          description: The number of items per page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 25
+      responses:
+        200:
+          description: The log of all answers submitted by the user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnswersLogItem'
+
 components:
   schemas:
     UUID:
       type: string
       format: uuid
       example: 123e4567-e89b-12d3-a456-426614174000
+
+    Question:
+      type: object
+      required:
+        - id
+        - topic
+        - question
+        - hint
+        - moreInfo
+        - difficulty
+        - choices
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        topic:
+          type: string
+          example: ancient greece
+        question:
+          type: string
+          example: In Ancient Greece, what was the Agora?
+        hint:
+          type: string
+          example: It was not just a place for shopping but also for democracy and discussion.
+        moreInfo:
+          type: string
+          example: >
+            The Agora was central to ancient Greek city-states, notably Athens. This area served as
+            the heart of public life, where citizens gathered not only to buy and sell goods but
+            also to discuss politics, philosophy, and current events, highlighting the deeply
+            democratic and societal nature of spaces in ancient Greek urban planning.
+        difficulty:
+          $ref: '#/components/schemas/Difficulty'
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Choice'
+
+    Choice:
+      type: object
+      required:
+        - id
+        - choice
+        - isCorrect
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        choice:
+          type: string
+          example: A marketplace and public square
+        isCorrect:
+          type: boolean
+          example: true
 
     UnansweredQuestion:
       type: object
@@ -120,3 +208,18 @@ components:
             the heart of public life, where citizens gathered not only to buy and sell goods but
             also to discuss politics, philosophy, and current events, highlighting the deeply
             democratic and societal nature of spaces in ancient Greek urban planning.
+
+    AnswersLogItem:
+      type: object
+      description: A past attempt from a user to answer a question.
+      required:
+        - id
+        - question
+        - choiceId
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        question:
+          $ref: '#/components/schemas/Question'
+        choiceId:
+          $ref: '#/components/schemas/UUID'

@@ -7,6 +7,30 @@ import (
 	"github.com/sasalatart.com/quizory/question/enums"
 )
 
+func toQuestion(q question.Question) oapi.Question {
+	choices := make([]oapi.Choice, len(q.Choices))
+	for _, c := range q.Choices {
+		choices = append(choices, toChoice(c))
+	}
+	return oapi.Question{
+		Id:         q.ID,
+		Topic:      q.Topic.String(),
+		Question:   q.Question,
+		Hint:       q.Hint,
+		MoreInfo:   q.MoreInfo,
+		Difficulty: toDifficulty(q.Difficulty),
+		Choices:    choices,
+	}
+}
+
+func toChoice(c question.Choice) oapi.Choice {
+	return oapi.Choice{
+		Id:        c.ID,
+		Choice:    c.Choice,
+		IsCorrect: c.IsCorrect,
+	}
+}
+
 func toUnansweredQuestion(q question.Question) oapi.UnansweredQuestion {
 	choices := make([]oapi.UnansweredChoice, len(q.Choices))
 	for _, c := range q.Choices {
@@ -47,5 +71,13 @@ func toSubmitAnswerResult(r answer.SubmissionResponse) oapi.SubmitAnswerResult {
 		Id:              r.ID,
 		CorrectChoiceId: r.CorrectChoiceID,
 		MoreInfo:        r.MoreInfo,
+	}
+}
+
+func toAnswersLogItem(l answer.LogItem) oapi.AnswersLogItem {
+	return oapi.AnswersLogItem{
+		Id:       l.ID,
+		Question: toQuestion(l.Question),
+		ChoiceId: l.ChoiceID,
 	}
 }
