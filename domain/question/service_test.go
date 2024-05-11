@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sasalatart.com/quizory/answer"
+	"github.com/sasalatart.com/quizory/domain/answer"
+	"github.com/sasalatart.com/quizory/domain/question"
 	"github.com/sasalatart.com/quizory/llm"
-	"github.com/sasalatart.com/quizory/question"
 	"github.com/sasalatart.com/quizory/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

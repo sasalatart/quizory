@@ -1,12 +1,12 @@
 package testutil
 
 import (
-	"github.com/sasalatart.com/quizory/answer"
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db"
+	"github.com/sasalatart.com/quizory/domain/answer"
+	"github.com/sasalatart.com/quizory/domain/question"
 	"github.com/sasalatart.com/quizory/http/server"
 	"github.com/sasalatart.com/quizory/llm"
-	"github.com/sasalatart.com/quizory/question"
 	"go.uber.org/fx"
 )
 

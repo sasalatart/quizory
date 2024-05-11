@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/sasalatart.com/quizory/question/enums"
+	"github.com/sasalatart.com/quizory/domain/question/enums"
 )
 
 // Mock creates a new random Question for testing purposes with the specified overrides.
