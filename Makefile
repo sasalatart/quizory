@@ -25,10 +25,11 @@ codegen:
 	$(GOCMD) run ./cmd/codegen
 
 build:
-	$(GOBUILD) -o $(BINARIES_DIR)/aigen -v ./cmd/aigen
+	$(GOBUILD) -o $(BINARIES_DIR)/aigen -v ./cmd/aigen && \
+	$(GOBUILD) -o $(BINARIES_DIR)/api -v ./cmd/api
 
 clean:
-	rm -f $(BINARIES_DIR)
+	rm -rf $(BINARIES_DIR)
 
 test:
 	$(GOTEST) ./...
