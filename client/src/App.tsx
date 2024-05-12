@@ -1,27 +1,15 @@
-import { useContext } from 'react';
-import { SessionContext, SessionProvider } from './auth/session-provider';
-import { Login } from './auth';
+import { EnsureLoggedIn } from './auth';
+import { QueryClientProvider, SessionProvider } from './providers';
+import { Questions } from './questions';
 
 export default function App() {
   return (
     <SessionProvider>
-      <Landing />
+      <QueryClientProvider>
+        <EnsureLoggedIn>
+          <Questions />
+        </EnsureLoggedIn>
+      </QueryClientProvider>
     </SessionProvider>
-  );
-}
-
-function Landing(): JSX.Element {
-  const { session, logout } = useContext(SessionContext);
-
-  if (!session) {
-    return <Login />;
-  }
-
-  return (
-    <div>
-      <button onClick={logout} className="btn btn-outline btn-primary">
-        Sign Out
-      </button>
-    </div>
   );
 }

@@ -2,6 +2,8 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 import { supabase } from '../supabase';
+import { PropsWithChildren, useContext } from 'react';
+import { SessionContext } from '../providers/session-provider';
 
 export function Login(): JSX.Element {
   return (
@@ -12,4 +14,9 @@ export function Login(): JSX.Element {
       onlyThirdPartyProviders
     />
   );
+}
+
+export function EnsureLoggedIn({ children }: PropsWithChildren): JSX.Element {
+  const { session } = useContext(SessionContext);
+  return session ? <>{children}</> : <Login />;
 }

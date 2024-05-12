@@ -1,0 +1,13 @@
+apis/DefaultApi.ts
+apis/index.ts
+index.ts
+models/AnswersLogItem.ts
+models/Choice.ts
+models/Difficulty.ts
+models/Question.ts
+models/SubmitAnswerRequest.ts
+models/SubmitAnswerResult.ts
+models/UnansweredChoice.ts
+models/UnansweredQuestion.ts
+models/index.ts
+runtime.ts
