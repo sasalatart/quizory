@@ -8,7 +8,7 @@ import (
 )
 
 func toQuestion(q question.Question) oapi.Question {
-	choices := make([]oapi.Choice, len(q.Choices))
+	choices := make([]oapi.Choice, 0, len(q.Choices))
 	for _, c := range q.Choices {
 		choices = append(choices, toChoice(c))
 	}
@@ -32,7 +32,7 @@ func toChoice(c question.Choice) oapi.Choice {
 }
 
 func toUnansweredQuestion(q question.Question) oapi.UnansweredQuestion {
-	choices := make([]oapi.UnansweredChoice, len(q.Choices))
+	choices := make([]oapi.UnansweredChoice, 0, len(q.Choices))
 	for _, c := range q.Choices {
 		choices = append(choices, toUnansweredChoice(c))
 	}
