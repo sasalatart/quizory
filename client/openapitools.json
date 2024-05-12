@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.5.0",
+    "generators": {
+      "api": {
+        "inputSpec": "../http/oapi/schema.yml",
+        "output": "src/generated/api",
+        "generatorName": "typescript-fetch"
+      }
+    }
+  }
+}
