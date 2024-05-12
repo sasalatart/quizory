@@ -141,6 +141,7 @@ func (s *ServerTestSuite) mustGetNextQuestion(
 	s.Require().Equal(http.StatusOK, res.StatusCode)
 	got := parseResponse[oapi.UnansweredQuestion](s.T(), res)
 	s.Equal(wantQuestion.ID.String(), got.Id.String())
+	s.Len(got.Choices, len(wantQuestion.Choices))
 }
 
 func (s *ServerTestSuite) mustSubmitAnswer(
