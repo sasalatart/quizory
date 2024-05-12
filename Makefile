@@ -23,9 +23,15 @@ help:
 docker:
 	docker-compose up
 
-install:
-	$(GOCMD) mod tidy && \
+install-client:
 	cd $(CLIENT_DIR) && $(JSCMD) install
+
+install-go:
+	$(GOCMD) install github.com/volatiletech/sqlboiler/v4@latest && \
+	$(GOCMD) install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest && \
+	$(GOCMD) mod tidy
+
+install: install-go install-client
 
 lint-client:
 	cd $(CLIENT_DIR) && $(JSCMD) lint

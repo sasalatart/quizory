@@ -26,5 +26,8 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
 
+      - name: install-dependencies
+        run: make install-client
+
       - name: run-linter
         run: make lint-client
