@@ -10,7 +10,7 @@ all: help
 help:
 	@echo "docker    	: Starts the local Docker infra."
 	@echo "install  	: Installs the dependencies (Go & JS)."
-	@echo "lint				: Runs linters (golangci-lint & eslint)."
+	@echo "lint  	  	: Runs linters (golangci-lint & eslint)."
 	@echo "migrate  	: Runs database migrations."
 	@echo "codegen  	: Runs codegen tools."
 	@echo "build    	: Builds the project."
