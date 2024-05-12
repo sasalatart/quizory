@@ -1,6 +1,6 @@
-import { EnsureLoggedIn } from './auth';
-import { QueryClientProvider, SessionProvider } from './providers';
-import { Questions } from './questions';
+import { QueryClientProvider, SessionProvider } from '@/providers';
+import { EnsureLoggedIn } from '@/screens/login';
+import { Questions } from '@/screens/questions';
 
 export default function App() {
   return (

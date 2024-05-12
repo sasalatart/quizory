@@ -1,9 +1,8 @@
+import { PropsWithChildren, useContext } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-
-import { supabase } from '../supabase';
-import { PropsWithChildren, useContext } from 'react';
-import { SessionContext } from '../providers/session-provider';
+import { SessionContext } from '@/providers';
+import { supabase } from '../../supabase';
 
 export function Login(): JSX.Element {
   return (

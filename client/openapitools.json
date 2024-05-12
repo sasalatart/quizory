@@ -6,7 +6,7 @@
     "generators": {
       "api": {
         "inputSpec": "../http/oapi/schema.yml",
-        "output": "src/api",
+        "output": "src/generated/api",
         "generatorName": "typescript-fetch"
       }
     }

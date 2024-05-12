@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useContext } from 'react';
 import { QueryClientProvider as BaseReactQueryClientProvider, QueryClient } from 'react-query';
-import { Configuration, DefaultApi } from '../api';
+import { Configuration, DefaultApi } from '@/generated/api';
 import { BASE_API_URL } from '../config';
 import { SessionContext } from './session-provider';
 

@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { QueryClientContext, SessionContext } from '../providers';
+import { QueryClientContext, SessionContext } from '@/providers';
 
 export function Questions(): JSX.Element {
   const { logout } = useContext(SessionContext);
