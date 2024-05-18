@@ -1,24 +1,28 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { createContext, useCallback, useEffect, useState, type PropsWithChildren } from 'react';
 import { supabase } from '../supabase';
 import { type Session } from '@supabase/supabase-js';
 
 type SessionContextValue = {
   session: Session | undefined;
-  logout: () => unknown;
+  handleLogOut: () => unknown;
+  isLoggingOut: boolean;
 };
 
 const SessionContext = createContext<SessionContextValue>({
   session: undefined,
-  logout: () => undefined,
+  handleLogOut: () => undefined,
+  isLoggingOut: false,
 });
 
 function SessionProvider({ children }: PropsWithChildren): JSX.Element {
   const [session, setSession] = useState<Session | undefined>();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogOut = useCallback(async () => {
+    setIsLoggingOut(true);
+    await supabase.auth.signOut();
+    setIsLoggingOut(false);
+  }, []);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,7 +44,8 @@ function SessionProvider({ children }: PropsWithChildren): JSX.Element {
     <SessionContext.Provider
       value={{
         session,
-        logout: () => supabase.auth.signOut(),
+        handleLogOut,
+        isLoggingOut,
       }}
     >
       {children}
