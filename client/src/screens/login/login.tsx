@@ -1,10 +1,10 @@
 import { PropsWithChildren, useContext } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { SessionContext } from '@/providers';
-import { supabase } from '../../supabase';
+import { supabase } from '@/supabase';
+import { GITHUB_USER_LINK, GITHUB_REPO_LINK } from '@/config';
 import { NapoleonicHatIcon } from '@/icons';
-import { CONFIG } from '@/layout/config';
+import { SessionContext } from '@/providers';
 
 export function Login(): JSX.Element {
   return (
@@ -26,13 +26,13 @@ export function Login(): JSX.Element {
       <div className="flex flex-col items-center mt-4">
         <p>
           Created by Sebastián Salata R-T{' '}
-          <a href={CONFIG.githubUserLink} target="_blank" className="link">
+          <a href={GITHUB_USER_LINK} target="_blank" className="link">
             (sasalatart)
           </a>
         </p>
         <p>
           See code on{' '}
-          <a href={CONFIG.githubRepoLink} target="_blank" className="link">
+          <a href={GITHUB_REPO_LINK} target="_blank" className="link">
             GitHub
           </a>
         </p>
