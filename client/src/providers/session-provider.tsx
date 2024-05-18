@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useState, type PropsWithChildren } from 'react';
-import { supabase } from '../supabase';
+import { useNavigate } from 'react-router-dom';
 import { type Session } from '@supabase/supabase-js';
+import { supabase } from '@/supabase';
 
 type SessionContextValue = {
   session: Session | undefined;
@@ -8,15 +9,17 @@ type SessionContextValue = {
   isLoggingOut: boolean;
 };
 
-const SessionContext = createContext<SessionContextValue>({
+export const SessionContext = createContext<SessionContextValue>({
   session: undefined,
   handleLogOut: () => undefined,
   isLoggingOut: false,
 });
 
-function SessionProvider({ children }: PropsWithChildren): JSX.Element {
+export function SessionProvider({ children }: PropsWithChildren): JSX.Element | null {
   const [session, setSession] = useState<Session | undefined>();
+  const [isGettingSession, setIsGettingSession] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogOut = useCallback(async () => {
     setIsLoggingOut(true);
@@ -27,18 +30,24 @@ function SessionProvider({ children }: PropsWithChildren): JSX.Element {
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session ?? undefined);
+      setIsGettingSession(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session ?? undefined);
+      navigate(session ? '/questions/next' : '');
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
+
+  if (isGettingSession) {
+    return null;
+  }
 
   return (
     <SessionContext.Provider
@@ -52,5 +61,3 @@ function SessionProvider({ children }: PropsWithChildren): JSX.Element {
     </SessionContext.Provider>
   );
 }
-
-export { SessionContext, SessionProvider };
