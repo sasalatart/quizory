@@ -4,6 +4,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { SessionContext } from '@/providers';
 import { supabase } from '../../supabase';
 import { NapoleonicHatIcon } from '@/icons';
+import { CONFIG } from '@/layout/config';
 
 export function Login(): JSX.Element {
   return (
@@ -24,14 +25,14 @@ export function Login(): JSX.Element {
 
       <div className="flex flex-col items-center mt-4">
         <p>
-          Created by{' '}
-          <a href="https://github.com/sasalatart" target="_blank" className="link">
-            sasalatart
+          Created by Sebastián Salata R-T{' '}
+          <a href={CONFIG.githubUserLink} target="_blank" className="link">
+            (sasalatart)
           </a>
         </p>
         <p>
           See code on{' '}
-          <a href="https://github.com/sasalatart/quizory" target="_blank" className="link">
+          <a href={CONFIG.githubRepoLink} target="_blank" className="link">
             GitHub
           </a>
         </p>
