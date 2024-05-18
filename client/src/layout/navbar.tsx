@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { SessionContext } from '@/providers';
 
 export function Navbar(): JSX.Element {
-  const { logout } = useContext(SessionContext);
+  const { handleLogOut, isLoggingOut } = useContext(SessionContext);
 
   return (
     <div className="navbar bg-base-100">
@@ -49,7 +49,8 @@ export function Navbar(): JSX.Element {
         </ul>
       </div>
       <div className="navbar-end">
-        <button onClick={logout} className="btn">
+        <button onClick={handleLogOut} className="btn" disabled={isLoggingOut}>
+          {isLoggingOut ? <span className="loading loading-spinner"></span> : null}
           Log Out
         </button>
       </div>
