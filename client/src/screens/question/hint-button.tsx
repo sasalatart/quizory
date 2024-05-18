@@ -7,13 +7,19 @@ interface Props {
 export function HintButton({ hint }: Props): JSX.Element {
   const modalRef = useRef<HTMLDialogElement>(null);
 
-  function onClick() {
+  function onClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
     modalRef.current?.showModal();
+  }
+
+  function onClose(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    modalRef.current?.close();
   }
 
   return (
     <>
-      <button className="btn btn-secondary" onClick={onClick}>
+      <button type="button" className="btn btn-secondary" onClick={onClick}>
         Hint
       </button>
       <dialog ref={modalRef} className="modal modal-bottom sm:modal-middle">
@@ -21,10 +27,9 @@ export function HintButton({ hint }: Props): JSX.Element {
           <h3 className="font-bold text-lg">Hint</h3>
           <p className="py-4">{hint}</p>
           <div className="modal-action">
-            <form method="dialog">
-              {/* if there is a button in form, it will close the modal */}
-              <button className="btn">Close</button>
-            </form>
+            <button onClick={onClose} className="btn">
+              Close
+            </button>
           </div>
         </div>
       </dialog>
