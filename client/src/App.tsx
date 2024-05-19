@@ -2,7 +2,8 @@ import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import { QueryClientProvider, SessionProvider } from '@/providers';
 import { Layout } from '@/layout';
 import { Login } from '@/screens/login';
-import { Question } from '@/screens/next-question';
+import { Question } from '@/screens/current-question';
+import { AnswersLog } from '@/screens/answers-log';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
           {
             path: 'next',
             element: <Question />,
+          },
+          {
+            path: 'log',
+            element: <AnswersLog />,
           },
         ],
       },

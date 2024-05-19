@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { useQuery } from 'react-query';
 import { QueryClientContext } from '@/providers';
+import { CenteredSpinner } from '@/layout';
 import { QuestionFormCard } from './form-card';
 import { Feedback, QuestionFeedbackCard } from './feedback-card';
 import { NoQuestionsLeftCard } from './no-questions-left-card';
@@ -20,7 +21,7 @@ export function Question(): JSX.Element {
   });
 
   if (isLoading && !question) {
-    return <span className="loading loading-spinner loading-xs"></span>;
+    return <CenteredSpinner />;
   }
 
   const shouldShowFeedback = question?.choices.some(({ id }) => id === feedback?.selectedChoiceId);

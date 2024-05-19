@@ -116,7 +116,7 @@ func (s *Server) GetAnswersLog(
 		return err
 	}
 
-	var result []oapi.AnswersLogItem
+	result := make([]oapi.AnswersLogItem, 0, len(logItems))
 	for _, logItem := range logItems {
 		result = append(result, toAnswersLogItem(logItem))
 	}
