@@ -1,7 +1,8 @@
 import { createContext, useCallback, useEffect, useState, type PropsWithChildren } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { type Session } from '@supabase/supabase-js';
 import { supabase } from '@/supabase';
+import { ROUTES } from '@/router';
 
 type SessionContextValue = {
   session: Session | undefined;
@@ -20,6 +21,7 @@ export function SessionProvider({ children }: PropsWithChildren): JSX.Element | 
   const [isGettingSession, setIsGettingSession] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogOut = useCallback(async () => {
     setIsLoggingOut(true);
@@ -32,18 +34,25 @@ export function SessionProvider({ children }: PropsWithChildren): JSX.Element | 
       setSession(session ?? undefined);
       setIsGettingSession(false);
     });
+  }, [navigate]);
 
+  useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session ?? undefined);
-      navigate(session ? '/questions/next' : '');
+
+      if (!session) {
+        navigate(ROUTES.login);
+      } else if (location.pathname === ROUTES.login) {
+        navigate(ROUTES.questions.current);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   if (isGettingSession) {
     return null;
