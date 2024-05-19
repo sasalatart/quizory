@@ -1,10 +1,8 @@
-import { PropsWithChildren, useContext } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/supabase';
 import { GITHUB_USER_LINK, GITHUB_REPO_LINK } from '@/config';
 import { NapoleonicHatIcon } from '@/icons';
-import { SessionContext } from '@/providers';
 
 export function Login(): JSX.Element {
   return (
@@ -39,9 +37,4 @@ export function Login(): JSX.Element {
       </div>
     </div>
   );
-}
-
-export function EnsureLoggedIn({ children }: PropsWithChildren): JSX.Element {
-  const { session } = useContext(SessionContext);
-  return session ? <>{children}</> : <Login />;
 }

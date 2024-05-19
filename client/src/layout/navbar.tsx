@@ -1,6 +1,8 @@
 import { useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { SessionContext } from '@/providers';
 import { HamburgerIcon, NapoleonicHatIcon } from '@/icons';
+import { InlineSpinner } from './spinner';
 
 export function Navbar(): JSX.Element {
   const { handleLogOut, isLoggingOut } = useContext(SessionContext);
@@ -17,29 +19,31 @@ export function Navbar(): JSX.Element {
             className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
           >
             <li>
-              <a>Current Question</a>
+              <Link to="/questions/next">Current Question</Link>
             </li>
             <li>
-              <a>Past Questions</a>
+              <Link to="/questions/log">Past Questions</Link>
             </li>
           </ul>
         </div>
         <NapoleonicHatIcon />
-        <a className="btn btn-ghost text-xl">Quizory</a>
+        <Link to="/questions/next" className="btn btn-ghost text-xl">
+          Quizory
+        </Link>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
           <li>
-            <a>Current Question</a>
+            <Link to="/questions/next">Current Question</Link>
           </li>
           <li>
-            <a>Past Questions</a>
+            <Link to="/questions/log">Past Questions</Link>
           </li>
         </ul>
       </div>
       <div className="navbar-end">
         <button onClick={handleLogOut} className="btn" disabled={isLoggingOut}>
-          {isLoggingOut ? <span className="loading loading-spinner"></span> : null}
+          {isLoggingOut ? <InlineSpinner /> : null}
           Log Out
         </button>
       </div>

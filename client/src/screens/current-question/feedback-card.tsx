@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import { UnansweredQuestion } from '@/generated/api';
+import { InlineSpinner } from '@/layout';
 
 export interface Feedback {
   selectedChoiceId: string;
@@ -44,7 +45,7 @@ export function QuestionFeedbackCard({
 
         <div className="card-actions justify-end">
           <button onClick={onNext} className="btn btn-primary" disabled={isLoadingNext}>
-            {isLoadingNext ? <span className="loading loading-spinner"></span> : null}
+            {isLoadingNext ? <InlineSpinner /> : null}
             Next
           </button>
         </div>
