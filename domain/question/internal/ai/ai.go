@@ -29,22 +29,30 @@ func Generate(
 	amount int,
 	results chan Result,
 ) {
+	send := func(res Result) {
+		// Avoid sending results if the context has been cancelled
+		if ctx.Err() != nil {
+			return
+		}
+		results <- res
+	}
+
 	resp, err := llmService.ChatCompletion(
 		ctx,
 		prompt,
 		newUserContent(topic, recentlyGenerated, amount),
 	)
 	if err != nil {
-		results <- Result{Err: errors.Wrap(err, "generating AI questions")}
+		send(Result{Err: errors.Wrap(err, "generating AI questions")})
 		return
 	}
 
 	var questions []Question
 	if err := json.Unmarshal([]byte(resp), &questions); err != nil {
-		results <- Result{Err: errors.Wrap(err, "unmarshalling AI questions")}
+		send(Result{Err: errors.Wrap(err, "unmarshalling AI questions")})
 		return
 	}
-	results <- Result{Questions: questions}
+	send(Result{Questions: questions})
 }
 
 // newUserContent returns a message to be sent to the LLM model, requesting the generation of new
