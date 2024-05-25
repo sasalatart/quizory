@@ -13,11 +13,11 @@ import (
 const envFileName = ".env.quizory"
 
 func init() {
-	mustLoadEnvVars()
+	loadEnvVars()
 }
 
-// mustLoadEnvVars loads environment variables from the root .env file if it exists.
-func mustLoadEnvVars() {
+// loadEnvVars loads environment variables from the root .env file if it exists.
+func loadEnvVars() {
 	envFileDir, err := findFilePath(envFileName)
 	if errors.Is(err, os.ErrNotExist) {
 		slog.Warn("No .env file found")
