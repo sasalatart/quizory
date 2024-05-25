@@ -20,7 +20,7 @@ type LLMConfig struct {
 func NewLLMConfig(openAIKey string) LLMConfig {
 	return LLMConfig{
 		OpenAIKey: openAIKey,
-		Frequency: 5 * time.Second,
-		BatchSize: 5,
+		Frequency: 12 * time.Hour,
+		BatchSize: 8,
 	}
 }

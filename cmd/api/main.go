@@ -17,8 +17,6 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-
 	app := fx.New(
 		fx.Provide(config.NewConfig),
 		db.Module,
@@ -27,8 +25,11 @@ func main() {
 		question.Module,
 		server.Module,
 		fx.Invoke(migrationsLC),
+		fx.Invoke(questionsGenLC),
 		fx.Invoke(serverLC),
 	)
+
+	ctx := context.Background()
 
 	go func() {
 		if err := app.Start(ctx); err != nil {
@@ -49,6 +50,15 @@ func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			return migrations.Up(dbCfg)
+		},
+	})
+}
+
+func questionsGenLC(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.Service) {
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			go service.StartGeneration(ctx, llmCfg.Frequency, llmCfg.BatchSize)
+			return nil
 		},
 	})
 }

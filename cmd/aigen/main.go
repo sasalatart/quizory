@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db"
@@ -15,8 +14,6 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-
 	app := fx.New(
 		fx.Provide(config.NewConfig),
 		db.Module,
@@ -28,13 +25,11 @@ func main() {
 					service.StartGeneration(ctx, llmCfg.Frequency, llmCfg.BatchSize)
 					return nil
 				},
-				OnStop: func(context.Context) error {
-					cancel()
-					return nil
-				},
 			})
 		}),
 	)
+
+	ctx := context.Background()
 
 	go func() {
 		if err := app.Start(ctx); err != nil {
@@ -42,18 +37,11 @@ func main() {
 		}
 	}()
 
-	handleStop := func() {
-		if err := app.Stop(ctx); err != nil {
-			panic(err)
-		}
-	}
-
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-	select {
-	case <-sig:
-		handleStop()
-	case <-time.After(4 * time.Minute):
-		handleStop()
+
+	<-sig
+	if err := app.Stop(ctx); err != nil {
+		panic(err)
 	}
 }

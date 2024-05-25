@@ -33,7 +33,7 @@ func NewService(repo *Repository, llmService llm.ChatCompletioner) *Service {
 
 // StartGeneration generates questions about random topics at a given frequency.
 func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchSize int) {
-	slog.Info("Starting generation loop", slog.Duration("freq", freq))
+	slog.Info("Starting questions generation loop", slog.Duration("freq", freq))
 
 	ticker := time.NewTicker(freq)
 	for {
