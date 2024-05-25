@@ -22,8 +22,11 @@ func Up(dbCfg config.DBConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "creating migrations instance")
 	}
-	if err := m.Up(); err != nil {
-		return errors.Wrap(err, "executing migrations")
+
+	err = m.Up()
+	if errors.Is(err, migrate.ErrNoChange) {
+		slog.Info("No migrations to apply")
+		return nil
 	}
-	return nil
+	return err
 }
