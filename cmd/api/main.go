@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +16,13 @@ import (
 	"github.com/sasalatart.com/quizory/llm"
 	"go.uber.org/fx"
 )
+
+var generateQuestions bool
+
+func init() {
+	flag.BoolVar(&generateQuestions, "generate", false, "generate questions")
+	flag.Parse()
+}
 
 func main() {
 	app := fx.New(
@@ -55,6 +63,10 @@ func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
 }
 
 func questionsGenLC(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.Service) {
+	if !generateQuestions {
+		return
+	}
+
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go service.StartGeneration(ctx, llmCfg.Frequency, llmCfg.BatchSize)
