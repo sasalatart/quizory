@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -19,17 +19,21 @@ func init() {
 // mustLoadEnvVars loads environment variables from the root .env file if it exists.
 func mustLoadEnvVars() {
 	envFileDir, err := findFilePath(envFileName)
+	if errors.Is(err, os.ErrNotExist) {
+		slog.Warn("No .env file found")
+		return
+	}
 	if err != nil {
 		panic(errors.Wrapf(err, "finding %s file", envFileName))
 	}
-	if err := godotenv.Load(envFileDir); err != nil && !os.IsNotExist(err) {
+	if err := godotenv.Load(envFileDir); err != nil {
 		panic(errors.Wrapf(err, "loading %s file", envFileName))
 	}
 }
 
 // findFilePath searches for a file with the given name starting from the current working directory
-// and going up to the root directory. It returns the path of the file if found, or an error if it
-// does not exist or if there was an error while searching.
+// and going up to the root directory. It returns the path of the file if found, or an
+// os.ErrNotExist if it does not exist.
 func findFilePath(fileName string) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -45,7 +49,7 @@ func findFilePath(fileName string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no file found called %s", fileName)
+	return "", errors.Wrapf(os.ErrNotExist, "%s file not found", fileName)
 }
 
 // Config represents the configuration of the application.
