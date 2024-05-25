@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path"
 
 	"github.com/pkg/errors"
 )
@@ -33,11 +34,16 @@ func NewDBConfig(dbName string) DBConfig {
 	psqlPassword, _ := u.User.Password()
 	psqlHost, psqlPort, err := net.SplitHostPort(u.Host)
 	if err != nil {
-		panic(errors.Wrap(err, "splitting host and port"))
+		panic(errors.Wrap(err, "splitting host and port from DB_URL"))
+	}
+
+	migrationsDir, err := findFilePath(path.Join("db", "migrations"))
+	if err != nil {
+		panic(errors.Wrap(err, "finding migrations directory"))
 	}
 
 	return DBConfig{
-		MigrationsDir: mustGetModuleRoot() + "/db/migrations",
+		MigrationsDir: migrationsDir,
 		User:          psqlUser,
 		Password:      psqlPassword,
 		Host:          psqlHost,

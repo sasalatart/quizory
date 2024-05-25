@@ -19,9 +19,6 @@ help:
 	@echo "dev      	: Runs the local Docker infra, client and API server in dev mode."
 	@echo "aigen     	: Runs the AI questions generator."
 
-docker:
-	docker-compose up
-
 install-client:
 	cd $(CLIENT_DIR) && $(JSCMD) install
 
@@ -46,7 +43,7 @@ migrate:
 codegen:
 	$(GOCMD) run ./cmd/codegen
 
-build-ai-gen:
+build-aigen:
 	$(GOBUILD) -o $(BINARIES_DIR)/aigen -v ./cmd/aigen
 
 build-api:
@@ -55,13 +52,16 @@ build-api:
 build-client:
 	cd $(CLIENT_DIR) && $(JSCMD) build
 
-build: build-ai-gen build-api build-client
+build: install build-aigen build-api build-client
 
 clean:
 	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist
 
 test:
 	$(GOTEST) ./...
+
+docker-infra-dev:
+	docker-compose -f infra/docker-compose.dev.yml up
 
 client-dev:
 	cd client && $(JSCMD) dev
@@ -70,7 +70,10 @@ api-dev:
 	$(GOCMD) run ./cmd/api
 
 dev:
-	$(MAKE) docker & $(MAKE) client-dev & $(MAKE) api-dev & wait
+	$(MAKE) docker-infra-dev & $(MAKE) client-dev & $(MAKE) api-dev & wait
 
 aigen:
 	$(GOCMD) run ./cmd/aigen
+
+docker-image:
+	docker build -t sasalatart/quizory-api -f ./infra/deploy/Dockerfile .
