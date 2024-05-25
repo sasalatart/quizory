@@ -76,3 +76,4 @@ jobs:
         with:
           push: false
           tags: sasalatart/quizory-api:${{ github.sha }}
+          file: ./infra/deploy/Dockerfile
