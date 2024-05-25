@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path"
 
 	"github.com/pkg/errors"
 )
@@ -36,8 +37,13 @@ func NewDBConfig(dbName string) DBConfig {
 		panic(errors.Wrap(err, "splitting host and port from DB_URL"))
 	}
 
+	migrationsDir, err := findFilePath(path.Join("db", "migrations"))
+	if err != nil {
+		panic(errors.Wrap(err, "finding migrations directory"))
+	}
+
 	return DBConfig{
-		MigrationsDir: "./db/migrations",
+		MigrationsDir: migrationsDir,
 		User:          psqlUser,
 		Password:      psqlPassword,
 		Host:          psqlHost,

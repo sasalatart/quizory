@@ -18,3 +18,4 @@
 
 # Secrets
 .env
+.env.*
