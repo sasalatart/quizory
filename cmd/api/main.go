@@ -8,6 +8,7 @@ import (
 
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db"
+	"github.com/sasalatart.com/quizory/db/migrations"
 	"github.com/sasalatart.com/quizory/domain/answer"
 	"github.com/sasalatart.com/quizory/domain/question"
 	"github.com/sasalatart.com/quizory/http/server"
@@ -25,17 +26,8 @@ func main() {
 		answer.Module,
 		question.Module,
 		server.Module,
-		fx.Invoke(func(lc fx.Lifecycle, s *server.Server) {
-			lc.Append(fx.Hook{
-				OnStart: func(context.Context) error {
-					s.Start()
-					return nil
-				},
-				OnStop: func(context.Context) error {
-					return s.Shutdown()
-				},
-			})
-		}),
+		fx.Invoke(migrationsLC),
+		fx.Invoke(serverLC),
 	)
 
 	go func() {
@@ -51,4 +43,24 @@ func main() {
 	if err := app.Stop(ctx); err != nil {
 		panic(err)
 	}
+}
+
+func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			return migrations.Up(dbCfg)
+		},
+	})
+}
+
+func serverLC(lc fx.Lifecycle, s *server.Server) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			s.Start()
+			return nil
+		},
+		OnStop: func(context.Context) error {
+			return s.Shutdown()
+		},
+	})
 }
