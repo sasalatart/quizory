@@ -33,11 +33,11 @@ func NewDBConfig(dbName string) DBConfig {
 	psqlPassword, _ := u.User.Password()
 	psqlHost, psqlPort, err := net.SplitHostPort(u.Host)
 	if err != nil {
-		panic(errors.Wrap(err, "splitting host and port"))
+		panic(errors.Wrap(err, "splitting host and port from DB_URL"))
 	}
 
 	return DBConfig{
-		MigrationsDir: mustGetModuleRoot() + "/db/migrations",
+		MigrationsDir: "./db/migrations",
 		User:          psqlUser,
 		Password:      psqlPassword,
 		Host:          psqlHost,
