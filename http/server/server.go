@@ -38,9 +38,11 @@ func NewServer(
 
 func (s *Server) Start() {
 	s.App = fiber.New()
-	applyDefaultMiddleware(s.App, s.cfg)
 
-	oapi.RegisterHandlers(s.App, s)
+	s.registerMiddlewares()
+	if err := s.registerAppHandlers(); err != nil {
+		log.Fatal(err)
+	}
 
 	addr := s.cfg.Address()
 	slog.Info("Server is running", "address", addr)
