@@ -26,7 +26,7 @@ func (s *Service) ChatCompletion(
 	resp, err := s.openaiClient.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4Turbo,
+			Model: openai.GPT4o,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
@@ -38,7 +38,7 @@ func (s *Service) ChatCompletion(
 				},
 			},
 			Seed:      &seed,
-			MaxTokens: 2000,
+			MaxTokens: 4096,
 		},
 	)
 	if err != nil {

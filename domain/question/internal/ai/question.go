@@ -5,7 +5,7 @@ type Question struct {
 	Question   string   `json:"question"`
 	Hint       string   `json:"hint"`
 	Choices    []Choice `json:"choices"`
-	MoreInfo   string   `json:"moreInfo"`
+	MoreInfo   []string `json:"moreInfo"`
 	Difficulty string   `json:"difficulty"`
 }
 

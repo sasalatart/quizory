@@ -72,7 +72,7 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 						{"text": "Choice C", "isCorrect": false},
 						{"text": "Choice D", "isCorrect": false}
 					],
-					"moreInfo": "Test more info",
+					"moreInfo": ["Test more info", "Test fun fact"],
 					"difficulty": "novice historian"
 				}
 			]`, llmCallsDone), nil
