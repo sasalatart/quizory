@@ -44,19 +44,8 @@ func TestServer(t *testing.T) {
 func (s *ServerTestSuite) SetupSuite() {
 	s.app = fx.New(
 		fx.NopLogger,
-		testutil.Module,
+		testutil.ModuleWithAPI,
 		fx.Populate(&s.serverTestSuiteParams),
-		fx.Invoke(func(lc fx.Lifecycle, server *server.Server) {
-			lc.Append(fx.Hook{
-				OnStart: func(context.Context) error {
-					go server.Start()
-					return nil
-				},
-				OnStop: func(context.Context) error {
-					return server.Shutdown()
-				},
-			})
-		}),
 	)
 	err := s.app.Start(context.Background())
 	s.Require().NoError(err)
