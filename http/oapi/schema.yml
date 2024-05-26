@@ -4,6 +4,16 @@ info:
   title: AI Generated Questions
 
 paths:
+  /health-check:
+    get:
+      operationId: healthCheck
+      description: Checks if the service is up and ready to receive requests.
+      responses:
+        204:
+          description: The service is healthy.
+        503:
+          description: The service is unhealthy.
+
   /questions/next:
     get:
       operationId: getNextQuestion

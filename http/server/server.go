@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"log/slog"
@@ -20,17 +21,20 @@ var _ oapi.ServerInterface = (*Server)(nil)
 type Server struct {
 	*fiber.App
 	cfg             config.ServerConfig
+	db              *sql.DB
 	answerService   *answer.Service
 	questionService *question.Service
 }
 
 func NewServer(
 	cfg config.ServerConfig,
+	db *sql.DB,
 	answerService *answer.Service,
 	questionService *question.Service,
 ) *Server {
 	return &Server{
 		cfg:             cfg,
+		db:              db,
 		answerService:   answerService,
 		questionService: questionService,
 	}
@@ -49,6 +53,16 @@ func (s *Server) Start() {
 	if err := s.Listen(addr); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// HealthCheck returns a 204 status code if the server is healthy, and a 503 status code otherwise.
+func (s *Server) HealthCheck(c *fiber.Ctx) error {
+	// TODO: add a more meaningful health check. In the meantime, it is just checking if the
+	// database connection is healthy.
+	if s.db.Ping() != nil {
+		return fiber.ErrServiceUnavailable
+	}
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // GetNextQuestion returns the next question for a user to answer.

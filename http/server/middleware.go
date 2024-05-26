@@ -30,7 +30,7 @@ func (s *Server) registerMiddlewares() {
 	s.App.Use(cors.New())
 
 	s.App.Use(func(c *fiber.Ctx) error {
-		if strings.HasPrefix(c.Path(), "/openapi") {
+		if strings.HasPrefix(c.Path(), "/openapi") || strings.HasPrefix(c.Path(), "/health-check") {
 			return c.Next()
 		}
 		return jwtware.New(jwtware.Config{

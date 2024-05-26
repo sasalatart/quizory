@@ -25,8 +25,8 @@ var TestModule = fx.Module(
 	fx.Provide(newTestClientFactory),
 )
 
-// TestClientFactory is a factory function that creates a new oapi.ClientWithResponses for a given
-// user ID.
+// TestClientFactory is a factory function that creates an authenticated oapi.ClientWithResponses
+// for a given user ID.
 type TestClientFactory func(userID uuid.UUID) (*oapi.ClientWithResponses, error)
 
 func newTestClientFactory(cfg config.ServerConfig) TestClientFactory {

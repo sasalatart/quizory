@@ -174,6 +174,9 @@ type ClientInterface interface {
 
 	SubmitAnswer(ctx context.Context, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// HealthCheck request
+	HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetNextQuestion request
 	GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -195,6 +198,18 @@ func (c *Client) SubmitAnswerWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) SubmitAnswer(ctx context.Context, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSubmitAnswerRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewHealthCheckRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +280,33 @@ func NewSubmitAnswerRequestWithBody(server string, contentType string, body io.R
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewHealthCheckRequest generates requests for HealthCheck
+func NewHealthCheckRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/health-check")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -416,6 +458,9 @@ type ClientWithResponsesInterface interface {
 
 	SubmitAnswerWithResponse(ctx context.Context, body SubmitAnswerJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitAnswerResponse, error)
 
+	// HealthCheckWithResponse request
+	HealthCheckWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckResponse, error)
+
 	// GetNextQuestionWithResponse request
 	GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
 
@@ -439,6 +484,27 @@ func (r SubmitAnswerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r SubmitAnswerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type HealthCheckResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r HealthCheckResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r HealthCheckResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -506,6 +572,15 @@ func (c *ClientWithResponses) SubmitAnswerWithResponse(ctx context.Context, body
 	return ParseSubmitAnswerResponse(rsp)
 }
 
+// HealthCheckWithResponse request returning *HealthCheckResponse
+func (c *ClientWithResponses) HealthCheckWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckResponse, error) {
+	rsp, err := c.HealthCheck(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseHealthCheckResponse(rsp)
+}
+
 // GetNextQuestionWithResponse request returning *GetNextQuestionResponse
 func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error) {
 	rsp, err := c.GetNextQuestion(ctx, reqEditors...)
@@ -545,6 +620,22 @@ func ParseSubmitAnswerResponse(rsp *http.Response) (*SubmitAnswerResponse, error
 		}
 		response.JSON201 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseHealthCheckResponse parses an HTTP response from a HealthCheckWithResponse call
+func ParseHealthCheckResponse(rsp *http.Response) (*HealthCheckResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &HealthCheckResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil
@@ -608,6 +699,9 @@ type ServerInterface interface {
 	// (POST /answers)
 	SubmitAnswer(c *fiber.Ctx) error
 
+	// (GET /health-check)
+	HealthCheck(c *fiber.Ctx) error
+
 	// (GET /questions/next)
 	GetNextQuestion(c *fiber.Ctx) error
 
@@ -626,6 +720,12 @@ type MiddlewareFunc fiber.Handler
 func (siw *ServerInterfaceWrapper) SubmitAnswer(c *fiber.Ctx) error {
 
 	return siw.Handler.SubmitAnswer(c)
+}
+
+// HealthCheck operation middleware
+func (siw *ServerInterfaceWrapper) HealthCheck(c *fiber.Ctx) error {
+
+	return siw.Handler.HealthCheck(c)
 }
 
 // GetNextQuestion operation middleware
@@ -695,6 +795,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	}
 
 	router.Post(options.BaseURL+"/answers", wrapper.SubmitAnswer)
+
+	router.Get(options.BaseURL+"/health-check", wrapper.HealthCheck)
 
 	router.Get(options.BaseURL+"/questions/next", wrapper.GetNextQuestion)
 

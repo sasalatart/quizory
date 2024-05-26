@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sasalatart.com/quizory/config"
 	"github.com/sasalatart.com/quizory/db/migrations"
+	"github.com/sasalatart.com/quizory/infra"
 	"go.uber.org/fx"
 )
 
@@ -18,6 +20,7 @@ var Module = fx.Module(
 	fx.Provide(newDB),
 )
 
+// newDB creates a database connection, and adds an fx hook to close it when the application stops.
 func newDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
 	rootDB := mustOpen(cfg.URL())
 	lc.Append(fx.Hook{
@@ -28,11 +31,23 @@ func newDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
 	return rootDB
 }
 
+// mustOpen opens a database connection with the given URL, and waits for it to be ready.
+// It retries up to 5 times with an exponential backoff, starting at 1 second.
+// It panics if the connection cannot be established after the retries.
 func mustOpen(dbURL string) *sql.DB {
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		panic(errors.Wrapf(err, "opening database with URL %s", dbURL))
 	}
+
+	check := func() bool {
+		err := db.Ping()
+		return err == nil
+	}
+	if err := infra.WaitFor(check, 5, 1*time.Second); err != nil {
+		panic(errors.Wrapf(err, "timeout pinging database with URL %s", dbURL))
+	}
+
 	return db
 }
 
@@ -41,6 +56,7 @@ var TestModule = fx.Module(
 	fx.Provide(newTempDB),
 )
 
+// newTempDB creates a temporary database for testing purposes, and adds fx hooks to clean it up.
 func newTempDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
 	rootDB := mustOpen(cfg.URL())
 	db, dbName := mustCreateTempDB(rootDB)
@@ -56,6 +72,7 @@ func newTempDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
 	return db
 }
 
+// mustCreateTempDB creates a temporary database with a random name.
 func mustCreateTempDB(rootDB *sql.DB) (*sql.DB, string) {
 	dbName := "tmp_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	cfg := config.NewDBConfig(dbName)
