@@ -121,6 +121,31 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
+     * Checks if the service is up and ready to receive requests.
+     */
+    async healthCheckRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/health-check`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Checks if the service is up and ready to receive requests.
+     */
+    async healthCheck(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.healthCheckRaw(initOverrides);
+    }
+
+    /**
      * Registers the choice made by a user for a specific question, and returns the correct choice for it, plus some more info for the user to know how they did. 
      */
     async submitAnswerRaw(requestParameters: SubmitAnswerOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SubmitAnswerResult>> {
