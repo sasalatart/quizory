@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,10 +49,10 @@ func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchS
 				slog.Int("amount", batchSize),
 			)
 			if err := s.handleGeneration(ctx, topic, batchSize); err != nil {
-				if !errors.Is(err, context.Canceled) {
-					slog.Error("Error generating question set", "error", err)
+				if errors.Is(err, context.Canceled) {
+					return
 				}
-				return
+				slog.Error("Error generating question set", "error", err)
 			}
 		}
 	}
@@ -80,6 +81,7 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 			q, err := parseAIQuestion(aiQuestion, topic)
 			if errors.Is(err, ErrInvalidRecord) {
 				slog.Warn("Skipping invalid question", "validationError", err)
+				continue
 			}
 			if err != nil {
 				return errors.Wrap(err, "parsing AI question")
@@ -149,7 +151,7 @@ func parseAIQuestion(aiQuestion ai.Question, topic enums.Topic) (*Question, erro
 		return nil, errors.Wrap(err, "parsing difficulty")
 	}
 
-	q := New(aiQuestion.Question, aiQuestion.Hint, aiQuestion.MoreInfo).
+	q := New(aiQuestion.Question, aiQuestion.Hint, strings.Join(aiQuestion.MoreInfo, "\n")).
 		WithTopic(topic).
 		WithDifficulty(difficulty)
 	for _, c := range aiQuestion.Choices {
