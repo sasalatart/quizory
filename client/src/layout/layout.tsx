@@ -7,7 +7,9 @@ export function Layout(): JSX.Element {
     <div className="bg-primary h-screen flex flex-col">
       <Navbar />
       <div className="container m-auto">
-        <Outlet />
+        <div className="m-4">
+          <Outlet />
+        </div>
       </div>
       <Footer />
     </div>

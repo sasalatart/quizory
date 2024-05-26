@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 
 interface Props {
   hint: string;
@@ -19,8 +20,8 @@ export function HintButton({ hint }: Props): JSX.Element {
 
   return (
     <>
-      <button type="button" className="btn btn-secondary" onClick={onClick}>
-        Hint
+      <button type="button" className="btn btn-ghost btn-circle" onClick={onClick}>
+        <QuestionMarkCircleIcon className="w-8 h-8" />
       </button>
       <dialog ref={modalRef} className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
