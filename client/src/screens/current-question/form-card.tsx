@@ -35,7 +35,10 @@ export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
       className="card bg-neutral shadow-xl"
     >
       <div className="card-body">
-        <QuestionBadges topic={question.topic} difficulty={question.difficulty} />
+        <div className="flex justify-between">
+          <QuestionBadges topic={question.topic} difficulty={question.difficulty} />
+          <HintButton hint={question.hint} />
+        </div>
         <h2 className="card-title">{question.question}</h2>
 
         {question.choices.map(({ id, choice }) => (
@@ -52,16 +55,15 @@ export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
           </div>
         ))}
 
-        <div className="card-actions justify-end">
+        <div className="card-actions justify-center">
           <button
             type="submit"
             disabled={formState.isSubmitting || !formState.isValid}
-            className="btn btn-primary"
+            className="btn btn-primary btn-block sm:btn-wide"
           >
             {formState.isSubmitting ? <InlineSpinner /> : null}
             Submit
           </button>
-          <HintButton hint={question.hint} />
         </div>
       </div>
     </form>

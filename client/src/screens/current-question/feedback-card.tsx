@@ -40,11 +40,15 @@ export function QuestionFeedbackCard({
               <div className="divider"></div>
             </>
           )}
-          <p>{feedback.moreInfo}</p>
+          {feedback.moreInfo.split('\n').map((line, index) => (
+            <p key={index} className="my-4">
+              {line}
+            </p>
+          ))}
         </div>
 
-        <div className="card-actions justify-end">
-          <button onClick={onNext} className="btn btn-primary" disabled={isLoadingNext}>
+        <div className="card-actions">
+          <button onClick={onNext} className="btn btn-primary btn-block" disabled={isLoadingNext}>
             {isLoadingNext ? <InlineSpinner /> : null}
             Next
           </button>
