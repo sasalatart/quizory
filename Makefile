@@ -61,7 +61,7 @@ test:
 	$(GOTEST) ./...
 
 docker-infra-dev:
-	docker-compose -f infra/docker-compose.dev.yml up
+	docker-compose -f infra/docker/docker-compose.dev.yml up
 
 client-dev:
 	cd client && $(JSCMD) dev
@@ -76,4 +76,4 @@ aigen:
 	$(GOCMD) run ./cmd/aigen
 
 docker-image:
-	docker build -t sasalatart/quizory-api -f ./infra/deploy/Dockerfile .
+	docker build -t sasalatart/quizory-api -f ./infra/docker/Dockerfile .
