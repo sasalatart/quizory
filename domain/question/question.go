@@ -1,12 +1,14 @@
 package question
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/sasalatart.com/quizory/domain/question/enums"
 )
+
+var ErrInvalidRecord = errors.New("invalid question record")
 
 // Question represents a question about history that users need to answer.
 type Question struct {
@@ -62,23 +64,27 @@ func (q *Question) WithChoice(choice string, isCorrect bool) *Question {
 
 // Validate checks if a question is valid or not, and returns an error if it's not.
 func (q *Question) Validate() error {
+	invalidErr := func(msg string) error {
+		return errors.Wrap(ErrInvalidRecord, msg)
+	}
+
 	if !q.Topic.IsATopic() {
-		return errors.New("invalid topic")
+		return invalidErr("invalid topic")
 	}
 	if q.Question == "" {
-		return errors.New("question is required")
+		return invalidErr("question is required")
 	}
 	if q.Hint == "" {
-		return errors.New("hint is required")
+		return invalidErr("hint is required")
 	}
 	if len(q.Choices) < 2 {
-		return errors.New("at least two choices are required")
+		return invalidErr("at least two choices are required")
 	}
 	if q.MoreInfo == "" {
-		return errors.New("more info field is required")
+		return invalidErr("more info field is required")
 	}
 	if !q.Difficulty.IsADifficulty() {
-		return errors.New("invalid difficulty")
+		return invalidErr("invalid difficulty")
 	}
 
 	seenChoices := make(map[string]struct{})
@@ -90,10 +96,10 @@ func (q *Question) Validate() error {
 		}
 	}
 	if len(seenChoices) != len(q.Choices) {
-		return errors.New("choices must be unique")
+		return invalidErr("choices must be unique")
 	}
 	if correctChoices != 1 {
-		return errors.New("one choice must be correct")
+		return invalidErr("one choice must be correct")
 	}
 	return nil
 }

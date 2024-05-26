@@ -142,6 +142,7 @@ func TestQuestion_Validate(t *testing.T) {
 			err := q.Validate()
 			if tt.wantErr {
 				assert.Error(t, err)
+				assert.ErrorIs(t, err, question.ErrInvalidRecord)
 			} else {
 				assert.NoError(t, err)
 			}
