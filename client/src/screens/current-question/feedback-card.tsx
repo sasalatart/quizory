@@ -47,8 +47,12 @@ export function QuestionFeedbackCard({
           ))}
         </div>
 
-        <div className="card-actions">
-          <button onClick={onNext} className="btn btn-primary btn-block" disabled={isLoadingNext}>
+        <div className="card-actions justify-center">
+          <button
+            onClick={onNext}
+            disabled={isLoadingNext}
+            className="btn btn-primary btn-block sm:btn-wide"
+          >
             {isLoadingNext ? <InlineSpinner /> : null}
             Next
           </button>
