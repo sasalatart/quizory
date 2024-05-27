@@ -1,0 +1,49 @@
+services:
+  quizory:
+    container_name: quizory
+    image: sasalatart/quizory-api:latest
+    env_file:
+      - .env.quizory
+    ports:
+      - 8080:8080
+    depends_on:
+      - quizory_postgres
+      - caddy
+    networks:
+      - quizory
+    restart: always
+
+  quizory_postgres:
+    container_name: quizory_postgres
+    image: postgres:16
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      - .env.quizory
+    ports:
+      - 5432:5432
+    networks:
+      - quizory
+    restart: always
+
+  caddy:
+    container_name: caddy
+    image: caddy:2.7.6
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - quizory
+
+networks:
+  quizory:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres-data:
