@@ -10,7 +10,9 @@ export function Login(): JSX.Element {
       <div className="flex flex-col items-center space-y-2">
         <NapoleonicHatIcon height={160} width={200} />
         <h1 className="text-2xl font-bold tracking-tight">Quizory</h1>
-        <h2 className="text-xl text-center">AI-generated questions to challenge your knowledge!</h2>
+        <h2 className="text-xl text-center">
+          LLM-generated questions to challenge your knowledge!
+        </h2>
       </div>
       <div className="mx-auto mt-4">
         <Auth

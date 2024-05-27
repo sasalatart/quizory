@@ -53,7 +53,7 @@ build-go:
 build: install build-go build-client
 
 clean:
-	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist
+	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist && rm -rf $(CLIENT_DIR)/src/generated/api/apis
 
 test:
 	$(GOTEST) ./...

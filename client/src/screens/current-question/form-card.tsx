@@ -17,10 +17,10 @@ interface Form {
 }
 
 export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
-  const apiClient = useContext(QueryClientContext);
+  const { answersApi } = useContext(QueryClientContext);
 
   const { mutateAsync: submitAnswer } = useMutation(
-    ({ choiceId }: Form) => apiClient.submitAnswer({ submitAnswerRequest: { choiceId } }),
+    ({ choiceId }: Form) => answersApi.submitAnswer({ submitAnswerRequest: { choiceId } }),
     {
       onSuccess: ({ correctChoiceId, moreInfo }, { choiceId }) => {
         onSubmit({ correctChoiceId, selectedChoiceId: choiceId, moreInfo });

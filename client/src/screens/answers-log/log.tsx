@@ -11,12 +11,12 @@ const PAGE_KEY = 'page';
 const PAGE_SIZE = 10;
 
 function useAnswersLog(pageNumber: number) {
-  const apiClient = useContext(QueryClientContext);
+  const { answersApi } = useContext(QueryClientContext);
   const { session } = useContext(SessionContext);
 
   return useQuery(`page-${pageNumber}-log`, {
     queryFn: () =>
-      apiClient.getAnswersLog({
+      answersApi.getAnswersLog({
         page: pageNumber,
         pageSize: PAGE_SIZE,
         userId: session!.user.id,

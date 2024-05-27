@@ -1,11 +1,18 @@
 openapi: '3.0.0'
 info:
   version: 1.0.0
-  title: AI Generated Questions
+  title: Quizory
+  description: LLM-Generated history questions to test your knowledge.
+servers:
+  - url: https://quizory-api.salatart.com
+
+security:
+  - BearerAuth: []
 
 paths:
   /health-check:
     get:
+      tags: [Infra]
       operationId: healthCheck
       description: Checks if the service is up and ready to receive requests.
       responses:
@@ -13,9 +20,11 @@ paths:
           description: The service is healthy.
         503:
           description: The service is unhealthy.
+      security: []
 
   /questions/next:
     get:
+      tags: [Questions]
       operationId: getNextQuestion
       description: Returns the next question that a user should answer.
       responses:
@@ -30,6 +39,7 @@ paths:
 
   /answers:
     post:
+      tags: [Answers]
       operationId: submitAnswer
       description: >
         Registers the choice made by a user for a specific question, and returns the correct
@@ -50,6 +60,7 @@ paths:
 
   /users/{userId}/answers:
     get:
+      tags: [Answers]
       operationId: getAnswersLog
       description: Returns the paginated log of all answers submitted by the user.
       parameters:
@@ -86,6 +97,12 @@ paths:
                   $ref: '#/components/schemas/AnswersLogItem'
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     UUID:
       type: string
