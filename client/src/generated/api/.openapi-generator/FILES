@@ -1,4 +1,6 @@
-apis/DefaultApi.ts
+apis/AnswersApi.ts
+apis/InfraApi.ts
+apis/QuestionsApi.ts
 apis/index.ts
 index.ts
 models/AnswersLogItem.ts

@@ -1,3 +1,5 @@
 /* tslint:disable */
 /* eslint-disable */
-export * from './DefaultApi';
+export * from './AnswersApi';
+export * from './InfraApi';
+export * from './QuestionsApi';

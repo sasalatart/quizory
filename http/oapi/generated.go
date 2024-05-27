@@ -18,6 +18,10 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // Defines values for Difficulty.
 const (
 	DifficultyAvidHistorian   Difficulty = "DifficultyAvidHistorian"
@@ -719,6 +723,8 @@ type MiddlewareFunc fiber.Handler
 // SubmitAnswer operation middleware
 func (siw *ServerInterfaceWrapper) SubmitAnswer(c *fiber.Ctx) error {
 
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
 	return siw.Handler.SubmitAnswer(c)
 }
 
@@ -730,6 +736,8 @@ func (siw *ServerInterfaceWrapper) HealthCheck(c *fiber.Ctx) error {
 
 // GetNextQuestion operation middleware
 func (siw *ServerInterfaceWrapper) GetNextQuestion(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
 	return siw.Handler.GetNextQuestion(c)
 }
@@ -746,6 +754,8 @@ func (siw *ServerInterfaceWrapper) GetAnswersLog(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter userId: %w", err).Error())
 	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAnswersLogParams

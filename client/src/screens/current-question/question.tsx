@@ -9,14 +9,14 @@ import { NoQuestionsLeftCard } from './no-questions-left-card';
 export function Question(): JSX.Element {
   const [feedback, setFeedback] = useState<Feedback | undefined>();
 
-  const apiClient = useContext(QueryClientContext);
+  const { questionsApi } = useContext(QueryClientContext);
   const {
     data: question,
     isLoading,
     isRefetching,
     refetch: refetchNextQuestion,
   } = useQuery('current-question', {
-    queryFn: () => apiClient.getNextQuestion(),
+    queryFn: () => questionsApi.getNextQuestion(),
     refetchOnWindowFocus: false,
   });
 
