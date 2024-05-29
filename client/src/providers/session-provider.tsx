@@ -1,8 +1,9 @@
 import { createContext, useCallback, useEffect, useState, type PropsWithChildren } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type Session } from '@supabase/supabase-js';
-import { supabase } from '@/supabase';
+import { CenteredSpinner } from '@/layout';
 import { ROUTES } from '@/router';
+import { supabase } from '@/supabase';
 
 type SessionContextValue = {
   session: Session | undefined;
@@ -16,7 +17,7 @@ export const SessionContext = createContext<SessionContextValue>({
   isLoggingOut: false,
 });
 
-export function SessionProvider({ children }: PropsWithChildren): JSX.Element | null {
+export function SessionProvider({ children }: PropsWithChildren): JSX.Element {
   const [session, setSession] = useState<Session | undefined>();
   const [isGettingSession, setIsGettingSession] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -55,7 +56,11 @@ export function SessionProvider({ children }: PropsWithChildren): JSX.Element | 
   }, [location.pathname, navigate]);
 
   if (isGettingSession) {
-    return null;
+    return (
+      <div className="h-screen">
+        <CenteredSpinner />
+      </div>
+    );
   }
 
   return (
