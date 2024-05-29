@@ -54,13 +54,13 @@ VITE_SUPABASE_KEY=<your-supabase-public-key>
 VITE_BASE_API_URL="http://localhost:8080"
 ```
 
-### Running the app locally
+### Running The App
 
 ```sh
 # Install the Go & JS dependencies
 $ make install
 
-# Concurrently turns on:
+# Concurrently turn on:
 #   1. A local Postgres database via docker-compose
 #   2. The Go backend (port 8080), WITHOUT live-reload (for now)
 #   3. The React (port 5173), with HMR
@@ -86,8 +86,8 @@ $ make test
 
 ## Credits
 
-None of the questions, answers or historical context that is served by this project has been
-provided by me. All has been consumed from [OpenAI][openai]'s GPT-4 models. So...
+None of the questions, answers or historical context served by this project have been provided by me.
+All has been generated from [OpenAI][openai]'s GPT-4 models. So...
 
 1. Yes, thanks OpenAI.
 2. More importantly, thanks _to whoever's data was used to train GPT4_.
