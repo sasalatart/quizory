@@ -11,5 +11,8 @@ export default {
     extend: {},
   },
   plugins: [typography, daisyui],
+  daisyui: {
+    themes: ["dark"], // Always use dark theme
+  },
 }
 
