@@ -3,7 +3,6 @@ package question
 import (
 	"context"
 	"database/sql"
-	_ "embed"
 	"log/slog"
 	"strings"
 	"time"
