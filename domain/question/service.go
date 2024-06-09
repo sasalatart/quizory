@@ -72,7 +72,7 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 
 	select {
 	case <-ctx.Done():
-		return nil
+		return ctx.Err()
 	case result := <-results:
 		if result.Err != nil {
 			return result.Err
