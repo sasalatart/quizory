@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/domain/question/enums"
+	"github.com/sasalatart/quizory/domain/question/enums"
 )
 
 var ErrInvalidRecord = errors.New("invalid question record")

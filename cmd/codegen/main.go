@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/sasalatart.com/quizory/config"
+	"github.com/sasalatart/quizory/config"
 )
 
 func main() {

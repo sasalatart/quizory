@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/sasalatart.com/quizory/config"
+	"github.com/sasalatart/quizory/config"
 	"github.com/sashabaranov/go-openai"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/sasalatart.com/quizory/http/oapi"
+	"github.com/sasalatart/quizory/http/oapi"
 	swagger "github.com/swaggo/http-swagger"
 
 	"github.com/gofiber/fiber/v2/middleware/recover"

@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sasalatart.com/quizory/db/migrations"
-	"github.com/sasalatart.com/quizory/infra"
+	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/db/migrations"
+	"github.com/sasalatart/quizory/infra"
 	"go.uber.org/fx"
 )
 

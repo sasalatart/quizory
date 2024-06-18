@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/domain/question/enums"
-	"github.com/sasalatart.com/quizory/llm"
+	"github.com/sasalatart/quizory/domain/question/enums"
+	"github.com/sasalatart/quizory/llm"
 )
 
 // Result represents the result of generating questions, intended to be used for communication

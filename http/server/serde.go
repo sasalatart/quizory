@@ -1,10 +1,10 @@
 package server
 
 import (
-	"github.com/sasalatart.com/quizory/domain/answer"
-	"github.com/sasalatart.com/quizory/domain/question"
-	"github.com/sasalatart.com/quizory/domain/question/enums"
-	"github.com/sasalatart.com/quizory/http/oapi"
+	"github.com/sasalatart/quizory/domain/answer"
+	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/question/enums"
+	"github.com/sasalatart/quizory/http/oapi"
 )
 
 func toQuestion(q question.Question) oapi.Question {

@@ -7,13 +7,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sasalatart.com/quizory/db"
-	"github.com/sasalatart.com/quizory/domain/answer"
-	"github.com/sasalatart.com/quizory/domain/question"
-	"github.com/sasalatart.com/quizory/http/server"
-	"github.com/sasalatart.com/quizory/infra"
-	"github.com/sasalatart.com/quizory/llm"
+	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/db"
+	"github.com/sasalatart/quizory/domain/answer"
+	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/http/server"
+	"github.com/sasalatart/quizory/infra"
+	"github.com/sasalatart/quizory/llm"
 	"go.uber.org/fx"
 )
 

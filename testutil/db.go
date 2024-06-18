@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/pkg/errors"
-	models "github.com/sasalatart.com/quizory/db/model"
+	models "github.com/sasalatart/quizory/db/model"
 )
 
 // DeleteData deletes all entities from the test database.

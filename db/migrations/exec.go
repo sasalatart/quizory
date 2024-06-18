@@ -8,7 +8,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/config"
+	"github.com/sasalatart/quizory/config"
 )
 
 // Up runs the migrations on the database specified by dbUrl.

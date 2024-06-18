@@ -1,4 +1,4 @@
-module github.com/sasalatart.com/quizory
+module github.com/sasalatart/quizory
 
 go 1.21.5
 
