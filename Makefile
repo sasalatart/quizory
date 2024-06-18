@@ -68,7 +68,15 @@ api-dev:
 	$(GOCMD) run ./cmd/api $(GENERATE_FLAG)
 
 dev:
-	$(MAKE) docker-infra-dev & $(MAKE) client-dev & $(MAKE) api-dev & wait
+	@sh -c '\
+		cleanup() { \
+			exit 0; \
+		}; \
+		trap "cleanup" INT; \
+		$(MAKE) docker-infra-dev & DOCKER_PID=$$!; \
+		$(MAKE) client-dev & CLIENT_PID=$$!; \
+		$(MAKE) api-dev & API_PID=$$!; \
+		wait $$DOCKER_PID $$CLIENT_PID $$API_PID'
 
 docker-image:
 	docker build -t sasalatart/quizory-api -f ./infra/docker/Dockerfile .
