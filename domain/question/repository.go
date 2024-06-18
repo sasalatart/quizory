@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	models "github.com/sasalatart.com/quizory/db/model"
-	"github.com/sasalatart.com/quizory/domain/question/enums"
+	models "github.com/sasalatart/quizory/db/model"
+	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )

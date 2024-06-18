@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 	"flag"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sasalatart.com/quizory/db"
-	"github.com/sasalatart.com/quizory/db/migrations"
-	"github.com/sasalatart.com/quizory/domain/answer"
-	"github.com/sasalatart.com/quizory/domain/question"
-	"github.com/sasalatart.com/quizory/http/server"
-	"github.com/sasalatart.com/quizory/llm"
+	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/db"
+	"github.com/sasalatart/quizory/db/migrations"
+	"github.com/sasalatart/quizory/domain/answer"
+	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/http/server"
+	"github.com/sasalatart/quizory/llm"
 	"go.uber.org/fx"
 )
 
@@ -41,7 +42,8 @@ func main() {
 
 	go func() {
 		if err := app.Start(ctx); err != nil {
-			panic(err)
+			slog.Error("Error starting app", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -50,7 +52,8 @@ func main() {
 
 	<-sig
 	if err := app.Stop(ctx); err != nil {
-		panic(err)
+		slog.Error("Error stopping app", "error", err)
+		os.Exit(1)
 	}
 }
 

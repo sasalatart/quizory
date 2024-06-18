@@ -4,8 +4,8 @@ import (
 	"log"
 	"log/slog"
 
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sasalatart.com/quizory/db/migrations"
+	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/db/migrations"
 )
 
 func main() {

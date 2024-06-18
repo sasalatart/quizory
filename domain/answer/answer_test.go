@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sasalatart.com/quizory/domain/answer"
+	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/stretchr/testify/assert"
 )
 

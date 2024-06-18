@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart.com/quizory/domain/pagination"
-	"github.com/sasalatart.com/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/pagination"
+	"github.com/sasalatart/quizory/domain/question"
 )
 
 // Service represents the service that manages answers.

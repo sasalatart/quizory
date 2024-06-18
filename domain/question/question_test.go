@@ -3,8 +3,8 @@ package question_test
 import (
 	"testing"
 
-	"github.com/sasalatart.com/quizory/domain/question"
-	"github.com/sasalatart.com/quizory/domain/question/enums"
+	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

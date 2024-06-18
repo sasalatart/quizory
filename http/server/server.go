@@ -8,11 +8,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/sasalatart.com/quizory/config"
-	"github.com/sasalatart.com/quizory/domain/answer"
-	"github.com/sasalatart.com/quizory/domain/pagination"
-	"github.com/sasalatart.com/quizory/domain/question"
-	"github.com/sasalatart.com/quizory/http/oapi"
+	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/domain/answer"
+	"github.com/sasalatart/quizory/domain/pagination"
+	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/http/oapi"
 )
 
 // ensure that we've conformed to the `ServerInterface` with a compile-time check.
