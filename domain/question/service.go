@@ -51,7 +51,7 @@ func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchS
 				if errors.Is(err, context.Canceled) {
 					return
 				}
-				slog.Error("Error generating question set", "error", err)
+				slog.Error("Error generating question set", slog.Any("error", err))
 			}
 		}
 	}
@@ -79,7 +79,7 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 		for _, aiQuestion := range result.Questions {
 			q, err := parseAIQuestion(aiQuestion, topic)
 			if errors.Is(err, ErrInvalidRecord) {
-				slog.Warn("Skipping invalid question", "validationError", err)
+				slog.Warn("Skipping invalid question", slog.Any("validationError", err))
 				continue
 			}
 			if err != nil {

@@ -44,12 +44,11 @@ func (s *Server) Start() {
 	s.App = fiber.New()
 
 	s.registerMiddlewares()
-	if err := s.registerAppHandlers(); err != nil {
-		log.Fatal(err)
-	}
+	s.mustRegisterSwaggerHandlers()
+	oapi.RegisterHandlers(s.App, s)
 
 	addr := s.cfg.Address()
-	slog.Info("Server is running", "address", addr)
+	slog.Info("Server is running", slog.String("address", addr))
 	if err := s.Listen(addr); err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +78,7 @@ func (s *Server) GetNextQuestion(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 	if err != nil {
-		slog.Error("Failed to get next question", "error", err)
+		slog.Error("Failed to get next question", slog.Any("error", err))
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(toUnansweredQuestion(*q))
@@ -92,7 +91,7 @@ func (s *Server) SubmitAnswer(c *fiber.Ctx) error {
 
 	req := new(oapi.SubmitAnswerRequest)
 	if err := c.BodyParser(req); err != nil {
-		slog.Error("Failed to parse request body", "error", err)
+		slog.Error("Failed to parse request body", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
@@ -103,7 +102,7 @@ func (s *Server) SubmitAnswer(c *fiber.Ctx) error {
 
 	submissionResponse, err := s.answerService.Submit(ctx, userID, req.ChoiceId)
 	if err != nil {
-		slog.Error("Failed to submit answer", "error", err)
+		slog.Error("Failed to submit answer", slog.Any("error", err))
 		return err
 	}
 	return c.Status(fiber.StatusCreated).JSON(toSubmitAnswerResult(*submissionResponse))
@@ -119,7 +118,7 @@ func (s *Server) GetAnswersLog(
 
 	p := pagination.New(params.Page, params.PageSize)
 	if err := p.Validate(); err != nil {
-		slog.Error("Invalid pagination", "error", err)
+		slog.Error("Invalid pagination", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid pagination")
 	}
 
@@ -128,7 +127,7 @@ func (s *Server) GetAnswersLog(
 		Pagination: p,
 	})
 	if err != nil {
-		slog.Error("Failed to get answers log", "error", err)
+		slog.Error("Failed to get answers log", slog.Any("error", err))
 		return err
 	}
 
