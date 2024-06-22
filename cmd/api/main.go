@@ -42,7 +42,7 @@ func main() {
 
 	go func() {
 		if err := app.Start(ctx); err != nil {
-			slog.Error("Error starting app", "error", err)
+			slog.Error("Error starting app", slog.Any("error", err))
 			os.Exit(1)
 		}
 	}()
@@ -52,7 +52,7 @@ func main() {
 
 	<-sig
 	if err := app.Stop(ctx); err != nil {
-		slog.Error("Error stopping app", "error", err)
+		slog.Error("Error stopping app", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
