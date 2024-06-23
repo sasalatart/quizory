@@ -69,8 +69,8 @@ func serverLC(lc fx.Lifecycle, server *server.Server, clientFactory server.TestC
 			}
 			return nil
 		},
-		OnStop: func(context.Context) error {
-			return server.Shutdown()
+		OnStop: func(ctx context.Context) error {
+			return server.Shutdown(ctx)
 		},
 	})
 }

@@ -23,7 +23,7 @@ You may try Quizory by visiting the following links:
 
 This project requires the following to be installed in your machine:
 
-1. [Go v1.21][go]
+1. [Go v1.22][go]
 2. [Node v20.10][nodejs] + [pnpm][pnpm]
 3. [Docker][docker]
 4. [Docker Compose][docker-compose]
@@ -116,8 +116,8 @@ _Quizory_ is [MIT licensed](./LICENSE).
 [go]: https://golang.org/
 [mit]: https://opensource.org/licenses/MIT
 [nodejs]: https://nodejs.org/en
-[oapi-codegen-license]: https://github.com/deepmap/oapi-codegen?tab=Apache-2.0-1-ov-file
-[oapi-codegen]: https://github.com/deepmap/oapi-codegen
+[oapi-codegen-license]: https://github.com/oapi-codegen/oapi-codegen?tab=Apache-2.0-1-ov-file
+[oapi-codegen]: https://github.com/oapi-codegen/oapi-codegen
 [openai]: https://openai.com/
 [pnpm]: https://pnpm.io/
 [sqlboiler-license]: https://github.com/volatiletech/sqlboiler?tab=BSD-3-Clause-1-ov-file

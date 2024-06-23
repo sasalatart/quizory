@@ -79,13 +79,15 @@ func questionsGenLC(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.
 }
 
 func serverLC(lc fx.Lifecycle, s *server.Server) {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			s.Start()
 			return nil
 		},
-		OnStop: func(context.Context) error {
-			return s.Shutdown()
+		OnStop: func(ctx context.Context) error {
+			return s.Shutdown(ctx)
 		},
 	})
 }
