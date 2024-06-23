@@ -1,6 +1,6 @@
 package: oapi
 generate:
-  fiber-server: true
+  std-http-server: true
   client: true
   models: true
 output: generated.go
