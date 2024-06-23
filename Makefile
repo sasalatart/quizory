@@ -2,6 +2,7 @@ GOCMD = go
 JSCMD = pnpm
 GOBUILD = $(GOCMD) build
 GOTEST = $(GOCMD) test
+GOTOOL = $(GOCMD) tool
 BINARIES_DIR = out
 CLIENT_DIR = client
 GENERATE_FLAG =
@@ -56,7 +57,11 @@ clean:
 	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist && rm -rf $(CLIENT_DIR)/src/generated/api/apis
 
 test:
-	$(GOTEST) ./...
+	$(GOTEST) -race -shuffle=on ./...
+
+test-with-coverage:
+	$(GOTEST) -coverprofile coverage.out ./... && \
+	$(GOTOOL) cover -html coverage.out -o coverage.html && open coverage.html
 
 docker-infra-dev:
 	docker-compose -f infra/docker/docker-compose.dev.yml up

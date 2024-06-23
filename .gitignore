@@ -19,3 +19,7 @@
 # Secrets
 .env
 .env.*
+
+# Test coverage artifacts
+coverage.out
+coverage.html
