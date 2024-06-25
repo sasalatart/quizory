@@ -51,6 +51,7 @@ func (s *Server) Start() {
 		BaseRouter: mux,
 		Middlewares: []oapi.MiddlewareFunc{
 			middleware.WithAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
+			middleware.WithRecover,
 			middleware.WithLogger,
 		},
 	})
