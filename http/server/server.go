@@ -94,7 +94,7 @@ func (s *Server) GetNextQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(ctx)
 
 	q, err := s.questionService.NextFor(ctx, userID)
-	if err != nil && errors.Is(err, question.ErrNoQuestionsLeft) {
+	if errors.Is(err, question.ErrNoQuestionsLeft) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -102,7 +102,7 @@ func (s *Server) GetNextQuestion(w http.ResponseWriter, r *http.Request) {
 		handleServerError(w, "Failed to get next question", err)
 		return
 	}
-	_ = json.NewEncoder(w).Encode(toUnansweredQuestion(*q))
+	encodeJSON(w, toUnansweredQuestion(*q))
 }
 
 // SubmitAnswer registers the choice made by a user for a specific question, and returns the correct
@@ -124,7 +124,7 @@ func (s *Server) SubmitAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(toSubmitAnswerResult(*submissionResponse))
+	encodeJSON(w, toSubmitAnswerResult(*submissionResponse))
 }
 
 // GetAnswersLog returns a list of previous attempts at answering questions from the specified user.
@@ -155,7 +155,15 @@ func (s *Server) GetAnswersLog(
 	for _, logItem := range logItems {
 		result = append(result, toAnswersLogItem(logItem))
 	}
-	_ = json.NewEncoder(w).Encode(result)
+	encodeJSON(w, result)
+}
+
+// encodeJSON encodes the given data as JSON into the response writer. If an error occurs, it logs
+// it and sends a 500 status code.
+func encodeJSON(w http.ResponseWriter, data any) {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		handleServerError(w, "Failed to encode response", err)
+	}
 }
 
 func handleBadRequest(w http.ResponseWriter, msg string, err error) {

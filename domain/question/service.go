@@ -136,7 +136,7 @@ func (s Service) NextFor(
 		WhereNotAnsweredBy(userID),
 		OrderByCreatedAtAsc(),
 	)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Wrapf(ErrNoQuestionsLeft, "getting next question for %s", userID)
 	}
 	return q, err
