@@ -10,19 +10,33 @@ export function Question(): JSX.Element {
   const [feedback, setFeedback] = useState<Feedback | undefined>();
 
   const { questionsApi } = useContext(QueryClientContext);
+
   const {
     data: question,
-    isLoading,
-    isRefetching,
-    refetch: refetchNextQuestion,
+    isLoading: isLoadingCurrentQuestion,
+    isRefetching: isRefetchingCurrentQuestion,
+    refetch: refetchCurrentQuestion,
   } = useQuery('current-question', {
-    queryFn: () => questionsApi.getNextQuestion(),
+    queryFn: async () => {
+      const remainingTopics = await questionsApi.getRemainingTopics();
+      if (remainingTopics.length === 0) {
+        return null;
+      }
+
+      // TODO: allow users to choose the actual topic
+      return questionsApi.getNextQuestion({ topic: remainingTopics[0].topic });
+    },
     refetchOnWindowFocus: false,
   });
 
-  if (isLoading && !question) {
+  if (isLoadingCurrentQuestion) {
     return <CenteredSpinner />;
   }
+
+  if (!question) {
+    return <NoQuestionsLeftCard />;
+  }
+
 
   const shouldShowFeedback = question?.choices.some(({ id }) => id === feedback?.selectedChoiceId);
   if (question && feedback && shouldShowFeedback) {
@@ -30,14 +44,10 @@ export function Question(): JSX.Element {
       <QuestionFeedbackCard
         question={question}
         feedback={feedback}
-        isLoadingNext={isRefetching}
-        onNext={refetchNextQuestion}
+        isLoadingNext={isRefetchingCurrentQuestion}
+        onNext={refetchCurrentQuestion}
       />
     );
-  }
-
-  if (!question) {
-    return <NoQuestionsLeftCard />;
   }
 
   return <QuestionFormCard question={question} onSubmit={(feedback) => setFeedback(feedback)} />;

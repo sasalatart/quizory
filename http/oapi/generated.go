@@ -95,6 +95,12 @@ type UnansweredQuestion struct {
 	Topic      string             `json:"topic"`
 }
 
+// GetNextQuestionParams defines parameters for GetNextQuestion.
+type GetNextQuestionParams struct {
+	// Topic The topic for which the next question should be retrieved.
+	Topic string `form:"topic" json:"topic"`
+}
+
 // GetAnswersLogParams defines parameters for GetAnswersLog.
 type GetAnswersLogParams struct {
 	// Page The page number to retrieve (index starts at 0).
@@ -189,7 +195,7 @@ type ClientInterface interface {
 	HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNextQuestion request
-	GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetNextQuestion(ctx context.Context, params *GetNextQuestionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRemainingTopics request
 	GetRemainingTopics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -234,8 +240,8 @@ func (c *Client) HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn)
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNextQuestionRequest(c.Server)
+func (c *Client) GetNextQuestion(ctx context.Context, params *GetNextQuestionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNextQuestionRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +344,7 @@ func NewHealthCheckRequest(server string) (*http.Request, error) {
 }
 
 // NewGetNextQuestionRequest generates requests for GetNextQuestion
-func NewGetNextQuestionRequest(server string) (*http.Request, error) {
+func NewGetNextQuestionRequest(server string, params *GetNextQuestionParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -354,6 +360,24 @@ func NewGetNextQuestionRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "topic", runtime.ParamLocationQuery, params.Topic); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -515,7 +539,7 @@ type ClientWithResponsesInterface interface {
 	HealthCheckWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckResponse, error)
 
 	// GetNextQuestionWithResponse request
-	GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
+	GetNextQuestionWithResponse(ctx context.Context, params *GetNextQuestionParams, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
 
 	// GetRemainingTopicsWithResponse request
 	GetRemainingTopicsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRemainingTopicsResponse, error)
@@ -660,8 +684,8 @@ func (c *ClientWithResponses) HealthCheckWithResponse(ctx context.Context, reqEd
 }
 
 // GetNextQuestionWithResponse request returning *GetNextQuestionResponse
-func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error) {
-	rsp, err := c.GetNextQuestion(ctx, reqEditors...)
+func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, params *GetNextQuestionParams, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error) {
+	rsp, err := c.GetNextQuestion(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -816,7 +840,7 @@ type ServerInterface interface {
 	HealthCheck(w http.ResponseWriter, r *http.Request)
 
 	// (GET /questions/next)
-	GetNextQuestion(w http.ResponseWriter, r *http.Request)
+	GetNextQuestion(w http.ResponseWriter, r *http.Request, params GetNextQuestionParams)
 
 	// (GET /questions/remaining-topics)
 	GetRemainingTopics(w http.ResponseWriter, r *http.Request)
@@ -870,10 +894,30 @@ func (siw *ServerInterfaceWrapper) HealthCheck(w http.ResponseWriter, r *http.Re
 func (siw *ServerInterfaceWrapper) GetNextQuestion(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	var err error
+
 	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetNextQuestionParams
+
+	// ------------- Required query parameter "topic" -------------
+
+	if paramValue := r.URL.Query().Get("topic"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "topic"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "topic", r.URL.Query(), &params.Topic)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "topic", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetNextQuestion(w, r)
+		siw.Handler.GetNextQuestion(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {

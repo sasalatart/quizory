@@ -25,16 +25,31 @@ import {
     UnansweredQuestionToJSON,
 } from '../models/index';
 
+export interface GetNextQuestionRequest {
+    topic: string;
+}
+
 /**
  * 
  */
 export class QuestionsApi extends runtime.BaseAPI {
 
     /**
-     * Returns the next question that a user should answer.
+     * Returns the next question that a user should answer for the specified topic.
      */
-    async getNextQuestionRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UnansweredQuestion>> {
+    async getNextQuestionRaw(requestParameters: GetNextQuestionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UnansweredQuestion>> {
+        if (requestParameters['topic'] == null) {
+            throw new runtime.RequiredError(
+                'topic',
+                'Required parameter "topic" was null or undefined when calling getNextQuestion().'
+            );
+        }
+
         const queryParameters: any = {};
+
+        if (requestParameters['topic'] != null) {
+            queryParameters['topic'] = requestParameters['topic'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -57,10 +72,10 @@ export class QuestionsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns the next question that a user should answer.
+     * Returns the next question that a user should answer for the specified topic.
      */
-    async getNextQuestion(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UnansweredQuestion | null | undefined > {
-        const response = await this.getNextQuestionRaw(initOverrides);
+    async getNextQuestion(requestParameters: GetNextQuestionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UnansweredQuestion | null | undefined > {
+        const response = await this.getNextQuestionRaw(requestParameters, initOverrides);
         switch (response.raw.status) {
             case 200:
                 return await response.value();
