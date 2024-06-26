@@ -138,7 +138,7 @@ func (s *QuestionServiceTestSuite) assertNextQuestionIs(
 	s.T().Helper()
 	got, err := s.Service.NextFor(context.Background(), userID, topic)
 	s.Require().NoError(err)
-	s.Equal(wantQuestionID, got.ID)
+	s.Equal(wantQuestionID.String(), got.ID.String())
 }
 
 func (s *QuestionServiceTestSuite) TestRemainingTopicsFor() {
