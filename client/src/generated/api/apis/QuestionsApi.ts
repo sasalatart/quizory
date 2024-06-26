@@ -15,9 +15,12 @@
 
 import * as runtime from '../runtime';
 import type {
+  RemainingTopic,
   UnansweredQuestion,
 } from '../models/index';
 import {
+    RemainingTopicFromJSON,
+    RemainingTopicToJSON,
     UnansweredQuestionFromJSON,
     UnansweredQuestionToJSON,
 } from '../models/index';
@@ -66,6 +69,40 @@ export class QuestionsApi extends runtime.BaseAPI {
             default:
                 return await response.value();
         }
+    }
+
+    /**
+     * Returns the list of topics with questions still unanswered by the user making the request. Each of these topics comes with the actual amount of questions left to answer. 
+     */
+    async getRemainingTopicsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<RemainingTopic>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("BearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/questions/remaining-topics`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RemainingTopicFromJSON));
+    }
+
+    /**
+     * Returns the list of topics with questions still unanswered by the user making the request. Each of these topics comes with the actual amount of questions left to answer. 
+     */
+    async getRemainingTopics(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<RemainingTopic>> {
+        const response = await this.getRemainingTopicsRaw(initOverrides);
+        return await response.value();
     }
 
 }

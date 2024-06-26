@@ -72,6 +72,55 @@ func (r *Repository) Insert(ctx context.Context, q Question) error {
 	return txn.Commit()
 }
 
+// GetRemainingTopics returns a map such that each key is a topic for which the user still has
+// unanswered questions, and each value is the amount of remaining questions for that topic.
+// This might look like it does not belong in the repository, but if we do this at the service level
+// by loading all unanswered questions for a user and grouping via code, we risk loading ALL
+// questions in the database in the worst case (e.g. if the user has not answered any question).
+func (r *Repository) GetRemainingTopics(
+	ctx context.Context,
+	userID uuid.UUID,
+) (map[enums.Topic]uint, error) {
+	query := `
+		SELECT topic, COUNT(*) AS count
+		FROM questions
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM answers a
+			JOIN choices c ON c.id = a.choice_id
+			WHERE c.question_id = questions.id AND a.user_id = $1
+		)
+		GROUP BY topic
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	topicCounts := make(map[enums.Topic]uint)
+	for rows.Next() {
+		var tc struct {
+			Topic string `boil:"topic"`
+			Count uint   `boil:"count"`
+		}
+		if err := rows.Scan(&tc.Topic, &tc.Count); err != nil {
+			return nil, err
+		}
+		topic, err := enums.TopicString(tc.Topic)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parsing topic %s", tc.Topic)
+		}
+		topicCounts[topic] = tc.Count
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return topicCounts, nil
+}
+
+// withChoices eager loads the choices of the questions.
 func (r *Repository) withChoices(qms []qm.QueryMod) []qm.QueryMod {
 	return append(qms, qm.Load(models.QuestionRels.Choices))
 }

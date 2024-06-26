@@ -58,6 +58,12 @@ type Question struct {
 	Topic      string     `json:"topic"`
 }
 
+// RemainingTopic defines model for RemainingTopic.
+type RemainingTopic struct {
+	AmountOfQuestions int    `json:"amountOfQuestions"`
+	Topic             string `json:"topic"`
+}
+
 // SubmitAnswerRequest defines model for SubmitAnswerRequest.
 type SubmitAnswerRequest struct {
 	ChoiceId UUID `json:"choiceId"`
@@ -185,6 +191,9 @@ type ClientInterface interface {
 	// GetNextQuestion request
 	GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetRemainingTopics request
+	GetRemainingTopics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAnswersLog request
 	GetAnswersLog(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
@@ -227,6 +236,18 @@ func (c *Client) HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn)
 
 func (c *Client) GetNextQuestion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNextQuestionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetRemainingTopics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRemainingTopicsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -326,6 +347,33 @@ func NewGetNextQuestionRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/questions/next")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRemainingTopicsRequest generates requests for GetRemainingTopics
+func NewGetRemainingTopicsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/questions/remaining-topics")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -469,6 +517,9 @@ type ClientWithResponsesInterface interface {
 	// GetNextQuestionWithResponse request
 	GetNextQuestionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNextQuestionResponse, error)
 
+	// GetRemainingTopicsWithResponse request
+	GetRemainingTopicsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRemainingTopicsResponse, error)
+
 	// GetAnswersLogWithResponse request
 	GetAnswersLogWithResponse(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error)
 }
@@ -538,6 +589,28 @@ func (r GetNextQuestionResponse) StatusCode() int {
 	return 0
 }
 
+type GetRemainingTopicsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]RemainingTopic
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRemainingTopicsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRemainingTopicsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetAnswersLogResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -593,6 +666,15 @@ func (c *ClientWithResponses) GetNextQuestionWithResponse(ctx context.Context, r
 		return nil, err
 	}
 	return ParseGetNextQuestionResponse(rsp)
+}
+
+// GetRemainingTopicsWithResponse request returning *GetRemainingTopicsResponse
+func (c *ClientWithResponses) GetRemainingTopicsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRemainingTopicsResponse, error) {
+	rsp, err := c.GetRemainingTopics(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRemainingTopicsResponse(rsp)
 }
 
 // GetAnswersLogWithResponse request returning *GetAnswersLogResponse
@@ -672,6 +754,32 @@ func ParseGetNextQuestionResponse(rsp *http.Response) (*GetNextQuestionResponse,
 	return response, nil
 }
 
+// ParseGetRemainingTopicsResponse parses an HTTP response from a GetRemainingTopicsWithResponse call
+func ParseGetRemainingTopicsResponse(rsp *http.Response) (*GetRemainingTopicsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRemainingTopicsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []RemainingTopic
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetAnswersLogResponse parses an HTTP response from a GetAnswersLogWithResponse call
 func ParseGetAnswersLogResponse(rsp *http.Response) (*GetAnswersLogResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -709,6 +817,9 @@ type ServerInterface interface {
 
 	// (GET /questions/next)
 	GetNextQuestion(w http.ResponseWriter, r *http.Request)
+
+	// (GET /questions/remaining-topics)
+	GetRemainingTopics(w http.ResponseWriter, r *http.Request)
 
 	// (GET /users/{userId}/answers)
 	GetAnswersLog(w http.ResponseWriter, r *http.Request, userId UUID, params GetAnswersLogParams)
@@ -763,6 +874,23 @@ func (siw *ServerInterfaceWrapper) GetNextQuestion(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetNextQuestion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetRemainingTopics operation middleware
+func (siw *ServerInterfaceWrapper) GetRemainingTopics(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRemainingTopics(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -936,6 +1064,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("POST "+options.BaseURL+"/answers", wrapper.SubmitAnswer)
 	m.HandleFunc("GET "+options.BaseURL+"/health-check", wrapper.HealthCheck)
 	m.HandleFunc("GET "+options.BaseURL+"/questions/next", wrapper.GetNextQuestion)
+	m.HandleFunc("GET "+options.BaseURL+"/questions/remaining-topics", wrapper.GetRemainingTopics)
 	m.HandleFunc("GET "+options.BaseURL+"/users/{userId}/answers", wrapper.GetAnswersLog)
 
 	return m

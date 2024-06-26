@@ -30,10 +30,10 @@ func TestAnswer_Validate(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.answer.Validate()
-			if tt.wantErr {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.answer.Validate()
+			if tc.wantErr {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, answer.ErrInvalidRecord)
 			} else {

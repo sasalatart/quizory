@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sasalatart/quizory/domain/pagination"
 	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/http/oapi"
 	"github.com/sasalatart/quizory/http/server"
 	"github.com/sasalatart/quizory/testutil"
@@ -32,9 +33,9 @@ type ServerTestSuite struct {
 	serverTestSuiteParams
 	app *fx.App
 
-	q1 question.Question
-	q2 question.Question
-	q3 question.Question
+	ancientGreeceQ1 question.Question
+	ancientGreeceQ2 question.Question
+	ancientRomeQ1   question.Question
 }
 
 func TestServer(t *testing.T) {
@@ -66,19 +67,32 @@ func (s *ServerTestSuite) TestIntegration() {
 	client, err := s.ClientFactory(userID)
 	s.Require().NoError(err)
 
+	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{})
 	s.mustNotHaveNextQuestion(ctx, client)
 
 	s.seedQuestions(ctx)
 
-	s.mustGetNextQuestion(ctx, client, s.q1)
-	s.mustSubmitAnswer(ctx, client, s.q1, s.q1.Choices[0].ID)
+	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+		{Topic: enums.TopicAncientGreece.String(), AmountOfQuestions: 2},
+		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
+	})
+	s.mustGetNextQuestion(ctx, client, s.ancientGreeceQ1)
+	s.mustSubmitAnswer(ctx, client, s.ancientGreeceQ1, s.ancientGreeceQ1.Choices[0].ID)
 
-	s.mustGetNextQuestion(ctx, client, s.q2)
-	s.mustSubmitAnswer(ctx, client, s.q2, s.q2.Choices[1].ID)
+	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+		{Topic: enums.TopicAncientGreece.String(), AmountOfQuestions: 1},
+		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
+	})
+	s.mustGetNextQuestion(ctx, client, s.ancientGreeceQ2)
+	s.mustSubmitAnswer(ctx, client, s.ancientGreeceQ2, s.ancientGreeceQ2.Choices[1].ID)
 
-	s.mustGetNextQuestion(ctx, client, s.q3)
-	s.mustSubmitAnswer(ctx, client, s.q3, s.q3.Choices[0].ID)
+	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
+	})
+	s.mustGetNextQuestion(ctx, client, s.ancientRomeQ1)
+	s.mustSubmitAnswer(ctx, client, s.ancientRomeQ1, s.ancientRomeQ1.Choices[0].ID)
 
+	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{})
 	s.mustNotHaveNextQuestion(ctx, client)
 
 	s.mustGetLog(
@@ -87,8 +101,8 @@ func (s *ServerTestSuite) TestIntegration() {
 		userID,
 		pagination.Pagination{Page: 0, PageSize: 2},
 		[]wantLogItem{
-			{QuestionID: s.q3.ID, ChoiceID: s.q3.Choices[0].ID},
-			{QuestionID: s.q2.ID, ChoiceID: s.q2.Choices[1].ID},
+			{QuestionID: s.ancientRomeQ1.ID, ChoiceID: s.ancientRomeQ1.Choices[0].ID},
+			{QuestionID: s.ancientGreeceQ2.ID, ChoiceID: s.ancientGreeceQ2.Choices[1].ID},
 		},
 	)
 	s.mustGetLog(
@@ -97,7 +111,7 @@ func (s *ServerTestSuite) TestIntegration() {
 		userID,
 		pagination.Pagination{Page: 1, PageSize: 2},
 		[]wantLogItem{
-			{QuestionID: s.q1.ID, ChoiceID: s.q1.Choices[0].ID},
+			{QuestionID: s.ancientGreeceQ1.ID, ChoiceID: s.ancientGreeceQ1.Choices[0].ID},
 		},
 	)
 	s.mustGetLog(
@@ -107,6 +121,19 @@ func (s *ServerTestSuite) TestIntegration() {
 		pagination.Pagination{Page: 2, PageSize: 2},
 		nil,
 	)
+}
+
+func (s *ServerTestSuite) mustHaveRemainingTopics(
+	ctx context.Context,
+	client *oapi.ClientWithResponses,
+	wantRemainingTopics []oapi.RemainingTopic,
+) {
+	s.T().Helper()
+	res, err := client.GetRemainingTopics(ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(http.StatusOK, res.StatusCode)
+	got := parseResponse[[]oapi.RemainingTopic](s.T(), res)
+	s.ElementsMatch(wantRemainingTopics, got)
 }
 
 func (s *ServerTestSuite) mustNotHaveNextQuestion(
@@ -187,20 +214,23 @@ func (s *ServerTestSuite) mustGetLog(
 }
 
 func (s *ServerTestSuite) seedQuestions(ctx context.Context) {
-	s.q1 = question.Mock(func(q *question.Question) {
+	s.ancientGreeceQ1 = question.Mock(func(q *question.Question) {
 		q.Question = "Question 1"
+		q.Topic = enums.TopicAncientGreece
 	})
-	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.q1))
+	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.ancientGreeceQ1))
 
-	s.q2 = question.Mock(func(q *question.Question) {
+	s.ancientGreeceQ2 = question.Mock(func(q *question.Question) {
 		q.Question = "Question 2"
+		q.Topic = enums.TopicAncientGreece
 	})
-	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.q2))
+	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.ancientGreeceQ2))
 
-	s.q3 = question.Mock(func(q *question.Question) {
+	s.ancientRomeQ1 = question.Mock(func(q *question.Question) {
 		q.Question = "Question 3"
+		q.Topic = enums.TopicAncientRome
 	})
-	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.q3))
+	s.Require().NoError(s.QuestionRepo.Insert(ctx, s.ancientRomeQ1))
 }
 
 func parseResponse[T any](t *testing.T, res *http.Response) T {

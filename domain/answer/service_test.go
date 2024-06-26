@@ -175,13 +175,13 @@ func (s *AnswerServiceTestSuite) TestLogFor() {
 			want: []answer.LogItem{},
 		},
 	}
-	for _, tt := range testCases {
-		s.Run(tt.name, func() {
-			got, err := s.AnswerService.LogFor(ctx, tt.req)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			got, err := s.AnswerService.LogFor(ctx, tc.req)
 			s.Require().NoError(err)
-			s.Require().Len(got, len(tt.want))
+			s.Require().Len(got, len(tc.want))
 
-			for i, want := range tt.want {
+			for i, want := range tc.want {
 				s.NotEqual(
 					uuid.Nil.String(),
 					got[i].ID.String(),
