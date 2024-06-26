@@ -1,6 +1,8 @@
 package server
 
 import (
+	"slices"
+
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
@@ -15,6 +17,15 @@ func toRemainingTopics(m map[enums.Topic]uint) []oapi.RemainingTopic {
 			AmountOfQuestions: int(amount),
 		})
 	}
+	slices.SortStableFunc(result, func(rt1, rt2 oapi.RemainingTopic) int {
+		if rt1.Topic < rt2.Topic {
+			return -1
+		}
+		if rt1.Topic > rt2.Topic {
+			return 1
+		}
+		return 0
+	})
 	return result
 }
 
