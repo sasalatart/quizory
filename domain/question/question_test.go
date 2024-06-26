@@ -136,11 +136,11 @@ func TestQuestion_Validate(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			q := tt.factory()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			q := tc.factory()
 			err := q.Validate()
-			if tt.wantErr {
+			if tc.wantErr {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, question.ErrInvalidRecord)
 			} else {
@@ -185,16 +185,16 @@ func TestQuestion_CorrectChoice(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			c, err := tt.q.CorrectChoice()
-			if tt.wantErr {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c, err := tc.q.CorrectChoice()
+			if tc.wantErr {
 				require.Error(t, err)
 				require.Nil(t, c)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, c.Choice)
+			assert.Equal(t, tc.want, c.Choice)
 		})
 	}
 }

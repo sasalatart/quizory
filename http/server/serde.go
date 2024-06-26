@@ -7,6 +7,17 @@ import (
 	"github.com/sasalatart/quizory/http/oapi"
 )
 
+func toRemainingTopics(m map[enums.Topic]uint) []oapi.RemainingTopic {
+	result := make([]oapi.RemainingTopic, 0, len(m))
+	for topic, amount := range m {
+		result = append(result, oapi.RemainingTopic{
+			Topic:             topic.String(),
+			AmountOfQuestions: int(amount),
+		})
+	}
+	return result
+}
+
 func toQuestion(q question.Question) oapi.Question {
 	choices := make([]oapi.Choice, 0, len(q.Choices))
 	for _, c := range q.Choices {

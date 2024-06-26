@@ -88,6 +88,20 @@ func (s *Server) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetRemainingTopics returns the list of topics with questions still unanswered by the user making
+// the request. Each of these topics comes with the actual amount of questions left to answer.
+func (s *Server) GetRemainingTopics(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
+
+	remainingTopics, err := s.questionService.RemainingTopicsFor(ctx, userID)
+	if err != nil {
+		handleServerError(w, "Failed to get remaining topics", err)
+		return
+	}
+	encodeJSON(w, toRemainingTopics(remainingTopics))
+}
+
 // GetNextQuestion returns the next question for a user to answer.
 func (s *Server) GetNextQuestion(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/llm"
 	"github.com/sasalatart/quizory/testutil"
 	"github.com/stretchr/testify/assert"
@@ -97,30 +98,95 @@ func (s *QuestionServiceTestSuite) TestNextFor() {
 	ctx := context.Background()
 	userID := uuid.New()
 
-	q1 := question.Mock(nil)
-	err := s.QuestionRepo.Insert(ctx, q1)
-	s.Require().NoError(err)
-
-	q2 := question.Mock(nil)
-	err = s.QuestionRepo.Insert(ctx, q2)
-	s.Require().NoError(err)
+	q1 := s.mustSeedQuestion(nil)
+	q2 := s.mustSeedQuestion(nil)
 
 	got, err := s.Service.NextFor(ctx, userID)
 	s.Require().NoError(err)
 	s.Equal(q1.ID, got.ID)
 
-	a1 := answer.New(userID, q1.Choices[0].ID)
-	err = s.AnswerRepo.Insert(ctx, *a1)
-	s.Require().NoError(err)
+	s.mustSeedAnswer(userID, q1.Choices[0].ID)
 
 	got, err = s.Service.NextFor(ctx, userID)
 	s.Require().NoError(err)
 	s.Equal(q2.ID, got.ID)
 
-	a2 := answer.New(userID, q2.Choices[0].ID)
-	err = s.AnswerRepo.Insert(ctx, *a2)
-	s.Require().NoError(err)
+	s.mustSeedAnswer(userID, q2.Choices[0].ID)
 
 	_, err = s.Service.NextFor(ctx, userID)
 	s.Require().ErrorIs(err, question.ErrNoQuestionsLeft)
+}
+
+func (s *QuestionServiceTestSuite) TestRemainingTopicsFor() {
+	userID1 := uuid.New()
+	userID2 := uuid.New()
+	userID3 := uuid.New()
+
+	q1 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicNapoleonicWars
+	})
+	s.mustSeedAnswer(userID1, q1.Choices[0].ID)
+
+	q2 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicNapoleonicWars
+	})
+	s.mustSeedAnswer(userID1, q2.Choices[0].ID)
+
+	q3 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicFrenchRevolution
+	})
+	s.mustSeedAnswer(userID1, q3.Choices[0].ID)
+	s.mustSeedAnswer(userID2, q3.Choices[0].ID)
+
+	testCases := []struct {
+		name   string
+		userID uuid.UUID
+		want   map[enums.Topic]uint
+	}{
+		{
+			name:   "A user that has answered all questions",
+			userID: userID1,
+			want:   map[enums.Topic]uint{},
+		},
+		{
+			name:   "A user that has answered some questions",
+			userID: userID2,
+			want: map[enums.Topic]uint{
+				enums.TopicNapoleonicWars: 2,
+			},
+		}, {
+			name:   "A user that has not answered any question",
+			userID: userID3,
+			want: map[enums.Topic]uint{
+				enums.TopicFrenchRevolution: 1,
+				enums.TopicNapoleonicWars:   2,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			got, err := s.Service.RemainingTopicsFor(context.Background(), tc.userID)
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func (s *QuestionServiceTestSuite) mustSeedQuestion(
+	overrides func(q *question.Question),
+) question.Question {
+	q := question.Mock(overrides)
+	err := s.QuestionRepo.Insert(context.Background(), q)
+	s.Require().NoError(err)
+	return q
+}
+
+func (s *QuestionServiceTestSuite) mustSeedAnswer(
+	userID uuid.UUID,
+	choiceID uuid.UUID,
+) answer.Answer {
+	a := answer.New(userID, choiceID)
+	err := s.AnswerRepo.Insert(context.Background(), *a)
+	s.Require().NoError(err)
+	return *a
 }
