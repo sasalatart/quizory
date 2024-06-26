@@ -43,13 +43,17 @@ func TestServer(t *testing.T) {
 }
 
 func (s *ServerTestSuite) SetupSuite() {
+	ctx := context.Background()
+
 	s.app = fx.New(
 		fx.NopLogger,
 		testutil.ModuleWithAPI,
 		fx.Populate(&s.serverTestSuiteParams),
 	)
-	err := s.app.Start(context.Background())
+	err := s.app.Start(ctx)
 	s.Require().NoError(err)
+
+	s.seedQuestions(ctx)
 }
 
 func (s *ServerTestSuite) TearDownSuite() {
@@ -67,35 +71,41 @@ func (s *ServerTestSuite) TestIntegration() {
 	client, err := s.ClientFactory(userID)
 	s.Require().NoError(err)
 
-	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{})
-	s.mustNotHaveNextQuestion(ctx, client)
-
-	s.seedQuestions(ctx)
-
-	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+	s.assertRemainingTopicsAre(ctx, client, []oapi.RemainingTopic{
 		{Topic: enums.TopicAncientGreece.String(), AmountOfQuestions: 2},
 		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
 	})
-	s.mustGetNextQuestion(ctx, client, s.ancientGreeceQ1)
-	s.mustSubmitAnswer(ctx, client, s.ancientGreeceQ1, s.ancientGreeceQ1.Choices[0].ID)
+	s.assertNextQuestionFor(ctx, client, enums.TopicAncientGreece, s.ancientGreeceQ1)
+	s.assertNextQuestionFor(ctx, client, enums.TopicAncientRome, s.ancientRomeQ1)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicNapoleonicWars)
 
-	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+	s.submitAnswer(ctx, client, s.ancientGreeceQ1, s.ancientGreeceQ1.Choices[0].ID)
+
+	s.assertRemainingTopicsAre(ctx, client, []oapi.RemainingTopic{
 		{Topic: enums.TopicAncientGreece.String(), AmountOfQuestions: 1},
 		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
 	})
-	s.mustGetNextQuestion(ctx, client, s.ancientGreeceQ2)
-	s.mustSubmitAnswer(ctx, client, s.ancientGreeceQ2, s.ancientGreeceQ2.Choices[1].ID)
+	s.assertNextQuestionFor(ctx, client, enums.TopicAncientGreece, s.ancientGreeceQ2)
+	s.assertNextQuestionFor(ctx, client, enums.TopicAncientRome, s.ancientRomeQ1)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicNapoleonicWars)
 
-	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{
+	s.submitAnswer(ctx, client, s.ancientGreeceQ2, s.ancientGreeceQ2.Choices[1].ID)
+
+	s.assertRemainingTopicsAre(ctx, client, []oapi.RemainingTopic{
 		{Topic: enums.TopicAncientRome.String(), AmountOfQuestions: 1},
 	})
-	s.mustGetNextQuestion(ctx, client, s.ancientRomeQ1)
-	s.mustSubmitAnswer(ctx, client, s.ancientRomeQ1, s.ancientRomeQ1.Choices[0].ID)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicAncientGreece)
+	s.assertNextQuestionFor(ctx, client, enums.TopicAncientRome, s.ancientRomeQ1)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicNapoleonicWars)
 
-	s.mustHaveRemainingTopics(ctx, client, []oapi.RemainingTopic{})
-	s.mustNotHaveNextQuestion(ctx, client)
+	s.submitAnswer(ctx, client, s.ancientRomeQ1, s.ancientRomeQ1.Choices[0].ID)
 
-	s.mustGetLog(
+	s.assertRemainingTopicsAre(ctx, client, []oapi.RemainingTopic{})
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicAncientGreece)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicAncientRome)
+	s.assertNoNextQuestionFor(ctx, client, enums.TopicNapoleonicWars)
+
+	s.assertPaginatedLog(
 		ctx,
 		client,
 		userID,
@@ -105,7 +115,7 @@ func (s *ServerTestSuite) TestIntegration() {
 			{QuestionID: s.ancientGreeceQ2.ID, ChoiceID: s.ancientGreeceQ2.Choices[1].ID},
 		},
 	)
-	s.mustGetLog(
+	s.assertPaginatedLog(
 		ctx,
 		client,
 		userID,
@@ -114,7 +124,7 @@ func (s *ServerTestSuite) TestIntegration() {
 			{QuestionID: s.ancientGreeceQ1.ID, ChoiceID: s.ancientGreeceQ1.Choices[0].ID},
 		},
 	)
-	s.mustGetLog(
+	s.assertPaginatedLog(
 		ctx,
 		client,
 		userID,
@@ -123,7 +133,7 @@ func (s *ServerTestSuite) TestIntegration() {
 	)
 }
 
-func (s *ServerTestSuite) mustHaveRemainingTopics(
+func (s *ServerTestSuite) assertRemainingTopicsAre(
 	ctx context.Context,
 	client *oapi.ClientWithResponses,
 	wantRemainingTopics []oapi.RemainingTopic,
@@ -136,23 +146,29 @@ func (s *ServerTestSuite) mustHaveRemainingTopics(
 	s.ElementsMatch(wantRemainingTopics, got)
 }
 
-func (s *ServerTestSuite) mustNotHaveNextQuestion(
+func (s *ServerTestSuite) assertNoNextQuestionFor(
 	ctx context.Context,
 	client *oapi.ClientWithResponses,
+	topic enums.Topic,
 ) {
 	s.T().Helper()
-	res, err := client.GetNextQuestion(ctx)
+	res, err := client.GetNextQuestion(ctx, &oapi.GetNextQuestionParams{
+		Topic: topic.String(),
+	})
 	s.Require().NoError(err)
 	s.Require().Equal(http.StatusNoContent, res.StatusCode)
 }
 
-func (s *ServerTestSuite) mustGetNextQuestion(
+func (s *ServerTestSuite) assertNextQuestionFor(
 	ctx context.Context,
 	client *oapi.ClientWithResponses,
+	topic enums.Topic,
 	wantQuestion question.Question,
 ) {
 	s.T().Helper()
-	res, err := client.GetNextQuestion(ctx)
+	res, err := client.GetNextQuestion(ctx, &oapi.GetNextQuestionParams{
+		Topic: topic.String(),
+	})
 	s.Require().NoError(err)
 	s.Require().Equal(http.StatusOK, res.StatusCode)
 	got := parseResponse[oapi.UnansweredQuestion](s.T(), res)
@@ -160,7 +176,7 @@ func (s *ServerTestSuite) mustGetNextQuestion(
 	s.Len(got.Choices, len(wantQuestion.Choices))
 }
 
-func (s *ServerTestSuite) mustSubmitAnswer(
+func (s *ServerTestSuite) submitAnswer(
 	ctx context.Context,
 	client *oapi.ClientWithResponses,
 	q question.Question,
@@ -186,7 +202,7 @@ type wantLogItem struct {
 	ChoiceID   uuid.UUID
 }
 
-func (s *ServerTestSuite) mustGetLog(
+func (s *ServerTestSuite) assertPaginatedLog(
 	ctx context.Context,
 	client *oapi.ClientWithResponses,
 	userID uuid.UUID,

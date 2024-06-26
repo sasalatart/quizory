@@ -150,14 +150,20 @@ func (s Service) FromChoices(ctx context.Context, ids ...uuid.UUID) ([]Question,
 func (s Service) NextFor(
 	ctx context.Context,
 	userID uuid.UUID,
+	topic enums.Topic,
 ) (*Question, error) {
 	q, err := s.repo.GetOne(
 		ctx,
+		WhereTopicEq(topic),
 		WhereNotAnsweredBy(userID),
 		OrderByCreatedAtAsc(),
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, errors.Wrapf(ErrNoQuestionsLeft, "getting next question for %s", userID)
+		return nil, errors.Wrapf(
+			ErrNoQuestionsLeft,
+			"getting next question about %s for %s",
+			topic, userID,
+		)
 	}
 	return q, err
 }

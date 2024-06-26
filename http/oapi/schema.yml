@@ -43,10 +43,18 @@ paths:
     get:
       tags: [Questions]
       operationId: getNextQuestion
-      description: Returns the next question that a user should answer.
+      description: Returns the next question that a user should answer for the specified topic.
+      parameters:
+        - name: topic
+          in: query
+          description: The topic for which the next question should be retrieved.
+          required: true
+          schema:
+            type: string
+          example: ancient greece
       responses:
         200:
-          description: The next question that a user should answer.
+          description: The next question that a user should answer for the specified topic.
           content:
             application/json:
               schema:

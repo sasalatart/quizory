@@ -14,6 +14,7 @@ import (
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/pagination"
 	"github.com/sasalatart/quizory/domain/question"
+	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/http/oapi"
 	"github.com/sasalatart/quizory/http/server/middleware"
 )
@@ -102,12 +103,22 @@ func (s *Server) GetRemainingTopics(w http.ResponseWriter, r *http.Request) {
 	encodeJSON(w, toRemainingTopics(remainingTopics))
 }
 
-// GetNextQuestion returns the next question for a user to answer.
-func (s *Server) GetNextQuestion(w http.ResponseWriter, r *http.Request) {
+// GetNextQuestion returns the next question that a user should answer for the specified topic.
+func (s *Server) GetNextQuestion(
+	w http.ResponseWriter,
+	r *http.Request,
+	params oapi.GetNextQuestionParams,
+) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
 
-	q, err := s.questionService.NextFor(ctx, userID)
+	topic, err := enums.TopicString(params.Topic)
+	if err != nil {
+		handleBadRequest(w, "Invalid topic", err)
+		return
+	}
+
+	q, err := s.questionService.NextFor(ctx, userID, topic)
 	if errors.Is(err, question.ErrNoQuestionsLeft) {
 		w.WriteHeader(http.StatusNoContent)
 		return

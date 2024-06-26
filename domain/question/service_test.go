@@ -96,25 +96,49 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 
 func (s *QuestionServiceTestSuite) TestNextFor() {
 	ctx := context.Background()
-	userID := uuid.New()
+	userID1 := uuid.New()
+	userID2 := uuid.New()
 
-	q1 := s.mustSeedQuestion(nil)
-	q2 := s.mustSeedQuestion(nil)
+	q1 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicNapoleonicWars
+	})
+	q2 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicFrenchRevolution
+	})
+	q3 := s.mustSeedQuestion(func(q *question.Question) {
+		q.Topic = enums.TopicFrenchRevolution
+	})
 
-	got, err := s.Service.NextFor(ctx, userID)
-	s.Require().NoError(err)
-	s.Equal(q1.ID, got.ID)
+	// Next question is the oldest unanswered question for the given topic
+	s.assertNextQuestionIs(enums.TopicFrenchRevolution, userID1, q2.ID)
 
-	s.mustSeedAnswer(userID, q1.Choices[0].ID)
+	// ...and will be the same for the topic unless the user answers it
+	s.assertNextQuestionIs(enums.TopicFrenchRevolution, userID1, q2.ID)
 
-	got, err = s.Service.NextFor(ctx, userID)
-	s.Require().NoError(err)
-	s.Equal(q2.ID, got.ID)
+	// ...only to change once it has been answered
+	s.mustSeedAnswer(userID1, q2.Choices[0].ID)
+	s.assertNextQuestionIs(enums.TopicFrenchRevolution, userID1, q3.ID)
 
-	s.mustSeedAnswer(userID, q2.Choices[0].ID)
+	// ...which does not affect the next question for the same topic for other users
+	s.assertNextQuestionIs(enums.TopicFrenchRevolution, userID2, q2.ID)
 
-	_, err = s.Service.NextFor(ctx, userID)
+	// ...but the user may change the topic without answering the current question for a given topic
+	s.assertNextQuestionIs(enums.TopicNapoleonicWars, userID1, q1.ID)
+
+	// ...and a sentinel error is returned when there are no more questions for the given topic
+	_, err := s.Service.NextFor(ctx, userID1, enums.TopicAncientGreece)
 	s.Require().ErrorIs(err, question.ErrNoQuestionsLeft)
+}
+
+func (s *QuestionServiceTestSuite) assertNextQuestionIs(
+	topic enums.Topic,
+	userID uuid.UUID,
+	wantQuestionID uuid.UUID,
+) {
+	s.T().Helper()
+	got, err := s.Service.NextFor(context.Background(), userID, topic)
+	s.Require().NoError(err)
+	s.Equal(wantQuestionID, got.ID)
 }
 
 func (s *QuestionServiceTestSuite) TestRemainingTopicsFor() {
