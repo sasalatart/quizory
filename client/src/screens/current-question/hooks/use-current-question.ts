@@ -46,6 +46,10 @@ export function useCurrentQuestion() {
       ]);
 
       const topic = getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics);
+      if (!topic) {
+        return { question: undefined, remainingTopics };
+      }
+
       const question = await questionsApi.getNextQuestion({ topic });
       return { question, remainingTopics };
     },
