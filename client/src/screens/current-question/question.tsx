@@ -12,11 +12,13 @@ export function Question(): JSX.Element {
     question,
     remainingTopics,
     isLoading,
-    handleGetNextQuestion,
+    handleChangeTopic,
+    handleRefetchCurrentQuestion,
     handleRefetchRemainingTopics,
   } = useCurrentQuestion();
 
   const { handleSubmitAnswer } = useSubmitAnswer({
+    question,
     onSubmit: async (submissionFeedback) => {
       await handleRefetchRemainingTopics();
       setFeedback(submissionFeedback);
@@ -27,23 +29,28 @@ export function Question(): JSX.Element {
     return <CenteredSpinner />;
   }
 
-  if (!question) {
-    return <NoQuestionsLeftCard />;
-  }
-
   if (feedback) {
     return (
       <QuestionFeedbackCard
-        question={question}
         feedback={feedback}
-        remainingTopics={remainingTopics ?? []}
-        onNext={async (topic) => {
-          await handleGetNextQuestion(topic);
+        onNext={async () => {
+          await handleRefetchCurrentQuestion();
           setFeedback(undefined);
         }}
       />
     );
   }
 
-  return <QuestionFormCard question={question} onSubmit={handleSubmitAnswer} />;
+  if (!question) {
+    return <NoQuestionsLeftCard />;
+  }
+
+  return (
+    <QuestionFormCard
+      question={question}
+      onChangeTopic={handleChangeTopic}
+      onSubmit={handleSubmitAnswer}
+      remainingTopics={remainingTopics ?? []}
+    />
+  );
 }
