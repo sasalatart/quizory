@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { useForm } from 'react-hook-form';
 import { UnansweredQuestion } from '@/generated/api';
 import { InlineSpinner } from '@/layout';
 
@@ -11,21 +12,20 @@ export interface Feedback {
 interface Props {
   question: UnansweredQuestion;
   feedback: Feedback;
-  isLoadingNext: boolean;
-  onNext: () => unknown;
+  onNext: () => Promise<unknown>;
 }
 
-export function QuestionFeedbackCard({
-  question,
-  feedback,
-  isLoadingNext,
-  onNext,
-}: Props): JSX.Element {
+export function QuestionFeedbackCard({ question, feedback, onNext }: Props): JSX.Element {
+  const { handleSubmit, formState } = useForm();
+
   const isCorrect = feedback.selectedChoiceId === feedback.correctChoiceId;
   const correctChoice = question.choices.find(({ id }) => id === feedback.correctChoiceId);
 
   return (
-    <div className="card bg-neutral shadow-xl">
+    <form
+      className="card bg-neutral shadow-xl"
+      onSubmit={handleSubmit(() => onNext())}
+    >
       <div className="card-body">
         <h2 className={clsx('card-title', isCorrect ? 'text-success' : 'text-error')}>
           {isCorrect ? 'Correct!' : 'Wrong'}
@@ -37,7 +37,7 @@ export function QuestionFeedbackCard({
               <p>
                 Correct choice was <span className="font-bold">{correctChoice?.choice}</span>.
               </p>
-              <div className="divider"></div>
+              <div className="divider" />
             </>
           )}
           {feedback.moreInfo.split('\n').map((line, index) => (
@@ -49,15 +49,15 @@ export function QuestionFeedbackCard({
 
         <div className="card-actions justify-center">
           <button
-            onClick={onNext}
-            disabled={isLoadingNext}
+            type="submit"
+            disabled={formState.isSubmitting || !formState.isValid}
             className="btn btn-primary btn-block sm:btn-wide"
           >
-            {isLoadingNext ? <InlineSpinner /> : null}
+            {formState.isSubmitting ? <InlineSpinner /> : null}
             Next
           </button>
         </div>
       </div>
-    </div>
+    </form>
   );
 }

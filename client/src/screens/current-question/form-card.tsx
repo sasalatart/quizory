@@ -1,39 +1,26 @@
-import { useContext } from 'react';
-import { useMutation } from 'react-query';
-import { useForm } from 'react-hook-form';
-import { UnansweredQuestion } from '@/generated/api';
+import { Controller, useForm } from 'react-hook-form';
+import startCase from 'lodash/startCase';
+import { RemainingTopic, UnansweredQuestion } from '@/generated/api';
 import { InlineSpinner, QuestionBadges } from '@/layout';
-import { QueryClientContext } from '@/providers';
 import { HintButton } from './hint-button';
-import { Feedback } from './feedback-card';
 
 interface Props {
   question: UnansweredQuestion;
-  onSubmit: (feedback: Feedback) => unknown;
+  remainingTopics: RemainingTopic[];
+  onChangeTopic: (topic: string) => unknown;
+  onSubmit: ({ choiceId }: { choiceId: string }) => unknown;
 }
 
 interface Form {
   choiceId: string;
+  topic: string;
 }
 
-export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
-  const { answersApi } = useContext(QueryClientContext);
+export function QuestionFormCard({ question, remainingTopics, onChangeTopic, onSubmit }: Props): JSX.Element {
+  const { control, register, handleSubmit, formState, resetField } = useForm<Form>();
 
-  const { mutateAsync: submitAnswer } = useMutation(
-    ({ choiceId }: Form) => answersApi.submitAnswer({ submitAnswerRequest: { choiceId } }),
-    {
-      onSuccess: ({ correctChoiceId, moreInfo }, { choiceId }) => {
-        onSubmit({ correctChoiceId, selectedChoiceId: choiceId, moreInfo });
-      },
-    },
-  );
-
-  const { register, handleSubmit, formState } = useForm<Form>();
   return (
-    <form
-      onSubmit={handleSubmit((data) => submitAnswer(data))}
-      className="card bg-neutral shadow-xl"
-    >
+    <form onSubmit={handleSubmit((data) => onSubmit(data))} className="card bg-neutral shadow-xl">
       <div className="card-body">
         <div className="flex justify-between">
           <QuestionBadges topic={question.topic} difficulty={question.difficulty} />
@@ -56,6 +43,32 @@ export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
         ))}
 
         <div className="card-actions justify-center">
+          <label className="form-control w-full sm:max-w-64">
+            <Controller
+              name="topic"
+              control={control}
+              rules={{ required: 'Topic is required' }}
+              defaultValue={question.topic}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  onChange={e => {
+                    field.onChange(e)
+                    resetField('choiceId')
+                    onChangeTopic(e.target.value)
+                  }}
+                  className="select select-bordered"
+                >
+                  {remainingTopics.map(({ topic, amountOfQuestions }) => (
+                    <option key={topic} value={topic}>
+                      {startCase(topic)} ({amountOfQuestions})
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+          </label>
+          
           <button
             type="submit"
             disabled={formState.isSubmitting || !formState.isValid}
