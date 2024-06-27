@@ -1,35 +1,29 @@
-import { useContext, useState } from 'react';
-import { useQuery } from 'react-query';
-import { QueryClientContext } from '@/providers';
+import { useState } from 'react';
 import { CenteredSpinner } from '@/layout';
 import { QuestionFormCard } from './form-card';
 import { Feedback, QuestionFeedbackCard } from './feedback-card';
 import { NoQuestionsLeftCard } from './no-questions-left-card';
+import { useCurrentQuestion, useSubmitAnswer } from './hooks';
 
 export function Question(): JSX.Element {
-  const [feedback, setFeedback] = useState<Feedback | undefined>();
-
-  const { questionsApi } = useContext(QueryClientContext);
+  const [feedback, setFeedback] = useState<Feedback>();
 
   const {
-    data: question,
-    isLoading: isLoadingCurrentQuestion,
-    isRefetching: isRefetchingCurrentQuestion,
-    refetch: refetchCurrentQuestion,
-  } = useQuery('current-question', {
-    queryFn: async () => {
-      const remainingTopics = await questionsApi.getRemainingTopics();
-      if (remainingTopics.length === 0) {
-        return null;
-      }
+    question,
+    remainingTopics,
+    isLoading,
+    handleGetNextQuestion,
+    handleRefetchRemainingTopics,
+  } = useCurrentQuestion();
 
-      // TODO: allow users to choose the actual topic
-      return questionsApi.getNextQuestion({ topic: remainingTopics[0].topic });
+  const { handleSubmitAnswer } = useSubmitAnswer({
+    onSubmit: async (submissionFeedback) => {
+      await handleRefetchRemainingTopics();
+      setFeedback(submissionFeedback);
     },
-    refetchOnWindowFocus: false,
   });
 
-  if (isLoadingCurrentQuestion) {
+  if (isLoading) {
     return <CenteredSpinner />;
   }
 
@@ -37,18 +31,19 @@ export function Question(): JSX.Element {
     return <NoQuestionsLeftCard />;
   }
 
-
-  const shouldShowFeedback = question?.choices.some(({ id }) => id === feedback?.selectedChoiceId);
-  if (question && feedback && shouldShowFeedback) {
+  if (feedback) {
     return (
       <QuestionFeedbackCard
         question={question}
         feedback={feedback}
-        isLoadingNext={isRefetchingCurrentQuestion}
-        onNext={refetchCurrentQuestion}
+        remainingTopics={remainingTopics ?? []}
+        onNext={async (topic) => {
+          await handleGetNextQuestion(topic);
+          setFeedback(undefined);
+        }}
       />
     );
   }
 
-  return <QuestionFormCard question={question} onSubmit={(feedback) => setFeedback(feedback)} />;
+  return <QuestionFormCard question={question} onSubmit={handleSubmitAnswer} />;
 }

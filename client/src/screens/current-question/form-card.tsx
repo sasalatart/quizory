@@ -1,15 +1,11 @@
-import { useContext } from 'react';
-import { useMutation } from 'react-query';
 import { useForm } from 'react-hook-form';
 import { UnansweredQuestion } from '@/generated/api';
 import { InlineSpinner, QuestionBadges } from '@/layout';
-import { QueryClientContext } from '@/providers';
 import { HintButton } from './hint-button';
-import { Feedback } from './feedback-card';
 
 interface Props {
   question: UnansweredQuestion;
-  onSubmit: (feedback: Feedback) => unknown;
+  onSubmit: ({ choiceId }: { choiceId: string }) => unknown;
 }
 
 interface Form {
@@ -17,23 +13,9 @@ interface Form {
 }
 
 export function QuestionFormCard({ question, onSubmit }: Props): JSX.Element {
-  const { answersApi } = useContext(QueryClientContext);
-
-  const { mutateAsync: submitAnswer } = useMutation(
-    ({ choiceId }: Form) => answersApi.submitAnswer({ submitAnswerRequest: { choiceId } }),
-    {
-      onSuccess: ({ correctChoiceId, moreInfo }, { choiceId }) => {
-        onSubmit({ correctChoiceId, selectedChoiceId: choiceId, moreInfo });
-      },
-    },
-  );
-
   const { register, handleSubmit, formState } = useForm<Form>();
   return (
-    <form
-      onSubmit={handleSubmit((data) => submitAnswer(data))}
-      className="card bg-neutral shadow-xl"
-    >
+    <form onSubmit={handleSubmit((data) => onSubmit(data))} className="card bg-neutral shadow-xl">
       <div className="card-body">
         <div className="flex justify-between">
           <QuestionBadges topic={question.topic} difficulty={question.difficulty} />
