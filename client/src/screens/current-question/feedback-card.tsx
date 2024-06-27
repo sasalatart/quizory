@@ -4,22 +4,22 @@ import { UnansweredQuestion } from '@/generated/api';
 import { InlineSpinner } from '@/layout';
 
 export interface Feedback {
-  question: UnansweredQuestion;
   selectedChoiceId: string;
   correctChoiceId: string;
   moreInfo: string;
 }
 
 interface Props {
+  question: UnansweredQuestion;
   feedback: Feedback;
   onNext: () => Promise<unknown>;
 }
 
-export function QuestionFeedbackCard({ feedback, onNext }: Props): JSX.Element {
+export function QuestionFeedbackCard({ question, feedback, onNext }: Props): JSX.Element {
   const { handleSubmit, formState } = useForm();
 
   const isCorrect = feedback.selectedChoiceId === feedback.correctChoiceId;
-  const correctChoice = feedback.question.choices.find(({ id }) => id === feedback.correctChoiceId);
+  const correctChoice = question.choices.find(({ id }) => id === feedback.correctChoiceId);
 
   return (
     <form

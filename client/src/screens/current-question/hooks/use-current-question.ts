@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useQuery } from 'react-query';
 import { QueryClientContext, SessionContext } from '@/providers';
 import { RemainingTopic } from '@/generated/api';
@@ -28,52 +28,30 @@ export function useCurrentQuestion() {
   const { answersApi, questionsApi } = useContext(QueryClientContext);
   const [selectedTopic, setSelectedTopic] = useState<string>();
 
-  const {
-    data: availableTopics,
-    isLoading: isLoadingAvailableTopics,
-    refetch: handleRefetchAvailableTopics,
-  } = useQuery({
-    queryKey: 'available-topics',
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['current-question', selectedTopic],
     queryFn: async () => {
+      // TODO: these two operations could probably be merged into one.
       const [lastAnsweredTopic, remainingTopics] = await Promise.all([
         answersApi
           .getAnswersLog({ userId: session!.user.id, page: 0, pageSize: 1 })
           .then((log) => log[0]?.question.topic),
         questionsApi.getRemainingTopics(),
       ]);
-      return { lastAnsweredTopic, remainingTopics };
-    },
-    onSuccess: ({ lastAnsweredTopic, remainingTopics }) => {
-      if (!selectedTopic) {
-        setSelectedTopic(getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics ?? []));
-      }
-    },
-  });
 
-  const lastAnsweredTopic = availableTopics?.lastAnsweredTopic;
-  const remainingTopics = availableTopics?.remainingTopics;
-  const {
-    data: question,
-    isLoading: isLoadingQuestion,
-    refetch: handleRefetchCurrentQuestion,
-  } = useQuery({
-    queryKey: ['current-question', selectedTopic],
-    queryFn: () => questionsApi.getNextQuestion({ topic: selectedTopic! }),
+      const topicToQuery = getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics);
+
+      const question = await questionsApi.getNextQuestion({ topic: topicToQuery });
+      return { question, remainingTopics };
+    },
     refetchOnWindowFocus: false,
-    enabled: !!selectedTopic,
   });
-
-  useEffect(() => {
-    const topicToQuery = getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics ?? []);
-    setSelectedTopic(topicToQuery);
-  }, [lastAnsweredTopic, remainingTopics, selectedTopic]);
 
   return {
-    question: question ?? undefined,
-    remainingTopics,
-    isLoading: isLoadingQuestion || isLoadingAvailableTopics,
+    question: data?.question,
+    remainingTopics: data?.remainingTopics ?? [],
+    isLoading,
+    refetch,
     handleChangeTopic: setSelectedTopic,
-    handleRefetchCurrentQuestion,
-    handleRefetchRemainingTopics: handleRefetchAvailableTopics,
   };
 }

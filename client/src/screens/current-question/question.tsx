@@ -13,36 +13,32 @@ export function Question(): JSX.Element {
     remainingTopics,
     isLoading,
     handleChangeTopic,
-    handleRefetchCurrentQuestion,
-    handleRefetchRemainingTopics,
+    refetch,
   } = useCurrentQuestion();
 
   const { handleSubmitAnswer } = useSubmitAnswer({
-    question,
-    onSubmit: async (submissionFeedback) => {
-      await handleRefetchRemainingTopics();
-      setFeedback(submissionFeedback);
-    },
+    onSubmit: setFeedback,
   });
 
   if (isLoading) {
     return <CenteredSpinner />;
   }
 
+  if (!question) {
+    return <NoQuestionsLeftCard />;
+  }
+
   if (feedback) {
     return (
       <QuestionFeedbackCard
+        question={question}
         feedback={feedback}
         onNext={async () => {
-          await handleRefetchCurrentQuestion();
+          await refetch();
           setFeedback(undefined);
         }}
       />
     );
-  }
-
-  if (!question) {
-    return <NoQuestionsLeftCard />;
   }
 
   return (
