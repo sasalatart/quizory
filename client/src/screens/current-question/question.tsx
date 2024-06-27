@@ -44,9 +44,9 @@ export function Question(): JSX.Element {
   return (
     <QuestionFormCard
       question={question}
+      remainingTopics={remainingTopics ?? []}
       onChangeTopic={handleChangeTopic}
       onSubmit={handleSubmitAnswer}
-      remainingTopics={remainingTopics ?? []}
     />
   );
 }

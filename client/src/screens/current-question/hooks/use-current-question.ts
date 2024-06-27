@@ -3,6 +3,12 @@ import { useQuery } from 'react-query';
 import { QueryClientContext, SessionContext } from '@/providers';
 import { RemainingTopic } from '@/generated/api';
 
+/**
+ * Returns the next topic to query, based on the following priority order:
+ * 1. Current topic if there are remaining questions for it.
+ * 2. Last answered topic if there are remaining questions for it.
+ * 3. The first remaining topic as a final fallback.
+ */
 function getTopicToQuery(
   selectedTopic: string | undefined,
   lastAnsweredTopic: string | undefined,
@@ -20,7 +26,7 @@ function getTopicToQuery(
     return lastAnsweredTopic;
   }
 
-  return remainingTopics?.[0]?.topic ?? lastAnsweredTopic;
+  return remainingTopics?.[0]?.topic;
 }
 
 export function useCurrentQuestion() {
@@ -39,9 +45,8 @@ export function useCurrentQuestion() {
         questionsApi.getRemainingTopics(),
       ]);
 
-      const topicToQuery = getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics);
-
-      const question = await questionsApi.getNextQuestion({ topic: topicToQuery });
+      const topic = getTopicToQuery(selectedTopic, lastAnsweredTopic, remainingTopics);
+      const question = await questionsApi.getNextQuestion({ topic });
       return { question, remainingTopics };
     },
     refetchOnWindowFocus: false,
