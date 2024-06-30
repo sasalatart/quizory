@@ -61,8 +61,10 @@ func (s *Server) Start() {
 	}
 
 	s.httpServer = http.Server{
-		Addr:    s.cfg.Address(),
-		Handler: middleware.WithCORS(handler),
+		Addr:         s.cfg.Address(),
+		Handler:      middleware.WithCORS(handler),
+		ReadTimeout:  s.cfg.ReadTimeout,
+		WriteTimeout: s.cfg.WriteTimeout,
 	}
 
 	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
