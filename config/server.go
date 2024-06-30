@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/pkg/errors"
 )
 
 // ServerConfig represents the configuration of the server.
 type ServerConfig struct {
-	Host      string
-	Port      int
-	JWTSecret string
-	SchemaDir string
+	Host         string
+	Port         int
+	JWTSecret    string
+	SchemaDir    string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 }
 
 // NewServerConfig returns a new ServerConfig instance with values loaded from environment variables.
@@ -26,10 +29,12 @@ func NewServerConfig(host string, port int) ServerConfig {
 	}
 
 	return ServerConfig{
-		Host:      host,
-		Port:      port,
-		JWTSecret: jwtSecret,
-		SchemaDir: schemaDir,
+		Host:         host,
+		Port:         port,
+		JWTSecret:    jwtSecret,
+		SchemaDir:    schemaDir,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
 	}
 }
 
