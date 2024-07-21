@@ -1,4 +1,4 @@
-name: Test Coverage Diff
+name: test-coverage-diff
 
 on:
   pull_request:
