@@ -60,4 +60,28 @@ jobs:
         run: make build
 
       - name: Test
-        run: make test
+        run: make test-ci
+
+      - name: Parse and extract coverage for all packages
+        id: parse-coverage
+        run: |
+          echo "| Package | Coverage |" > coverage_report.md
+          echo "| ------- | -------- |" >> coverage_report.md
+          while IFS= read -r line; do
+            package=$(echo $line | cut -d ' ' -f 1)
+            coverage=$(echo $line | cut -d ' ' -f 2)
+            echo "| $package | $coverage |" >> coverage_report.md
+          done < coverage.out
+
+      - name: Post coverage report to PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const coverageReport = fs.readFileSync('coverage_report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: coverageReport
+            });
