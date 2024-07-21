@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: build
+  docker-build:
+    name: docker-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
