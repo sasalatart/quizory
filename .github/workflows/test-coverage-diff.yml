@@ -2,8 +2,6 @@ name: test-coverage-diff
 
 on:
   pull_request:
-    paths:
-      - '**/*.go'
 
 jobs:
   test-coverage:
