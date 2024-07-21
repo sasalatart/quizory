@@ -72,7 +72,7 @@ dev:
 		wait $$DOCKER_PID $$CLIENT_PID $$API_PID'
 
 docker-infra-dev:
-	docker-compose -f infra/docker/docker-compose.dev.yml up
+	docker compose -f infra/docker/docker-compose.dev.yml up
 
 client-dev:
 	cd $(CLIENT_DIR) && $(JSCMD) dev
