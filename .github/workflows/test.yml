@@ -1,4 +1,4 @@
-name: build-and-test
+name: test
 on:
   push:
     branches:
@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
-    name: build-and-test
+  test:
+    name: test
     runs-on: ubuntu-latest
 
     services:
@@ -61,19 +61,3 @@ jobs:
 
       - name: Test
         run: make test
-
-  build-docker:
-    name: build-docker
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build
-        uses: docker/build-push-action@v5
-        with:
-          push: false
-          tags: sasalatart/quizory-api:${{ github.sha }}
-          file: ./infra/docker/Dockerfile
