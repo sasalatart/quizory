@@ -1,0 +1,113 @@
+name: Test Coverage Diff
+
+on:
+  pull_request:
+    paths:
+      - '**/*.go'
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for git diff
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Get base branch
+        id: base
+        run: echo "::set-output name=base::$(echo ${{ github.event.pull_request.base.ref }})"
+
+      - name: Get diff
+        id: diff
+        run: |
+          changed_packages=$(git diff --name-only origin/${{ steps.base.outputs.base }} HEAD | grep '\.go$' | sed 's|/[^/]*$||' | sort -u)
+          if [ -z "$changed_packages" ]; then
+            echo "::set-output name=packages::none"
+          else
+            echo "::set-output name=packages::$(echo $changed_packages | tr '\n' ' ')"
+          fi
+
+      - name: Setup coverage directory
+        run: mkdir -p coverage
+
+      - name: Measure coverage for PR branch
+        if: steps.diff.outputs.packages != 'none'
+        id: coverage_pr
+        run: |
+          for pkg in ${{ steps.diff.outputs.packages }}; do
+            if [ -d "$pkg" ]; then
+              go test -coverprofile=coverage/${pkg//\//_}_pr.out $pkg
+              go tool cover -func=coverage/${pkg//\//_}_pr.out | grep total | awk '{print $3}' | sed 's/%//' >> coverage/pr_coverage.txt
+              echo "$pkg" >> coverage/pr_packages.txt
+            fi
+          done
+        shell: bash
+
+      - name: Checkout base branch
+        if: steps.diff.outputs.packages != 'none'
+        run: git checkout origin/${{ steps.base.outputs.base }}
+
+      - name: Measure coverage for base branch
+        if: steps.diff.outputs.packages != 'none'
+        id: coverage_base
+        run: |
+          for pkg in ${{ steps.diff.outputs.packages }}; do
+            if [ -d "$pkg" ]; then
+              go test -coverprofile=coverage/${pkg//\//_}_base.out $pkg
+              go tool cover -func=coverage/${pkg//\//_}_base.out | grep total | awk '{print $3}' | sed 's/%//' >> coverage/base_coverage.txt
+              echo "$pkg" >> coverage/base_packages.txt
+            fi
+          done
+        shell: bash
+
+      - name: Compare coverage
+        if: steps.diff.outputs.packages != 'none'
+        id: compare
+        run: |
+          echo "| Package | Base Coverage (%) | PR Coverage (%) | Change (%) |" > coverage/report.md
+          echo "|---------|-------------------|-----------------|------------|" >> coverage/report.md
+
+          base_packages=$(cat coverage/base_packages.txt)
+          pr_packages=$(cat coverage/pr_packages.txt)
+
+          for pkg in ${{ steps.diff.outputs.packages }}; do
+            if [[ $base_packages =~ $pkg ]] && [[ $pr_packages =~ $pkg ]]; then
+              base=$(grep "^$pkg " coverage/base_coverage.txt | awk '{print $2}')
+              pr=$(grep "^$pkg " coverage/pr_coverage.txt | awk '{print $2}')
+              change=$(echo "$pr - $base" | bc)
+              echo "| $pkg | $base | $pr | $change |" >> coverage/report.md
+            elif [[ $base_packages =~ $pkg ]]; then
+              base=$(grep "^$pkg " coverage/base_coverage.txt | awk '{print $2}')
+              echo "| $pkg | $base | 0.0 | Removed package |" >> coverage/report.md
+            elif [[ $pr_packages =~ $pkg ]]; then
+              pr=$(grep "^$pkg " coverage/pr_coverage.txt | awk '{print $2}')
+              echo "| $pkg | 0.0 | $pr | New package |" >> coverage/report.md
+            fi
+          done
+        shell: bash
+
+      - name: Post coverage report
+        if: steps.diff.outputs.packages != 'none'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('coverage/report.md', 'utf8');
+            github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: report
+            });
+
+      - name: No package changed message
+        if: steps.diff.outputs.packages == 'none'
+        run: echo "No Go packages were changed in this PR."
