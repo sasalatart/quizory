@@ -1,0 +1,37 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ['--config=/etc/otel-config.yaml']
+    volumes:
+      - ./volumes/otel-collector/otel-config.yaml:/etc/otel-config.yaml
+    ports:
+      - '13133:13133' # health_check extension
+      - '4317:4317' # OpenTelemetry gRPC for logs, traces, and metrics
+      - '4318:4318' # OpenTelemetry HTTP for logs, traces, and metrics
+    networks:
+      - telemetry
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    networks:
+      - telemetry
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    user: 'root'
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./volumes/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - ./volumes/loki:/etc/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    networks:
+      - telemetry
+
+networks:
+  telemetry:
