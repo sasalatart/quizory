@@ -42,8 +42,11 @@ Make sure you have a `.env.quizory` file in your root dir filled as follows:
 
 ```env
 DB_URL=postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
-OPENAI_API_KEY=<your-openai-key>
 JWT_SECRET=<your-supabase-jwt-secret>
+OPENAI_API_KEY=<your-openai-key>
+
+# Default password for Grafana. You will be asked to input a new one the first time you login.
+GF_SECURITY_ADMIN_PASSWORD=admin
 ```
 
 Also, make sure you have a `client/.env.local` file filled as follows:
@@ -64,15 +67,13 @@ $ make install
 #   1. A local Postgres database via docker-compose
 #   2. The Go backend (port 8080), WITHOUT live-reload (for now)
 #   3. The React (port 5173), with HMR
+#   4. The OTEL stack - Grafana (UI via port 3000) & Loki for now
 $ make dev
-
-# Alternatively, if you would like to generate questions to seed your database, you can run the
-# following, which adds periodic generation of questions.
-# Note that this will consume your OpenAI credits.
-$ make dev GENERATE_FLAG=-generate
 ```
 
 You should now be able to access http://localhost:5173 and explore the app.
+
+You can also access Grafana via http://localhost:3000, and login with admin/admin credentials.
 
 ### Testing
 
