@@ -57,6 +57,7 @@ clean:
 	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist && rm -rf $(CLIENT_DIR)/src/generated/api/apis
 
 test:
+	DB_URL=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable \
 	$(GOTEST) -race -shuffle=on ./...
 
 coverage:

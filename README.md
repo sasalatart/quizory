@@ -41,7 +41,7 @@ detailed in this doc. You may use `Make help` to take a look at the main command
 Make sure you have a `.env.quizory` file in your root dir filled as follows:
 
 ```env
-DB_URL=postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
+DB_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
 JWT_SECRET=<your-supabase-jwt-secret>
 OPENAI_API_KEY=<your-openai-key>
 
