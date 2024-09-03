@@ -5,7 +5,6 @@ GOTEST = $(GOCMD) test
 GOTOOL = $(GOCMD) tool
 BINARIES_DIR = out
 CLIENT_DIR = client
-GENERATE_FLAG =
 
 all: help
 
@@ -58,6 +57,7 @@ clean:
 	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist && rm -rf $(CLIENT_DIR)/src/generated/api/apis
 
 test:
+	DB_URL=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable \
 	$(GOTEST) -race -shuffle=on ./...
 
 coverage:
@@ -66,19 +66,18 @@ coverage:
 
 dev:
 	@sh -c '\
-		$(MAKE) docker-infra-dev & DOCKER_PID=$$!; \
+		$(MAKE) docker-dev & DOCKER_PID=$$!; \
 		$(MAKE) client-dev & CLIENT_PID=$$!; \
-		$(MAKE) api-dev & API_PID=$$!; \
-		wait $$DOCKER_PID $$CLIENT_PID $$API_PID'
+		wait $$DOCKER_PID $$CLIENT_PID'
 
-docker-infra-dev:
+docker-dev:
 	docker compose -f infra/docker/docker-compose.dev.yml up
+
+docker-dev-down:
+	docker compose -f infra/docker/docker-compose.dev.yml down
 
 client-dev:
 	cd $(CLIENT_DIR) && $(JSCMD) dev
-
-api-dev:
-	$(GOCMD) run ./cmd/api $(GENERATE_FLAG)
 
 docker-image:
 	docker build -t sasalatart/quizory-api -f ./infra/docker/Dockerfile .

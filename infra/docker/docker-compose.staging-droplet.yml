@@ -2,6 +2,11 @@ services:
   quizory:
     container_name: quizory
     image: sasalatart/quizory-api:latest
+    environment:
+      - OTEL_SERVICE_NAME=quizory
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 # Metrics and Traces
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs # Logs
+      - OTEL_EXPORTER_OTLP_INSECURE=true
     env_file:
       - .env.quizory
     ports:
@@ -11,6 +16,7 @@ services:
       - caddy
     networks:
       - quizory
+      - telemetry
     restart: always
 
   quizory_postgres:
@@ -33,11 +39,12 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./volumes/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
     networks:
       - quizory
+      - telemetry
 
   watchtower:
     container_name: watchtower
@@ -56,6 +63,9 @@ networks:
     driver: bridge
 
 volumes:
-  caddy_data:
-  caddy_config:
+  caddy-data:
+  caddy-config:
   postgres-data:
+
+include:
+  - path: ./docker-compose.telemetry.yml

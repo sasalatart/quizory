@@ -16,6 +16,8 @@ import (
 	"github.com/sasalatart/quizory/http/server"
 	"github.com/sasalatart/quizory/llm"
 	"go.uber.org/fx"
+
+	"github.com/sasalatart/quizory/infra/otel"
 )
 
 var generateQuestions bool
@@ -33,6 +35,7 @@ func main() {
 		answer.Module,
 		question.Module,
 		server.Module,
+		otel.Module,
 		fx.Invoke(migrationsLC),
 		fx.Invoke(questionsGenLC),
 		fx.Invoke(serverLC),
@@ -79,8 +82,6 @@ func questionsGenLC(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.
 }
 
 func serverLC(lc fx.Lifecycle, s *server.Server) {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			s.Start()

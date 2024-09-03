@@ -21,8 +21,8 @@ COPY --from=builder /app/db/migrations/*.sql ./db/migrations/
 COPY --from=builder /app/http/oapi/schema.yml ./http/oapi/schema.yml
 
 ENV DB_URL=$DB_URL
-ENV OPENAI_API_KEY=$OPENAI_API_KEY
 ENV JWT_SECRET=$JWT_SECRET
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
 
 EXPOSE 8080
 

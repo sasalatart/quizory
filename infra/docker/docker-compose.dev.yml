@@ -1,13 +1,42 @@
 services:
+  quizory:
+    build:
+      dockerfile: ./Dockerfile.dev
+    container_name: quizory
+    environment:
+      - OTEL_SERVICE_NAME=quizory
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 # Metrics and Traces
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs # Logs
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+    env_file:
+      - ../../.env.quizory
+    ports:
+      - 8080:8080
+    volumes:
+      - ../..:/app
+      - ~/go/pkg/mod:/go/pkg/mod
+    depends_on:
+      - postgres
+      - otel-collector
+    command: go run ./cmd/api -generate
+    networks:
+      - telemetry
+
   postgres:
     image: postgres:16
+    container_name: postgres
     environment:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - 5433:5432
+      - 5432:5432
     volumes:
       - postgresql:/var/lib/postgresql
+    networks:
+      - telemetry
 
 volumes:
   postgresql:
+
+include:
+  - path: ./docker-compose.telemetry.yml

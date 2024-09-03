@@ -5,3 +5,7 @@
 quizory-api.salatart.com {
     reverse_proxy http://quizory:8080
 }
+
+grafana.salatart.com {
+    reverse_proxy http://grafana:3000
+}
