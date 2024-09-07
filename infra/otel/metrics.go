@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 )
 
@@ -40,4 +41,20 @@ func newMetricsProvider() (*metric.MeterProvider, error) {
 	}
 
 	return provider, nil
+}
+
+type Meter interface {
+	Int64Counter(
+		name string,
+		opts ...otelmetric.Int64CounterOption,
+	) (otelmetric.Int64Counter, error)
+
+	Int64Histogram(
+		name string,
+		opts ...otelmetric.Int64HistogramOption,
+	) (otelmetric.Int64Histogram, error)
+}
+
+func newMeter(provider *metric.MeterProvider) Meter {
+	return provider.Meter("quizory")
 }

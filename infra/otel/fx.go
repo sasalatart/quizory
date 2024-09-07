@@ -14,6 +14,7 @@ var Module = fx.Module(
 	"otel",
 	fx.Provide(newLoggerProvider),
 	fx.Provide(newMetricsProvider),
+	fx.Provide(fx.Annotate(newMeter, fx.As(new(Meter)))),
 	fx.Invoke(loggerLC),
 	fx.Invoke(metricsLC),
 )
@@ -37,3 +38,8 @@ func metricsLC(lc fx.Lifecycle, lp *metric.MeterProvider) {
 		},
 	})
 }
+
+var TestModule = fx.Module(
+	"otel-test",
+	fx.Provide(fx.Annotate(newMockMeter, fx.As(new(Meter)))),
+)
