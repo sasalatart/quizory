@@ -16,12 +16,12 @@ import (
 
 var Module = fx.Module(
 	"server",
-	fx.Provide(NewServer),
+	fx.Provide(newServer),
 )
 
 var TestModule = fx.Module(
 	"test-server",
-	fx.Provide(NewServer),
+	fx.Provide(newServer),
 	fx.Provide(newTestClientFactory),
 )
 

@@ -17,6 +17,7 @@ import (
 	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/http/oapi"
 	"github.com/sasalatart/quizory/http/server/middleware"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // ensure that we've conformed to the `ServerInterface` with a compile-time check.
@@ -30,7 +31,7 @@ type Server struct {
 	questionService *question.Service
 }
 
-func NewServer(
+func newServer(
 	cfg config.ServerConfig,
 	db *sql.DB,
 	answerService *answer.Service,
@@ -54,6 +55,7 @@ func (s *Server) Start() {
 			middleware.WithAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
 			middleware.WithRecover,
 			middleware.WithLogger,
+			otelhttp.NewMiddleware("quizory-server"),
 		},
 	})
 	if err := registerSwaggerHandlers(mux, s.cfg.SchemaDir); err != nil {

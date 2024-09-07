@@ -13,8 +13,12 @@ processors:
 exporters:
   logging:
     verbosity: Detailed
+
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
+
+  prometheus:
+    endpoint: '0.0.0.0:9091' # Prometheus pulls metrics, it does not push
 
 extensions:
   health_check:
@@ -31,3 +35,8 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [logging, loki]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, prometheus]
