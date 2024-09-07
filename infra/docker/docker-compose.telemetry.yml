@@ -7,6 +7,7 @@ services:
       - ./volumes/otel-collector/otel-config.yaml:/etc/otel-config.yaml
     ports:
       - '13133:13133' # health_check extension
+      - '9091:9091' # Prometheus metrics exposed here
       - '4317:4317' # OpenTelemetry gRPC for logs, traces, and metrics
       - '4318:4318' # OpenTelemetry HTTP for logs, traces, and metrics
     networks:
@@ -32,6 +33,18 @@ services:
     command: -config.file=/etc/loki/loki-config.yaml
     networks:
       - telemetry
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    volumes:
+      - ./volumes/prometheus/prometheus-config.yaml:/etc/prometheus/prometheus.yaml
+    ports:
+      - '9090:9090'
+    networks:
+      - telemetry
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
 
 networks:
   telemetry:
