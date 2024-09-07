@@ -26,6 +26,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.5.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.29.0
 	go.opentelemetry.io/otel/log v0.5.0
+	go.opentelemetry.io/otel/metric v1.29.0
 	go.opentelemetry.io/otel/sdk/log v0.5.0
 	go.opentelemetry.io/otel/sdk/metric v1.29.0
 	go.uber.org/fx v1.21.0
@@ -59,7 +60,6 @@ require (
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
 	github.com/swaggo/swag v1.8.1 // indirect
 	github.com/volatiletech/inflect v0.0.1 // indirect
-	go.opentelemetry.io/otel/metric v1.29.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.29.0 // indirect
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect

@@ -13,6 +13,7 @@ import (
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/http/server"
 	"github.com/sasalatart/quizory/infra"
+	"github.com/sasalatart/quizory/infra/otel"
 	"github.com/sasalatart/quizory/llm"
 	"go.uber.org/fx"
 )
@@ -29,6 +30,7 @@ var Module = fx.Module(
 
 	answer.Module,
 	question.Module,
+	otel.TestModule,
 
 	// Repositories are injected privately in the modules above, so we provide them here to make
 	// them available for tests (e.g. for seeding the database with test data).

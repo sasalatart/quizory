@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/domain/question/internal/ai"
+	"github.com/sasalatart/quizory/domain/question/internal/metrics"
 	"github.com/sasalatart/quizory/llm"
 )
 
@@ -19,15 +20,21 @@ var ErrNoQuestionsLeft = errors.New("no questions left")
 
 // Service represents the service that manages questions.
 type Service struct {
-	repo       *Repository
-	llmService llm.ChatCompletioner
+	llmService     llm.ChatCompletioner
+	metricsService metrics.Service
+	repo           *Repository
 }
 
 // NewService creates a new instance of question.Service.
-func NewService(repo *Repository, llmService llm.ChatCompletioner) *Service {
+func NewService(
+	llmService llm.ChatCompletioner,
+	metricsService metrics.Service,
+	repo *Repository,
+) *Service {
 	return &Service{
-		repo:       repo,
-		llmService: llmService,
+		llmService:     llmService,
+		metricsService: metricsService,
+		repo:           repo,
 	}
 }
 
@@ -59,6 +66,8 @@ func (s Service) StartGeneration(ctx context.Context, freq time.Duration, batchS
 
 // handleGeneration generates and stores a set of questions about a given topic.
 func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount int) error {
+	startTime := time.Now()
+
 	results := make(chan ai.Result)
 	defer close(results)
 
@@ -76,9 +85,12 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 		if result.Err != nil {
 			return result.Err
 		}
+
+		questionsStored := 0
 		for _, aiQuestion := range result.Questions {
 			q, err := parseAIQuestion(aiQuestion, topic)
 			if errors.Is(err, ErrInvalidRecord) {
+				s.metricsService.OnFailedValidation(ctx)
 				slog.Warn("Skipping invalid question", slog.Any("validationError", err))
 				continue
 			}
@@ -89,7 +101,13 @@ func (s Service) handleGeneration(ctx context.Context, topic enums.Topic, amount
 			if err := s.repo.Insert(context.WithoutCancel(ctx), *q); err != nil {
 				return errors.Wrap(err, "inserting question")
 			}
+			questionsStored++
 		}
+
+		if questionsStored == len(result.Questions) {
+			s.metricsService.OnSuccessfulGeneration(ctx)
+		}
+		s.metricsService.OnLLMCallFinished(ctx, time.Since(startTime))
 	}
 	return nil
 }

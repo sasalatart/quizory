@@ -11,9 +11,6 @@ processors:
     timeout: 5s
 
 exporters:
-  logging:
-    verbosity: Detailed
-
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
 
@@ -26,17 +23,13 @@ extensions:
 service:
   extensions: [health_check]
 
-  telemetry:
-    logs:
-      level: debug
-
   pipelines:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, loki]
+      exporters: [loki]
 
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, prometheus]
+      exporters: [prometheus]
