@@ -23,7 +23,7 @@ You may try Quizory by visiting the following links:
 
 This project requires the following to be installed in your machine:
 
-1. [Go v1.22][go]
+1. [Go v1.23][go]
 2. [Node v20.10][nodejs] + [pnpm][pnpm]
 3. [Docker][docker]
 4. [Docker Compose][docker-compose]

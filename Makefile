@@ -42,7 +42,7 @@ migrate:
 	$(GOCMD) run ./cmd/migrate
 
 codegen:
-	$(GOCMD) run ./cmd/codegen && \
+	PSQL_HOST=localhost $(GOCMD) run ./cmd/codegen && \
 	cd $(CLIENT_DIR) && $(JSCMD) codegen
 
 build: install build-go build-client
