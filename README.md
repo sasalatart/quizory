@@ -78,10 +78,6 @@ You can also access Grafana via http://localhost:3000, and login with admin/admi
 ### Testing
 
 ```sh
-# Shell 1: Turn on the dev infra (specifically, we need the Postgres database container)
-$ make dev
-
-# Shell 2: Run the actual tests
 $ make test
 ```
 

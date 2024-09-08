@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/config"
-	"github.com/sasalatart/quizory/db"
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/http/server"
@@ -25,7 +24,7 @@ var Module = fx.Module(
 	"testutil",
 
 	fx.Provide(config.NewTestConfig),
-	db.TestModule,
+	dbModule,
 	llm.TestModule,
 
 	answer.Module,

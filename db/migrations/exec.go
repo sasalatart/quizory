@@ -8,13 +8,15 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/pkg/errors"
-	"github.com/sasalatart/quizory/config"
 )
 
 // Up runs the migrations on the database specified by dbUrl.
-func Up(dbCfg config.DBConfig) error {
-	m, err := migrate.New(fmt.Sprintf("file://%s", dbCfg.MigrationsDir), dbCfg.URL())
+func Up(url, migrationsDir string) error {
+	m, err := migrate.New(fmt.Sprintf("file://%s", migrationsDir), url)
 	defer func() {
+		if m == nil {
+			return
+		}
 		if _, err := m.Close(); err != nil {
 			slog.Error("Failed to close migrations instance", slog.Any("error", err))
 		}

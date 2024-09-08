@@ -63,7 +63,7 @@ func main() {
 func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			return migrations.Up(dbCfg)
+			return migrations.Up(dbCfg.URL(), dbCfg.MigrationsDir)
 		},
 	})
 }
