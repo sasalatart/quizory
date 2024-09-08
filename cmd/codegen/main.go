@@ -17,7 +17,6 @@ func main() {
 
 	os.Setenv("PSQL_USER", dbCfg.User)
 	os.Setenv("PSQL_PASS", dbCfg.Password)
-	os.Setenv("PSQL_HOST", dbCfg.Host)
 	os.Setenv("PSQL_PORT", dbCfg.Port)
 	os.Setenv("PSQL_DBNAME", dbCfg.Name)
 
