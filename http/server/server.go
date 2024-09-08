@@ -31,7 +31,7 @@ type Server struct {
 	questionService *question.Service
 }
 
-func newServer(
+func NewServer(
 	cfg config.ServerConfig,
 	db *sql.DB,
 	answerService *answer.Service,

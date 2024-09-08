@@ -14,7 +14,7 @@ import (
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/http/oapi"
-	"github.com/sasalatart/quizory/http/server"
+	"github.com/sasalatart/quizory/http/server/servertest"
 	"github.com/sasalatart/quizory/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -24,7 +24,7 @@ import (
 type serverTestSuiteParams struct {
 	fx.In
 	DB            *sql.DB
-	ClientFactory server.TestClientFactory
+	ClientFactory servertest.ClientFactory
 	QuestionRepo  *question.Repository
 }
 

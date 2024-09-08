@@ -1,8 +1,9 @@
-package otel
+package oteltest
 
 import (
 	"context"
 
+	"github.com/sasalatart/quizory/infra/otel"
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/embedded"
 )
@@ -13,7 +14,7 @@ func newMockMeter() *MockMeter {
 	return &MockMeter{}
 }
 
-var _ Meter = MockMeter{}
+var _ otel.Meter = MockMeter{}
 
 func (m MockMeter) Int64Counter(
 	name string,

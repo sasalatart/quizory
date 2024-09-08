@@ -38,8 +38,3 @@ func metricsLC(lc fx.Lifecycle, lp *metric.MeterProvider) {
 		},
 	})
 }
-
-var TestModule = fx.Module(
-	"otel-test",
-	fx.Provide(fx.Annotate(newMockMeter, fx.As(new(Meter)))),
-)
