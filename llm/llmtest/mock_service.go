@@ -1,6 +1,10 @@
-package llm
+package llmtest
 
-import "context"
+import (
+	"context"
+
+	"github.com/sasalatart/quizory/llm"
+)
 
 type MockService struct {
 	ChatCompletionFn func(systemContent, userContent string) (string, error)
@@ -17,4 +21,4 @@ func (s *MockService) ChatCompletion(
 	return s.ChatCompletionFn(systemContent, userContent)
 }
 
-var _ ChatCompletioner = &MockService{}
+var _ llm.ChatCompletioner = &MockService{}

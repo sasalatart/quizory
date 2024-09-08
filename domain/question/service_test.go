@@ -12,6 +12,7 @@ import (
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/llm"
+	"github.com/sasalatart/quizory/llm/llmtest"
 	"github.com/sasalatart/quizory/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -60,7 +61,7 @@ func (s *QuestionServiceTestSuite) TestStartGeneration() {
 	defer cancel()
 
 	llmCallsDone := 0
-	s.LLMService.(*llm.MockService).ChatCompletionFn = func(_, _ string) (string, error) {
+	s.LLMService.(*llmtest.MockService).ChatCompletionFn = func(_, _ string) (string, error) {
 		llmCallsDone++
 		return fmt.Sprintf(`
 			[
