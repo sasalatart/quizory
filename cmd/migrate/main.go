@@ -13,7 +13,7 @@ func main() {
 	defer slog.Info("Migrations complete.")
 
 	dbCfg := config.NewConfig().DB
-	if err := migrations.Up(dbCfg); err != nil {
+	if err := migrations.Up(dbCfg.URL(), dbCfg.MigrationsDir); err != nil {
 		log.Fatal(err)
 	}
 }
