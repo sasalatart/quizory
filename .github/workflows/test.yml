@@ -62,6 +62,8 @@ jobs:
       - name: Output service logs on failure
         if: failure()
         run: docker compose -f infra/docker/docker-compose.dev.yml logs quizory
+        env:
+          UID: ${{ env.UID }}
 
       - name: Check for dirty git
         run: |
