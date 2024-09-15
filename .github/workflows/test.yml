@@ -34,12 +34,12 @@ jobs:
       - name: Spin up docker-compose
         run: |
           cp .env.quizory.example .env.quizory
-          docker compose -f infra/docker/docker-compose.dev.yml up -d
+          make dev
 
       - name: Wait for service to be healthy
         run: |
           echo "Waiting for service to be healthy..."
-          timeout=30  # Total time to wait in seconds
+          timeout=60  # Total time to wait in seconds
           interval=2  # Time between checks in seconds
           elapsed=0
           until curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health-check | grep -q "200"; do
@@ -55,7 +55,7 @@ jobs:
 
       - name: Output service logs on failure
         if: failure()
-        run: docker-compose logs
+        run: docker compose logs
 
       - name: Check for dirty git
         run: |
