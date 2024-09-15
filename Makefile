@@ -73,7 +73,7 @@ dev:
 		wait $$DOCKER_PID $$CLIENT_PID'
 
 docker-dev:
-	docker compose -f infra/docker/docker-compose.dev.yml up
+	docker compose -f infra/docker/docker-compose.dev.yml up $(ARGS)
 
 docker-dev-down:
 	docker compose -f infra/docker/docker-compose.dev.yml down

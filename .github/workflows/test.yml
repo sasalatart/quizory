@@ -34,7 +34,7 @@ jobs:
       - name: Spin up docker-compose
         run: |
           cp .env.quizory.example .env.quizory
-          make dev
+          make dev ARGS=-d
 
       - name: Wait for service to be healthy
         run: |
@@ -69,3 +69,6 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Tear down docker-compose
+        run: make docker-dev-down
