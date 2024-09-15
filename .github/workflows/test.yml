@@ -13,24 +13,6 @@ jobs:
     name: test
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DB_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
-
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +30,30 @@ jobs:
           node-version: '20.10.0'
           cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Spin up docker-compose
+        run: docker compose -f infra/docker/docker-compose.dev.yml up
+
+      - name: Wait for service to be healthy
+        run: |
+          echo "Waiting for service to be healthy..."
+          timeout=30  # Total time to wait in seconds
+          interval=2  # Time between checks in seconds
+          elapsed=0
+          until curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health-check | grep -q "200"; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Service did not become healthy after $timeout seconds."
+              exit 1
+            fi
+            echo "Service not healthy yet. Waiting..."
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+          echo "Service is healthy."
+
+      - name: Output service logs on failure
+        if: failure()
+        run: docker-compose logs
 
       - name: Check for dirty git
         run: |
