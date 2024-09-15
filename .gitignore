@@ -19,6 +19,7 @@
 # Secrets
 .env
 .env.*
+!.env.quizory.example
 
 # Test coverage artifacts
 coverage.out

@@ -32,7 +32,9 @@ jobs:
           cache-dependency-path: client/pnpm-lock.yaml
 
       - name: Spin up docker-compose
-        run: docker compose -f infra/docker/docker-compose.dev.yml up
+        run: |
+          cp .env.quizory.example .env.quizory
+          docker compose -f infra/docker/docker-compose.dev.yml up
 
       - name: Wait for service to be healthy
         run: |
