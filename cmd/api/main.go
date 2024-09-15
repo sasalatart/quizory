@@ -63,7 +63,7 @@ func main() {
 func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			return migrations.Up(dbCfg.URL(), dbCfg.MigrationsDir)
+			return migrations.Up(dbCfg.URL, dbCfg.MigrationsDir)
 		},
 	})
 }
@@ -75,7 +75,7 @@ func questionsGenLC(lc fx.Lifecycle, llmCfg config.LLMConfig, service *question.
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			go service.StartGeneration(ctx, llmCfg.Frequency, llmCfg.BatchSize)
+			go service.StartGeneration(ctx, llmCfg.Questions.Frequency, llmCfg.Questions.BatchSize)
 			return nil
 		},
 	})

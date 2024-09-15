@@ -1,9 +1,0 @@
-output = "db/model"
-wipe = true
-no-tests = true
-add-enum-types = true
-
-[psql]
-schema = "public"
-blacklist = ["schema_migrations"]
-sslmode = "disable"

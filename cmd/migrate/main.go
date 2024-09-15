@@ -2,18 +2,17 @@ package main
 
 import (
 	"log"
-	"log/slog"
 
 	"github.com/sasalatart/quizory/config"
 	"github.com/sasalatart/quizory/db/migrations"
 )
 
 func main() {
-	slog.Info("Running migrations...")
-	defer slog.Info("Migrations complete.")
+	log.Println("Running migrations...")
+	defer log.Println("Migrations complete.")
 
 	dbCfg := config.NewConfig().DB
-	if err := migrations.Up(dbCfg.URL(), dbCfg.MigrationsDir); err != nil {
-		log.Fatal(err)
+	if err := migrations.Up(dbCfg.URL, dbCfg.MigrationsDir); err != nil {
+		log.Fatal("unable to run migrations: ", err)
 	}
 }

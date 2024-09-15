@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/sasalatart/quizory/config"
@@ -58,8 +58,9 @@ func (s *Server) Start() {
 			otelhttp.NewMiddleware("quizory-server"),
 		},
 	})
-	if err := registerSwaggerHandlers(mux, s.cfg.SchemaDir); err != nil {
-		log.Fatal(err)
+	if err := registerSwaggerHandlers(mux, s.cfg.OAPISchemaDir); err != nil {
+		slog.Error("Failed to register Swagger handlers", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	s.httpServer = http.Server{
@@ -70,7 +71,8 @@ func (s *Server) Start() {
 	}
 
 	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
+		slog.Error("Failed to start server", slog.Any("error", err))
+		os.Exit(1)
 	}
 }
 

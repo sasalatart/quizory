@@ -42,8 +42,8 @@ Make sure you have a `.env.quizory` file in your root dir filled as follows:
 
 ```env
 DB_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-JWT_SECRET=<your-supabase-jwt-secret>
-OPENAI_API_KEY=<your-openai-key>
+LLM_OPENAI_KEY=<your-openai-key>
+SERVER_JWT_SECRET=<your-supabase-jwt-secret>
 
 # Default password for Grafana. You will be asked to input a new one the first time you login.
 GF_SECURITY_ADMIN_PASSWORD=admin
@@ -74,6 +74,11 @@ $ make dev
 You should now be able to access http://localhost:5173 and explore the app.
 
 You can also access Grafana via http://localhost:3000, and login with admin/admin credentials.
+
+### Configuring
+
+This project relies on [viper][viper] for configuration management. You may find the configuration file
+in `config/config.yaml`, and exposed to Go via `config/config.go`.
 
 ### Testing
 
@@ -122,3 +127,4 @@ _Quizory_ is [MIT licensed](./LICENSE).
 [supabase]: https://supabase.com/
 [supabase-google]: https://supabase.com/docs/guides/auth/social-login/auth-google
 [swagger-docs]: https://quizory-api.salatart.com/openapi/swagger/index.html
+[viper]: https://github.com/spf13/viper

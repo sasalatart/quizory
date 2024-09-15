@@ -1,3 +1,6 @@
 FROM golang:1.23-alpine
 
 WORKDIR /app
+
+ENV GOCACHE=/tmp/go-cache
+RUN mkdir -p /tmp/go-cache && chmod -R 777 /tmp/go-cache

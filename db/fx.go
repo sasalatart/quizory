@@ -18,7 +18,7 @@ var Module = fx.Module(
 
 // newDB creates a database connection, and adds an fx hook to close it when the application stops.
 func newDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
-	rootDB := mustOpen(cfg.URL())
+	rootDB := mustOpen(cfg.URL)
 	lc.Append(fx.Hook{
 		OnStop: func(context.Context) error {
 			return rootDB.Close()

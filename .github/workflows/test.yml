@@ -13,24 +13,6 @@ jobs:
     name: test
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DB_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
-
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +31,42 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
 
+      - name: Get current user UID
+        id: uid
+        run: echo "UID=$(id -u)" >> $GITHUB_ENV
+
+      - name: Spin up docker-compose
+        run: |
+          cp .env.quizory.example .env.quizory
+          make docker-dev ARGS=-d
+        env:
+          UID: ${{ env.UID }}
+
+      - name: Wait for service to be healthy
+        run: |
+          echo "Waiting for service to be healthy..."
+          timeout=60  # Total time to wait in seconds
+          interval=2  # Time between checks in seconds
+          elapsed=0
+          while true; do
+            if curl -s --fail http://localhost:8080/health-check > /dev/null; then
+              echo "Service is healthy."
+              break
+            else
+              if [ $elapsed -ge $timeout ]; then
+                echo "Service did not become healthy after $timeout seconds."
+                exit 1
+              fi
+              echo "Service not healthy yet. Waiting..."
+              sleep $interval
+              elapsed=$((elapsed + interval))
+            fi
+          done
+
+      - name: Output service logs on failure
+        if: failure()
+        run: docker compose -f infra/docker/docker-compose.dev.yml logs quizory
+
       - name: Check for dirty git
         run: |
           make install
@@ -61,3 +79,6 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Tear down docker-compose
+        run: make docker-dev-down
