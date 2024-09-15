@@ -31,10 +31,16 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
 
+      - name: Get current user UID
+        id: uid
+        run: echo "UID=$(id -u)" >> $GITHUB_ENV
+
       - name: Spin up docker-compose
         run: |
           cp .env.quizory.example .env.quizory
           make docker-dev ARGS=-d
+        env:
+          UID: ${{ env.UID }}
 
       - name: Wait for service to be healthy
         run: |
