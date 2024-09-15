@@ -4,7 +4,3 @@ WORKDIR /app
 
 ENV GOCACHE=/tmp/go-cache
 RUN mkdir -p /tmp/go-cache && chmod -R 777 /tmp/go-cache
-
-RUN useradd -m -d /home/appuser appuser
-RUN chown -R appuser:appuser /app
-USER appuser
