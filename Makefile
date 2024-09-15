@@ -1,8 +1,7 @@
 GOCMD = go
 JSCMD = pnpm
-DOCKERCMD = docker exec quizory go run
-GOBUILD = $(GOCMD) build
-GOTEST = $(GOCMD) test
+DOCKER_COMPOSE = docker compose -f infra/docker/docker-compose.dev.yml
+DOCKER_EXEC = docker exec quizory go run
 GOTOOL = $(GOCMD) tool
 BINARIES_DIR = out
 CLIENT_DIR = client
@@ -38,7 +37,7 @@ lint-go:
 	golangci-lint run
 
 migrate:
-	$(DOCKERCMD) ./cmd/migrate
+	$(DOCKER_EXEC) ./cmd/migrate
 
 codegen: codegen-go codegen-client
 
@@ -46,7 +45,7 @@ codegen-client:
 	cd $(CLIENT_DIR) && $(JSCMD) codegen
 
 codegen-go:
-	$(DOCKERCMD) ./cmd/codegen
+	$(DOCKER_EXEC) ./cmd/codegen
 
 build: install build-go build-client
 
@@ -54,16 +53,16 @@ build-client:
 	cd $(CLIENT_DIR) && $(JSCMD) build
 
 build-go:
-	$(GOBUILD) -o $(BINARIES_DIR)/api -v ./cmd/api
+	$(GOCMD) build -o $(BINARIES_DIR)/api -v ./cmd/api
 
 clean:
 	rm -rf $(BINARIES_DIR) && rm -rf $(CLIENT_DIR)/dist && rm -rf $(CLIENT_DIR)/src/generated/api/apis
 
 test:
-	$(GOTEST) -race -shuffle=on ./...
+	$(GOCMD) test -race -shuffle=on ./...
 
 coverage:
-	$(GOTEST) -coverprofile coverage.out ./... && \
+	$(GOCMD) test -coverprofile coverage.out ./... && \
 	$(GOTOOL) cover -html coverage.out -o coverage.html && open coverage.html
 
 dev:
@@ -73,10 +72,10 @@ dev:
 		wait $$DOCKER_PID $$CLIENT_PID'
 
 docker-dev:
-	docker compose -f infra/docker/docker-compose.dev.yml up $(ARGS)
+	$(DOCKER_COMPOSE) up $(ARGS)
 
 docker-dev-down:
-	docker compose -f infra/docker/docker-compose.dev.yml down
+	$(DOCKER_COMPOSE) down
 
 client-dev:
 	cd $(CLIENT_DIR) && $(JSCMD) dev
