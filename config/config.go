@@ -1,82 +1,91 @@
 package config
 
 import (
-	"log/slog"
-	"os"
-	"path/filepath"
+	"fmt"
+	"log"
+	"path"
+	"strings"
+	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/pkg/errors"
+	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/viper"
 	"go.uber.org/fx"
 )
 
-const envFileName = ".env.quizory"
-
-func init() {
-	loadEnvVars()
-}
-
-// loadEnvVars loads environment variables from the root .env file if it exists.
-func loadEnvVars() {
-	envFileDir, err := findFilePath(envFileName)
-	if errors.Is(err, os.ErrNotExist) {
-		slog.Warn("No .env file found")
-		return
-	}
-	if err != nil {
-		panic(errors.Wrapf(err, "finding %s file", envFileName))
-	}
-	if err := godotenv.Load(envFileDir); err != nil {
-		panic(errors.Wrapf(err, "loading %s file", envFileName))
-	}
-}
-
-// findFilePath searches for a file with the given name starting from the current working directory
-// and going up to the root directory. It returns the path of the file if found, or an
-// os.ErrNotExist if it does not exist.
-func findFilePath(fileName string) (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", errors.Wrap(err, "getting current working directory")
-	}
-
-	for dir := cwd; dir != "/"; dir = filepath.Dir(dir) {
-		possibleFilePath := filepath.Join(dir, fileName)
-		if _, err := os.Stat(possibleFilePath); err == nil {
-			return possibleFilePath, nil
-		} else if !os.IsNotExist(err) {
-			return "", err
-		}
-	}
-
-	return "", errors.Wrapf(os.ErrNotExist, "%s file not found", fileName)
-}
-
-// Config represents the configuration of the application.
 type Config struct {
 	fx.Out
 
-	DB     DBConfig
-	LLM    LLMConfig
-	Server ServerConfig
+	DB     DBConfig     `mapstructure:"db"`
+	LLM    LLMConfig    `mapstructure:"llm"`
+	Server ServerConfig `mapstructure:"server"`
+}
+
+type DBConfig struct {
+	MigrationsDir string `mapstructure:"migrations_dir"`
+	URL           string `mapstructure:"url"`
+}
+
+type LLMConfig struct {
+	OpenAIKey string `mapstructure:"openai_key"`
+
+	Questions struct {
+		BatchSize int           `mapstructure:"batch_size"`
+		Frequency time.Duration `mapstructure:"frequency"`
+	} `mapstructure:"questions"`
+}
+
+type ServerConfig struct {
+	Host          string        `mapstructure:"host"`
+	Port          int           `mapstructure:"port"`
+	ReadTimeout   time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout  time.Duration `mapstructure:"write_timeout"`
+	JWTSecret     string        `mapstructure:"jwt_secret"`
+	OAPISchemaDir string        `mapstructure:"oapi_schema_dir"`
+}
+
+func (c ServerConfig) Address() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
 // NewConfig returns a new Config instance with values loaded from environment variables.
 func NewConfig() Config {
-	openAIKey := os.Getenv("OPENAI_API_KEY")
+	v := viper.New()
 
-	return Config{
-		DB:     NewDBConfig("postgres"),
-		LLM:    NewLLMConfig(openAIKey),
-		Server: NewServerConfig("0.0.0.0", 8080),
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	configPath := mustFindAbsoluteFilePath(path.Join("config", "config.yaml"))
+	v.SetConfigFile(configPath)
+
+	if err := v.ReadInConfig(); err != nil {
+		log.Fatal("error reading config file: ", err)
 	}
+
+	var config Config
+	decoderConfig := &mapstructure.DecoderConfig{
+		DecodeHook: mapstructure.StringToTimeDurationHookFunc(),
+		Result:     &config,
+		TagName:    "mapstructure",
+	}
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	if err != nil {
+		log.Fatal("error creating mapstructure decoder: ", err)
+	}
+	if err := decoder.Decode(v.AllSettings()); err != nil {
+		log.Fatal("error decoding config: ", err)
+	}
+
+	config.Server.OAPISchemaDir = mustFindAbsoluteFilePath(config.Server.OAPISchemaDir)
+	config.DB.MigrationsDir = mustFindAbsoluteFilePath(config.DB.MigrationsDir)
+
+	return config
 }
 
 // NewTestConfig returns a Config instance intended for testing.
 func NewTestConfig() Config {
-	return Config{
-		DB:     NewDBConfig("postgres"),
-		LLM:    NewLLMConfig("test"),
-		Server: NewServerConfig("localhost", 8081),
-	}
+	cfg := NewConfig()
+	cfg.Server.Host = "localhost" // Test can run outside Docker
+	cfg.Server.Port = 8081        // Avoid conflicts with the main server in case it's running in dev mode
+	cfg.LLM.OpenAIKey = "test"
+	return cfg
 }

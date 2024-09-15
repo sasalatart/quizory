@@ -17,8 +17,9 @@ LABEL maintainer="Sebastian Salata R-T <sa.salatart@gmail.com>"
 WORKDIR /root/
 
 COPY --from=builder /app/api .
+COPY --from=builder /app/config/config.yaml ./config/config.yaml
 COPY --from=builder /app/db/migrations/*.sql ./db/migrations/
-COPY --from=builder /app/http/oapi/schema.yml ./http/oapi/schema.yml
+COPY --from=builder /app/http/oapi/schema.yaml ./http/oapi/schema.yaml
 
 EXPOSE 8080
 

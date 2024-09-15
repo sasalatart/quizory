@@ -1,5 +1,6 @@
 GOCMD = go
 JSCMD = pnpm
+DOCKERCMD = docker exec quizory go run
 GOBUILD = $(GOCMD) build
 GOTEST = $(GOCMD) test
 GOTOOL = $(GOCMD) tool
@@ -26,8 +27,6 @@ install-client:
 	cd $(CLIENT_DIR) && $(JSCMD) install
 
 install-go:
-	$(GOCMD) install github.com/volatiletech/sqlboiler/v4@latest && \
-	$(GOCMD) install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest && \
 	$(GOCMD) mod tidy
 
 lint: lint-go lint-client
@@ -39,11 +38,15 @@ lint-go:
 	golangci-lint run
 
 migrate:
-	$(GOCMD) run ./cmd/migrate
+	$(DOCKERCMD) ./cmd/migrate
 
-codegen:
-	PSQL_HOST=localhost $(GOCMD) run ./cmd/codegen && \
+codegen: codegen-go codegen-client
+
+codegen-client:
 	cd $(CLIENT_DIR) && $(JSCMD) codegen
+
+codegen-go:
+	$(DOCKERCMD) ./cmd/codegen
 
 build: install build-go build-client
 
