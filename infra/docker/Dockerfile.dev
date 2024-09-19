@@ -1,6 +1,10 @@
-FROM golang:1.23-alpine
+FROM golang:1.23
 
 WORKDIR /app
 
-ENV GOCACHE=/tmp/go-cache
-RUN mkdir -p /tmp/go-cache && chmod -R 777 /tmp/go-cache
+ENV GOCACHE=/app/.cache/go-build
+RUN mkdir -p /app/.cache/go-build
+
+RUN go install github.com/air-verse/air@v1.52.3
+
+CMD ["air", "-c", "./cmd/api/air.toml"]

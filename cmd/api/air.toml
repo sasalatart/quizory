@@ -1,0 +1,20 @@
+root = "."
+
+[build]
+  cmd = "go build -o ./tmp/api ./cmd/api/main.go"
+  bin = "./tmp/api"
+  exclude_dir = ["client", "tmp"]
+  exclude_file = ["*_test.go"]
+  include_ext = ["go", "yaml", "txt"]
+  delay = 1000
+  kill_delay = 500
+  restart_signal = "int"
+  build_args = ["-v"]
+  run_args = ["-generate"]
+
+[log]
+  color = "auto"
+  timestamp = "true"
+
+[misc]
+  clean_on_exit = true
