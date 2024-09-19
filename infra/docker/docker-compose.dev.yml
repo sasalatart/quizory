@@ -18,7 +18,6 @@ services:
     depends_on:
       - postgres
       - otel-collector
-    command: go run ./cmd/api -generate
     user: '${UID}:${UID}'
     networks:
       - telemetry
