@@ -21,15 +21,14 @@ jobs:
           go-version: '1.23'
           cache: 'true'
 
-      - name: Setup pnpm and install dependencies
-        uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
         with:
-          version: 9
           node-version: '20.10.0'
-          run_install: true
-          cache: true
-          working-directory: client
+          cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9
 
       - name: Get current user UID
         id: uid
@@ -81,4 +80,5 @@ jobs:
         run: make test
 
       - name: Tear down docker-compose
+        if: always()
         run: make docker-dev-down

@@ -31,15 +31,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup pnpm and install dependencies
-        uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
         with:
-          version: 9
           node-version: '20.10.0'
-          run_install: true
-          cache: true
-          working-directory: client
+          cache: 'pnpm'
           cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9
 
       - name: install-dependencies
         run: make install-client
