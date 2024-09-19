@@ -63,6 +63,7 @@ jobs:
 
       - name: Check for dirty git
         run: |
+          umask 022
           make install
           make migrate
           make codegen
