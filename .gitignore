@@ -28,5 +28,6 @@ coverage.html
 # Telemetry
 *.db
 
-# air
+# Air
 tmp/
+.cache

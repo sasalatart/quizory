@@ -16,8 +16,15 @@ services:
   grafana:
     image: grafana/grafana:11.2.0
     container_name: grafana
+    env_file:
+      - ../../.env.quizory
     ports:
       - '3000:3000'
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./volumes/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./volumes/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./volumes/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     networks:
       - telemetry
 
@@ -45,6 +52,9 @@ services:
       - telemetry
     command:
       - '--config.file=/etc/prometheus/prometheus.yaml'
+
+volumes:
+  grafana:
 
 networks:
   telemetry:
