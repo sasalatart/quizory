@@ -18,7 +18,7 @@ services:
     depends_on:
       - postgres
       - otel-collector
-    user: '${UID}:${UID}'
+    user: '${USERID}:${USERID}'
     networks:
       - telemetry
 

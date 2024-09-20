@@ -1,6 +1,6 @@
 GOCMD = go
 JSCMD = pnpm
-DOCKER_COMPOSE = docker compose -f infra/docker/docker-compose.dev.yml
+DOCKER_COMPOSE = USERID=$(id -u) docker compose -f infra/docker/docker-compose.dev.yml
 DOCKER_EXEC = docker exec quizory go run
 GOTOOL = $(GOCMD) tool
 BINARIES_DIR = out
