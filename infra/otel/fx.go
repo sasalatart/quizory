@@ -14,43 +14,41 @@ import (
 
 var Module = fx.Module(
 	"otel",
-	fx.Provide(newOTELProvider),
-	fx.Invoke(otelProviderLC),
+	fx.Provide(newProvider),
+	fx.Invoke(providerLC),
 	fx.Provide(fx.Annotate(newMeter, fx.As(new(Meter)))),
 )
 
-type OTELProvider struct {
-	fx.Out
-
+type Provider struct {
 	LoggerProvider *log.LoggerProvider
 	MeterProvider  *metric.MeterProvider
 }
 
-func newOTELProvider() (OTELProvider, error) {
+func newProvider() (*Provider, error) {
 	ctx := context.Background()
-	provider := OTELProvider{}
 
 	res, err := newResource(ctx, getServiceName(), getServiceVersion())
 	if err != nil {
-		return provider, errors.Wrap(err, "creating resource")
+		return nil, errors.Wrap(err, "creating resource")
 	}
 
 	lp, err := newLoggerProvider(ctx, res)
 	if err != nil {
-		return provider, errors.Wrap(err, "creating logger provider")
+		return nil, errors.Wrap(err, "creating logger provider")
 	}
-	provider.LoggerProvider = lp
 
 	mp, err := newMeterProvider(ctx, res)
 	if err != nil {
-		return provider, errors.Wrap(err, "creating meter provider")
+		return nil, errors.Wrap(err, "creating meter provider")
 	}
-	provider.MeterProvider = mp
 
-	return provider, nil
+	return &Provider{
+		LoggerProvider: lp,
+		MeterProvider:  mp,
+	}, nil
 }
 
-func otelProviderLC(lc fx.Lifecycle, op OTELProvider) {
+func providerLC(lc fx.Lifecycle, op *Provider) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			slog.SetDefault(otelslog.NewLogger(getServiceName()))
