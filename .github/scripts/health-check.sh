@@ -29,3 +29,5 @@ wait_for_service() {
     fi
   done
 }
+
+wait_for_service "$1" "$2" "$3"
