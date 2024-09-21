@@ -59,8 +59,7 @@ jobs:
           UID: ${{ env.UID }}
 
       - name: Wait for service to be healthy
-        run: |
-          scripts/wait-for-service.sh http://localhost:8080/health-check
+        run: ./.github/scripts/health-check.sh http://localhost:8080/health-check
 
       - name: Output service logs on failure
         if: failure()
