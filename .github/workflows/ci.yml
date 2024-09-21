@@ -43,7 +43,6 @@ jobs:
   local-health-check-and-clean-git:
     name: local-health-check-and-clean-git
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/bootstrap
@@ -61,24 +60,7 @@ jobs:
 
       - name: Wait for service to be healthy
         run: |
-          echo "Waiting for service to be healthy..."
-          timeout=60  # Total time to wait in seconds
-          interval=2  # Time between checks in seconds
-          elapsed=0
-          while true; do
-            if curl -s --fail http://localhost:8080/health-check > /dev/null; then
-              echo "Service is healthy."
-              break
-            else
-              if [ $elapsed -ge $timeout ]; then
-                echo "Service did not become healthy after $timeout seconds."
-                exit 1
-              fi
-              echo "Service not healthy yet. Waiting..."
-              sleep $interval
-              elapsed=$((elapsed + interval))
-            fi
-          done
+          scripts/wait-for-service.sh http://localhost:8080/health-check
 
       - name: Output service logs on failure
         if: failure()
