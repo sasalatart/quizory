@@ -20,45 +20,47 @@ var Module = fx.Module(
 )
 
 type Provider struct {
+	fx.Out
+
 	LoggerProvider *log.LoggerProvider
 	MeterProvider  *metric.MeterProvider
 }
 
-func newProvider() (*Provider, error) {
+func newProvider() (Provider, error) {
 	ctx := context.Background()
+	provider := Provider{}
 
 	res, err := newResource(ctx, getServiceName(), getServiceVersion())
 	if err != nil {
-		return nil, errors.Wrap(err, "creating resource")
+		return provider, errors.Wrap(err, "creating resource")
 	}
 
 	lp, err := newLoggerProvider(ctx, res)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating logger provider")
+		return provider, errors.Wrap(err, "creating logger provider")
 	}
+	provider.LoggerProvider = lp
 
 	mp, err := newMeterProvider(ctx, res)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating meter provider")
+		return provider, errors.Wrap(err, "creating meter provider")
 	}
+	provider.MeterProvider = mp
 
-	return &Provider{
-		LoggerProvider: lp,
-		MeterProvider:  mp,
-	}, nil
+	return provider, nil
 }
 
-func providerLC(lc fx.Lifecycle, op *Provider) {
+func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvider) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			slog.SetDefault(otelslog.NewLogger(getServiceName()))
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			if err := op.LoggerProvider.Shutdown(ctx); err != nil {
+			if err := lp.Shutdown(ctx); err != nil {
 				return errors.Wrap(err, "shutting down logger provider")
 			}
-			if err := op.MeterProvider.Shutdown(ctx); err != nil {
+			if err := mp.Shutdown(ctx); err != nil {
 				return errors.Wrap(err, "shutting down meter provider")
 			}
 			return nil
