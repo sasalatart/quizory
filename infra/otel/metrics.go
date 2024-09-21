@@ -8,37 +8,41 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	otelmetric "go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 const (
 	metricsExportInterval   = 10 * time.Second
-	minReadMemStatsInterval = 4 * time.Second
+	minReadMemStatsInterval = 5 * time.Second
 )
 
-func newMetricsProvider() (*metric.MeterProvider, error) {
-	ctx := context.Background()
-
+func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	exporter, err := otlpmetrichttp.New(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating OTLP metrics exporter")
 	}
 
-	provider := metric.NewMeterProvider(
-		metric.WithReader(
-			metric.NewPeriodicReader(exporter, metric.WithInterval(metricsExportInterval)),
+	provider := sdkmetric.NewMeterProvider(
+		sdkmetric.WithResource(res),
+		sdkmetric.WithReader(
+			sdkmetric.NewPeriodicReader(
+				exporter,
+				sdkmetric.WithInterval(metricsExportInterval),
+			),
 		),
 	)
 
-	otel.SetMeterProvider(provider)
-
 	// Auto-instrument runtime metrics (e.g., memory, CPU, GC stats)
 	if err := runtime.Start(
+		runtime.WithMeterProvider(provider),
 		runtime.WithMinimumReadMemStatsInterval(minReadMemStatsInterval),
 	); err != nil {
 		return nil, errors.Wrap(err, "starting runtime metrics")
 	}
+
+	otel.SetMeterProvider(provider)
 
 	return provider, nil
 }
@@ -46,15 +50,15 @@ func newMetricsProvider() (*metric.MeterProvider, error) {
 type Meter interface {
 	Int64Counter(
 		name string,
-		opts ...otelmetric.Int64CounterOption,
-	) (otelmetric.Int64Counter, error)
+		opts ...metric.Int64CounterOption,
+	) (metric.Int64Counter, error)
 
 	Int64Histogram(
 		name string,
-		opts ...otelmetric.Int64HistogramOption,
-	) (otelmetric.Int64Histogram, error)
+		opts ...metric.Int64HistogramOption,
+	) (metric.Int64Histogram, error)
 }
 
-func newMeter(provider *metric.MeterProvider) Meter {
+func newMeter(provider *sdkmetric.MeterProvider) Meter {
 	return provider.Meter("quizory")
 }
