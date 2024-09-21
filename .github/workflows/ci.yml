@@ -1,0 +1,91 @@
+name: ci
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bootstrap
+
+      - name: lint-go
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60.3
+
+      - name: lint-ts
+        run: make lint-client
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bootstrap
+      - run: make build
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bootstrap
+      - run: make test
+
+  local-health-check-and-clean-git:
+    name: local-health-check-and-clean-git
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bootstrap
+
+      - name: Get current user UID
+        id: uid
+        run: echo "UID=$(id -u)" >> $GITHUB_ENV
+
+      - name: Spin up docker-compose
+        run: |
+          cp .env.quizory.example .env.quizory
+          make docker-dev ARGS=-d
+        env:
+          UID: ${{ env.UID }}
+
+      - name: Wait for service to be healthy
+        run: ./.github/scripts/health-check.sh http://localhost:8080/health-check
+
+      - name: Output service logs on failure
+        if: failure()
+        run: docker compose -f infra/docker/docker-compose.dev.yml logs quizory
+
+      - name: Check for dirty git
+        run: |
+          make migrate
+          make codegen
+          git diff --exit-code
+
+      - name: Tear down docker-compose
+        run: make docker-dev-down
+
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          tags: sasalatart/quizory-api:${{ github.sha }}
+          file: ./infra/docker/Dockerfile
