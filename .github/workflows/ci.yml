@@ -15,7 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/bootstrap
-      - run: make lint
+
+      - name: lint-go
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60.3
+
+      - name: lint-ts
+        run: make lint-client
 
   build:
     name: build
