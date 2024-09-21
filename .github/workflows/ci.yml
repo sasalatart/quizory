@@ -1,4 +1,4 @@
-name: test
+name: ci
 on:
   push:
     branches:
@@ -9,27 +9,33 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/bootstrap
+      - run: make lint
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/bootstrap
+      - run: make build
+
   test:
     name: test
     runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/bootstrap
+      - run: make test
+
+  local-health-check-and-clean-diff:
+    name: local-health-check-and-clean-diff
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.10.0'
-          cache: 'pnpm'
-          cache-dependency-path: client/pnpm-lock.yaml
+      - uses: ./.github/actions/bootstrap
 
       - name: Get current user UID
         id: uid
@@ -69,16 +75,25 @@ jobs:
 
       - name: Check for dirty git
         run: |
-          make install
           make migrate
           make codegen
           git diff --exit-code
 
-      - name: Build
-        run: make build
-
-      - name: Test
-        run: make test
-
       - name: Tear down docker-compose
         run: make docker-dev-down
+
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          tags: sasalatart/quizory-api:${{ github.sha }}
+          file: ./infra/docker/Dockerfile

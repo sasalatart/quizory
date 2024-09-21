@@ -9,6 +9,7 @@
 /bin/
 /pkg/
 /out/
+.cache
 
 # IDE
 .idea/
@@ -30,4 +31,3 @@ coverage.html
 
 # Air
 tmp/
-.cache
