@@ -50,7 +50,7 @@ func newOTELProvider() (OTELProvider, error) {
 	return provider, nil
 }
 
-func otelProviderLC(lc fx.Lifecycle, op *OTELProvider) {
+func otelProviderLC(lc fx.Lifecycle, op OTELProvider) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			slog.SetDefault(otelslog.NewLogger(getServiceName()))
