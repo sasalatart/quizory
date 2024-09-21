@@ -40,8 +40,8 @@ jobs:
       - uses: ./.github/actions/bootstrap
       - run: make test
 
-  local-health-check-and-clean-diff:
-    name: local-health-check-and-clean-diff
+  local-health-check-and-clean-git:
+    name: local-health-check-and-clean-git
     runs-on: ubuntu-latest
 
     steps:
