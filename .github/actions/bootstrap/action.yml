@@ -1,10 +1,8 @@
 name: bootstrap
-description: 'Checks out code, sets up Go + Node environments, and installs dependencies'
+description: 'Sets up Go + Node environments, and installs dependencies'
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v4
-
     - name: Install Go
       uses: actions/setup-go@v5
       with:
