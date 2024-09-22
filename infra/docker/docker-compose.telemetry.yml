@@ -16,8 +16,6 @@ services:
   grafana:
     image: grafana/grafana:11.2.0
     container_name: grafana
-    env_file:
-      - ../../.env.quizory
     ports:
       - '3000:3000'
     volumes:
