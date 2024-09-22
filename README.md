@@ -44,9 +44,6 @@ Make sure you have a `.env.quizory` file in your root dir filled as follows:
 DB_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
 LLM_OPENAI_KEY=<your-openai-key>
 SERVER_JWT_SECRET=<your-supabase-jwt-secret>
-
-# Default password for Grafana. You will be asked to input a new one the first time you login.
-GF_SECURITY_ADMIN_PASSWORD=admin
 ```
 
 Also, make sure you have a `client/.env.local` file filled as follows:
