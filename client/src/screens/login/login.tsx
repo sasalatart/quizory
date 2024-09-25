@@ -3,7 +3,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/supabase';
 import { GITHUB_USER_LINK, GITHUB_REPO_LINK } from '@/config';
 import { NapoleonicHatIcon } from '@/icons';
-import { WithSkybox } from '@/layout/skybox';
+import { WithSkybox } from '@/layout';
 
 export function Login(): JSX.Element {
   return (
