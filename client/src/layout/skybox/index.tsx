@@ -11,12 +11,12 @@ export function WithSkybox({ children }: Props): JSX.Element {
   return (
     <div className="h-screen">
       <Canvas
-        className="absolute top-0 left-0 w-full h-full z-0"
+        className="absolute top-0 left-0 w-full h-full -z-10"
         camera={{ position: [0, 0, 0.1], fov: 75, near: 0.1 }}
       >
         <Skybox />
       </Canvas>
-      <div className="absolute top-0 left-0 w-full h-full flex flex-col z-1">{children}</div>
+      <div className="absolute top-0 left-0 w-full h-full flex flex-col">{children}</div>
     </div>
   );
 }
@@ -27,7 +27,7 @@ function Skybox(): JSX.Element {
 
   useFrame(() => {
     if (sphereRef.current) {
-      sphereRef.current.rotation.y += 0.00033; // Adjust the speed as needed
+      sphereRef.current.rotation.y += 0.0001; // Adjust the speed as needed
     }
   });
 
