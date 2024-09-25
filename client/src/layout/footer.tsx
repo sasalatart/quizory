@@ -2,7 +2,7 @@ import { GITHUB_USER_LINK, GITHUB_REPO_LINK } from '@/config';
 
 export function Footer(): JSX.Element {
   return (
-    <footer className="footer footer-center p-4 bg-base-300 text-base-content">
+    <footer className="footer footer-center p-4 bg-base-300 text-base-content opacity-85">
       <aside>
         <p>
           <a href={GITHUB_USER_LINK} target="_blank" className="link">
