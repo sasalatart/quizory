@@ -8,9 +8,7 @@ export function Layout(): JSX.Element {
     <WithSkybox>
       <Navbar />
       <div className="container m-auto">
-        <div className="m-4">
-          <Outlet />
-        </div>
+        <Outlet />
       </div>
       <Footer />
     </WithSkybox>
