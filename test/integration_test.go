@@ -173,10 +173,10 @@ func (s *TestSuite) assertGenerateBatchOfQuestions(
 	err := s.GeneratorService.GenerateBatch(ctx, amount, topic)
 	s.Require().NoError(err)
 
-	updatedQuestionsIDs := getCurrentQuestionsIDs()
-	s.Require().Equal(len(previousQuestionsIDs)+amount, len(updatedQuestionsIDs))
+	allQuestionsIDs := getCurrentQuestionsIDs()
+	s.Require().Equal(len(previousQuestionsIDs)+amount, len(allQuestionsIDs))
 
-	newQuestionsIDs := updatedQuestionsIDs[len(previousQuestionsIDs):]
+	newQuestionsIDs := allQuestionsIDs[len(previousQuestionsIDs):]
 	newQuestions, err := s.QuestionRepo.GetMany(
 		ctx,
 		question.WhereIDIn(newQuestionsIDs...),
