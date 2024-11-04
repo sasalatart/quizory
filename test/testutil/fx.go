@@ -5,7 +5,10 @@ import (
 	"github.com/sasalatart/quizory/db/dbtest"
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
-	"github.com/sasalatart/quizory/http/server/servertest"
+	"github.com/sasalatart/quizory/generator"
+	"github.com/sasalatart/quizory/http/grpc"
+	grpclient "github.com/sasalatart/quizory/http/grpc/client"
+	"github.com/sasalatart/quizory/http/rest/resttest"
 	"github.com/sasalatart/quizory/infra/otel/oteltest"
 	"github.com/sasalatart/quizory/llm/llmtest"
 	"go.uber.org/fx"
@@ -18,12 +21,13 @@ var Module = fx.Module(
 	"testutil",
 
 	fx.Provide(config.NewTestConfig),
-	dbtest.Module,
 	oteltest.Module,
+	dbtest.Module,
 	llmtest.Module,
 
 	answer.Module,
 	question.Module,
+	generator.Module,
 
 	// Repositories are injected privately in the modules above, so we provide them here to make
 	// them available for tests (e.g. for seeding the database with test data).
@@ -38,5 +42,7 @@ var ModuleWithAPI = fx.Module(
 	"testutil-with-api",
 
 	Module,
-	servertest.Module,
+	grpc.Module,
+	resttest.Module,
+	grpclient.Module,
 )

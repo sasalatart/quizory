@@ -188,6 +188,14 @@ func (r *Repository) toDB(q Question) (*models.Question, models.ChoiceSlice, err
 	}, choices, nil
 }
 
+func WhereIDIn(ids ...uuid.UUID) qm.QueryMod {
+	var strIDs []string
+	for _, id := range ids {
+		strIDs = append(strIDs, id.String())
+	}
+	return models.QuestionWhere.ID.IN(strIDs)
+}
+
 func WhereChoiceIDIn(ids ...uuid.UUID) qm.QueryMod {
 	strIDs := make([]interface{}, len(ids))
 	placeholders := make([]string, len(ids))

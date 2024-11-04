@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
-	"github.com/sasalatart/quizory/testutil"
+	"github.com/sasalatart/quizory/test/testutil"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/fx"
 )

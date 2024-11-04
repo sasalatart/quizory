@@ -12,7 +12,7 @@ func main() {
 	defer log.Println("Migrations complete.")
 
 	dbCfg := config.NewConfig().DB
-	if err := migrations.Up(dbCfg.URL, dbCfg.MigrationsDir); err != nil {
+	if err := migrations.Up(dbCfg.URL, dbCfg.MigrationsDir()); err != nil {
 		log.Fatal("unable to run migrations: ", err)
 	}
 }

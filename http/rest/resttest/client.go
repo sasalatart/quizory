@@ -1,4 +1,4 @@
-package servertest
+package resttest
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/sasalatart/quizory/config"
-	"github.com/sasalatart/quizory/http/oapi"
+	"github.com/sasalatart/quizory/http/rest/oapi"
 )
 
 // ClientFactory creates an authenticated oapi.ClientWithResponses for a given user ID.
@@ -32,7 +32,7 @@ func newClientFactory(cfg config.ServerConfig) ClientFactory {
 		}
 
 		return oapi.NewClientWithResponses(
-			fmt.Sprintf("http://%s", cfg.Address()),
+			fmt.Sprintf("http://%s", cfg.RESTAddress()),
 			authUserClientOption,
 		)
 	}

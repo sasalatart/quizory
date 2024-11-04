@@ -45,13 +45,7 @@ paths:
       operationId: getNextQuestion
       description: Returns the next question that a user should answer for the specified topic.
       parameters:
-        - name: topic
-          in: query
-          description: The topic for which the next question should be retrieved.
-          required: true
-          schema:
-            type: string
-          example: ancient greece
+        - $ref: '#/components/parameters/TopicQueryParam'
       responses:
         200:
           description: The next question that a user should answer for the specified topic.
@@ -89,28 +83,9 @@ paths:
       operationId: getAnswersLog
       description: Returns the paginated log of all answers submitted by the user.
       parameters:
-        - name: userId
-          in: path
-          description: The ID of the user whose answers are being retrieved.
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
-        - name: page
-          in: query
-          description: The page number to retrieve (index starts at 0).
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            default: 0
-        - name: pageSize
-          in: query
-          description: The number of items per page.
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            default: 25
+        - $ref: '#/components/parameters/UserIdQueryParam'
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/PageSizeQueryParam'
       responses:
         200:
           description: The log of all answers submitted by the user.
@@ -127,6 +102,44 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    UserIdQueryParam:
+      name: userId
+      in: path
+      description: The ID of the user.
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+
+    PageQueryParam:
+      name: page
+      in: query
+      description: The page number to retrieve (index starts at 0).
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 0
+
+    PageSizeQueryParam:
+      name: pageSize
+      in: query
+      description: The number of items per page.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 25
+
+    TopicQueryParam:
+      name: topic
+      in: query
+      description: The topic for which the next question should be retrieved.
+      required: true
+      schema:
+        type: string
+      example: ancient greece
 
   schemas:
     UUID:

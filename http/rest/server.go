@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"context"
@@ -15,8 +15,8 @@ import (
 	"github.com/sasalatart/quizory/domain/pagination"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
-	"github.com/sasalatart/quizory/http/oapi"
-	"github.com/sasalatart/quizory/http/server/middleware"
+	"github.com/sasalatart/quizory/http/rest/middleware"
+	"github.com/sasalatart/quizory/http/rest/oapi"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -46,25 +46,25 @@ func NewServer(
 }
 
 func (s *Server) Start() {
-	slog.Info("Running server", slog.String("address", s.cfg.Address()))
+	slog.Info("Running REST server", slog.String("address", s.cfg.RESTAddress()))
 
 	mux := http.NewServeMux()
 	handler := oapi.HandlerWithOptions(s, oapi.StdHTTPServerOptions{
 		BaseRouter: mux,
 		Middlewares: []oapi.MiddlewareFunc{
-			middleware.WithAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
+			middleware.WithJWTAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
 			middleware.WithRecover,
 			middleware.WithLogger,
 			otelhttp.NewMiddleware("quizory-server"),
 		},
 	})
-	if err := registerSwaggerHandlers(mux, s.cfg.OAPISchemaDir); err != nil {
+	if err := registerSwaggerHandlers(mux, s.cfg.OAPISchemaDir()); err != nil {
 		slog.Error("Failed to register Swagger handlers", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	s.httpServer = http.Server{
-		Addr:         s.cfg.Address(),
+		Addr:         s.cfg.RESTAddress(),
 		Handler:      middleware.WithCORS(handler),
 		ReadTimeout:  s.cfg.ReadTimeout,
 		WriteTimeout: s.cfg.WriteTimeout,

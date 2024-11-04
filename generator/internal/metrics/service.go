@@ -41,19 +41,20 @@ func NewService(meter otel.Meter) Service {
 	}
 }
 
-// OnSuccessfulGeneration records the count of all LLM calls that successfully complete and result
-// in a full set of questions generated (i.e. no questions are discarded).
-func (s Service) OnSuccessfulGeneration(ctx context.Context) {
+// RecordSuccessfulGeneration records the count of all LLM calls that successfully complete and
+// result in a full set of questions generated (i.e. no questions are discarded).
+func (s Service) RecordSuccessfulGeneration(ctx context.Context) {
 	s.successfulGenerationCounter.Add(ctx, 1)
 }
 
-// OnFailedValidation records cases where an LLM-generated question has failed its validation and
-// therefore needs to be discarded.
-func (s Service) OnFailedValidation(ctx context.Context) {
-	s.failedValidationCounter.Add(ctx, 1)
+// RecordFailedValidations records cases where one or more LLM-generated questions have failed their
+// validations and therefore need to be discarded.
+func (s Service) RecordFailedValidations(ctx context.Context, amount int64) {
+	s.failedValidationCounter.Add(ctx, amount)
 }
 
-// OnLLMCallFinished records the duration of an LLM call.
-func (s Service) OnLLMCallFinished(ctx context.Context, d time.Duration) {
+// RecordGenerationDuration records the duration of the whole questions generation process,
+// regardless of whether it had validation issues or not.
+func (s Service) RecordGenerationDuration(ctx context.Context, d time.Duration) {
 	s.generationDuration.Record(ctx, d.Milliseconds())
 }

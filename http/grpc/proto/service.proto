@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package quizory;
+
+option go_package = "github.com/sasalatart/quizory/http/grpc/proto";
+
+enum Difficulty {
+  DIFFICULTY_UNSPECIFIED = 0;
+  DIFFICULTY_NOVICE_HISTORIAN = 1;
+  DIFFICULTY_AVID_HISTORIAN = 2;
+  DIFFICULTY_HISTORY_SCHOLAR = 3;
+}
+
+message CreateQuestionRequest {
+  string topic = 1;
+  string question = 2;
+  string hint = 3;
+  string more_info = 4;
+  Difficulty difficulty = 5;
+  repeated Choice choices = 6;
+}
+
+message Choice {
+  string choice = 1;
+  bool is_correct = 2;
+}
+
+message CreateQuestionResponse {
+  string id = 1; // ID of the created question
+}
+
+message GetLatestQuestionsRequest {
+  int32 amount = 1;
+  string topic = 2;
+}
+
+message GetLatestQuestionsResponse {
+  repeated string questions = 1;
+}
+
+service QuizoryService {
+  rpc GetLatestQuestions(GetLatestQuestionsRequest) returns (GetLatestQuestionsResponse);
+  rpc CreateQuestion(CreateQuestionRequest) returns (CreateQuestionResponse);
+}

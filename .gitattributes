@@ -1,4 +1,5 @@
-/db/model/*.go linguist-generated=true
-/http/oapi/generated.go linguist-generated=true
 /**/*_enumer.go linguist-generated=true
 /client/src/generated/api/**/*.ts linguist-generated=true
+/db/model/*.go linguist-generated=true
+/http/grpc/proto/*.pb.go linguist-generated=true
+/http/rest/oapi/generated.go linguist-generated=true

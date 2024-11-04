@@ -1,6 +1,5 @@
 db:
   url: postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-  migrations_dir: 'db/migrations'
 
 llm:
   openai_key: 'expose me as LLM_OPENAI_KEY env var'
@@ -9,9 +8,9 @@ llm:
     frequency: '12h'
 
 server:
-  host: '0.0.0.0'
-  port: 8080
+  host: 'quizory'
+  rest_port: 8080
+  grpc_port: 8085
   read_timeout: '5s'
   write_timeout: '5s'
   jwt_secret: 'expose me as SERVER_JWT_SECRET en var'
-  oapi_schema_dir: 'http/oapi/schema.yaml'

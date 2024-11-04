@@ -95,19 +95,31 @@ type UnansweredQuestion struct {
 	Topic      string             `json:"topic"`
 }
 
+// PageQueryParam defines model for PageQueryParam.
+type PageQueryParam = int
+
+// PageSizeQueryParam defines model for PageSizeQueryParam.
+type PageSizeQueryParam = int
+
+// TopicQueryParam defines model for TopicQueryParam.
+type TopicQueryParam = string
+
+// UserIdQueryParam defines model for UserIdQueryParam.
+type UserIdQueryParam = UUID
+
 // GetNextQuestionParams defines parameters for GetNextQuestion.
 type GetNextQuestionParams struct {
 	// Topic The topic for which the next question should be retrieved.
-	Topic string `form:"topic" json:"topic"`
+	Topic TopicQueryParam `form:"topic" json:"topic"`
 }
 
 // GetAnswersLogParams defines parameters for GetAnswersLog.
 type GetAnswersLogParams struct {
 	// Page The page number to retrieve (index starts at 0).
-	Page *int `form:"page,omitempty" json:"page,omitempty"`
+	Page *PageQueryParam `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize The number of items per page.
-	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageSize *PageSizeQueryParam `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
 // SubmitAnswerJSONRequestBody defines body for SubmitAnswer for application/json ContentType.
@@ -201,7 +213,7 @@ type ClientInterface interface {
 	GetRemainingTopics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAnswersLog request
-	GetAnswersLog(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAnswersLog(ctx context.Context, userId UserIdQueryParam, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) SubmitAnswerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -264,7 +276,7 @@ func (c *Client) GetRemainingTopics(ctx context.Context, reqEditors ...RequestEd
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetAnswersLog(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetAnswersLog(ctx context.Context, userId UserIdQueryParam, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAnswersLogRequest(c.Server, userId, params)
 	if err != nil {
 		return nil, err
@@ -416,7 +428,7 @@ func NewGetRemainingTopicsRequest(server string) (*http.Request, error) {
 }
 
 // NewGetAnswersLogRequest generates requests for GetAnswersLog
-func NewGetAnswersLogRequest(server string, userId UUID, params *GetAnswersLogParams) (*http.Request, error) {
+func NewGetAnswersLogRequest(server string, userId UserIdQueryParam, params *GetAnswersLogParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -545,7 +557,7 @@ type ClientWithResponsesInterface interface {
 	GetRemainingTopicsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRemainingTopicsResponse, error)
 
 	// GetAnswersLogWithResponse request
-	GetAnswersLogWithResponse(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error)
+	GetAnswersLogWithResponse(ctx context.Context, userId UserIdQueryParam, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error)
 }
 
 type SubmitAnswerResponse struct {
@@ -702,7 +714,7 @@ func (c *ClientWithResponses) GetRemainingTopicsWithResponse(ctx context.Context
 }
 
 // GetAnswersLogWithResponse request returning *GetAnswersLogResponse
-func (c *ClientWithResponses) GetAnswersLogWithResponse(ctx context.Context, userId UUID, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error) {
+func (c *ClientWithResponses) GetAnswersLogWithResponse(ctx context.Context, userId UserIdQueryParam, params *GetAnswersLogParams, reqEditors ...RequestEditorFn) (*GetAnswersLogResponse, error) {
 	rsp, err := c.GetAnswersLog(ctx, userId, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -846,7 +858,7 @@ type ServerInterface interface {
 	GetRemainingTopics(w http.ResponseWriter, r *http.Request)
 
 	// (GET /users/{userId}/answers)
-	GetAnswersLog(w http.ResponseWriter, r *http.Request, userId UUID, params GetAnswersLogParams)
+	GetAnswersLog(w http.ResponseWriter, r *http.Request, userId UserIdQueryParam, params GetAnswersLogParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -951,7 +963,7 @@ func (siw *ServerInterfaceWrapper) GetAnswersLog(w http.ResponseWriter, r *http.
 	var err error
 
 	// ------------- Path parameter "userId" -------------
-	var userId UUID
+	var userId UserIdQueryParam
 
 	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
