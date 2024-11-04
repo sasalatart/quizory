@@ -28,5 +28,5 @@ func main() {
 		rest.Module, // TODO: make this module's Invoke non-blocking
 	)
 
-	infra.RunFX(ctx, app)
+	infra.RunFXApp(ctx, app)
 }

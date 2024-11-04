@@ -135,7 +135,6 @@ components:
     TopicQueryParam:
       name: topic
       in: query
-      description: The topic for which the next question should be retrieved.
       required: true
       schema:
         type: string

@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server represents the gRPC server that handles INTERNAL requests.
 type Server struct {
 	proto.UnimplementedQuizoryServiceServer
 
@@ -68,7 +69,6 @@ func (s *Server) GetLatestQuestions(
 	if err != nil {
 		return nil, err
 	}
-
 	return &proto.GetLatestQuestionsResponse{
 		Questions: toLatestQuestions(questions),
 	}, nil

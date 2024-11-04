@@ -43,11 +43,10 @@ func NewService(
 	}
 }
 
-// GenerateBatch generates a batch of questions about the given topic.
+// GenerateBatch generates and persists a batch of questions about the given topic.
 func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.Topic) (err error) {
-	startTime := time.Now()
-
 	var questions []question
+	startTime := time.Now()
 
 	slog.Info(
 		"Generating questions",
@@ -57,13 +56,11 @@ func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.T
 
 	defer func() {
 		if err == nil {
-			s.metricsService.RecordGenerationDuration(ctx, time.Since(startTime))
+			s.metricsService.RecordSuccessfulGeneration(ctx, time.Since(startTime))
 		}
 		if len(questions) != batchSize {
 			s.metricsService.RecordFailedValidations(ctx, int64(batchSize-len(questions)))
-			return
 		}
-		s.metricsService.RecordSuccessfulGeneration(ctx)
 	}()
 
 	questions, err = s.newBatchFromLLM(ctx, topic, batchSize)
@@ -79,12 +76,11 @@ func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.T
 				IsCorrect: c.IsCorrect,
 			})
 		}
-
 		resp, err := s.quizoryClient.CreateQuestion(ctx, &proto.CreateQuestionRequest{
 			Question:   q.Question,
 			Hint:       q.Hint,
 			Topic:      topic.String(),
-			Difficulty: s.parseJSONDifficulty(q.Difficulty),
+			Difficulty: q.parseDifficulty(),
 			MoreInfo:   strings.Join(q.MoreInfo, "\n"),
 			Choices:    choices,
 		})
@@ -100,7 +96,7 @@ func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.T
 	return nil
 }
 
-// newBatchFromLLM generates a set of questions about a given topic using an LLM model.
+// newBatchFromLLM generates a set of unpersisted questions about a given topic using an LLM model.
 func (s Service) newBatchFromLLM(
 	ctx context.Context,
 	topic enums.Topic,
@@ -123,18 +119,18 @@ func (s Service) newBatchFromLLM(
 		newUserContent(topic, recentlyGenerated.GetQuestions(), batchSize),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "generating AI questions")
+		return nil, errors.Wrap(err, "calling LLM")
 	}
 
 	var questions []question
 	if err := json.Unmarshal([]byte(llmResp), &questions); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling AI questions")
+		return nil, errors.Wrap(err, "unmarshalling LLM questions")
 	}
 	return questions, nil
 }
 
-// newUserContent returns a message to be sent to the LLM model, requesting the generation of new
-// questions about a given topic, excluding the ones that have been recently generated.
+// newUserContent returns the USER content to be used as context for the LLM when generating new
+// questions.
 func newUserContent(topic enums.Topic, recentlyGenerated []string, amount int) string {
 	baseMsg := fmt.Sprintf("Generate %d new questions about '%s'.", amount, topic)
 	if len(recentlyGenerated) == 0 {
@@ -149,8 +145,16 @@ func newUserContent(topic enums.Topic, recentlyGenerated []string, amount int) s
 	)
 }
 
-func (s Service) parseJSONDifficulty(difficulty string) proto.Difficulty {
-	switch difficulty {
+type question struct {
+	Question   string   `json:"question"`
+	Hint       string   `json:"hint"`
+	Choices    []choice `json:"choices"`
+	MoreInfo   []string `json:"moreInfo"`
+	Difficulty string   `json:"difficulty"`
+}
+
+func (q question) parseDifficulty() proto.Difficulty {
+	switch q.Difficulty {
 	case enums.DifficultyNoviceHistorian.String():
 		return proto.Difficulty_DIFFICULTY_NOVICE_HISTORIAN
 	case enums.DifficultyAvidHistorian.String():
@@ -160,14 +164,6 @@ func (s Service) parseJSONDifficulty(difficulty string) proto.Difficulty {
 	default:
 		return proto.Difficulty_DIFFICULTY_UNSPECIFIED
 	}
-}
-
-type question struct {
-	Question   string   `json:"question"`
-	Hint       string   `json:"hint"`
-	Choices    []choice `json:"choices"`
-	MoreInfo   []string `json:"moreInfo"`
-	Difficulty string   `json:"difficulty"`
 }
 
 type choice struct {

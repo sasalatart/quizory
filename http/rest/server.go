@@ -23,6 +23,7 @@ import (
 // ensure that we've conformed to the `ServerInterface` with a compile-time check.
 var _ oapi.ServerInterface = (*Server)(nil)
 
+// Server represents the REST server that handles external requests (e.g. from browsers).
 type Server struct {
 	httpServer      http.Server
 	cfg             config.ServerConfig
@@ -31,6 +32,7 @@ type Server struct {
 	questionService *question.Service
 }
 
+// TODO: instrument
 func NewServer(
 	cfg config.ServerConfig,
 	db *sql.DB,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 
@@ -29,7 +28,7 @@ func main() {
 		fx.Invoke(generatorLC),
 	)
 
-	infra.RunFX(ctx, app)
+	infra.RunFXApp(ctx, app)
 }
 
 func generatorLC(lc fx.Lifecycle, s *generator.Service, cfg config.LLMConfig) {
@@ -38,7 +37,6 @@ func generatorLC(lc fx.Lifecycle, s *generator.Service, cfg config.LLMConfig) {
 			go func() {
 				err := s.GenerateBatch(ctx, cfg.Questions.BatchSize, enums.RandomTopic())
 				if err != nil {
-					fmt.Println("Failed to generate questions", err)
 					slog.Error("Failed to generate questions", slog.Any("error", err))
 					os.Exit(1)
 				}

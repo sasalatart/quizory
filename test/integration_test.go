@@ -52,7 +52,7 @@ func (s *TestSuite) SetupSuite() {
 
 	s.app = fx.New(
 		fx.NopLogger,
-		testutil.ModuleWithAPI,
+		testutil.ModuleWithHTTP,
 		fx.Populate(&s.testSuiteParams),
 	)
 	err := s.app.Start(ctx)

@@ -35,11 +35,11 @@ var Module = fx.Module(
 	fx.Provide(question.NewRepository),
 )
 
-// ModuleWithAPI injects the API module in addition to the dependencies provided by Module.
-// It is intended to be used in test suites that require the API module, as it also turns on the API
-// server, manages its lifecycle, and waits for it to be ready before running tests.
-var ModuleWithAPI = fx.Module(
-	"testutil-with-api",
+// ModuleWithHTTP injects the main testutil.Module plus REST & GRPC related modules.
+// It is intended to be used in test suites that require server interactions, as it also turns on
+// the API server, manages its lifecycle, and waits for it to be ready before running tests.
+var ModuleWithHTTP = fx.Module(
+	"testutil-with-http",
 
 	Module,
 	grpc.Module,

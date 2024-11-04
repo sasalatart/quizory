@@ -28,7 +28,7 @@ func WaitFor(check func() bool, maxAttempts int, timeout time.Duration) error {
 	return nil
 }
 
-func RunFX(ctx context.Context, app *fx.App) {
+func RunFXApp(ctx context.Context, app *fx.App) {
 	go func() {
 		if err := app.Start(ctx); err != nil {
 			slog.Error("Error starting app", slog.Any("error", err))

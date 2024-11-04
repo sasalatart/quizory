@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// TODO: instrument
 func new(cfg config.ServerConfig) (proto.QuizoryServiceClient, *grpc.ClientConn, error) {
 	var client proto.QuizoryServiceClient
 

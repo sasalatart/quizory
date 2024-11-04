@@ -109,7 +109,6 @@ type UserIdQueryParam = UUID
 
 // GetNextQuestionParams defines parameters for GetNextQuestion.
 type GetNextQuestionParams struct {
-	// Topic The topic for which the next question should be retrieved.
 	Topic TopicQueryParam `form:"topic" json:"topic"`
 }
 

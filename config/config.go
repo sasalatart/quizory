@@ -89,6 +89,7 @@ func NewConfig() Config {
 }
 
 // NewTestConfig returns a Config instance intended for testing.
+// TODO: assign random available ports to avoid conflicts with other tests.
 func NewTestConfig() Config {
 	cfg := NewConfig()
 	cfg.Server.Host = "localhost" // Test can run outside Docker
