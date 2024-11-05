@@ -10,7 +10,6 @@ root = "."
   kill_delay = 500
   restart_signal = "int"
   build_args = ["-v"]
-  run_args = ["-generate"]
 
 [log]
   color = "auto"

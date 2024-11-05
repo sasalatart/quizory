@@ -1,7 +1,7 @@
 services:
   quizory:
     build:
-      dockerfile: ./Dockerfile.dev
+      dockerfile: ./Dockerfile.api.dev
     container_name: quizory
     environment:
       - OTEL_SERVICE_NAME=quizory
@@ -20,6 +20,7 @@ services:
       - otel-collector
     user: '${UID}:${UID}'
     networks:
+      - quizory
       - telemetry
 
   postgres:
@@ -33,10 +34,14 @@ services:
     volumes:
       - postgresql:/var/lib/postgresql
     networks:
+      - quizory
       - telemetry
 
 volumes:
   postgresql:
+
+networks:
+  quizory:
 
 include:
   - path: ./docker-compose.telemetry.yml

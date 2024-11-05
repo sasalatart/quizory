@@ -1,4 +1,4 @@
-package servertest
+package resttest
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sasalatart/quizory/http/server"
+	"github.com/sasalatart/quizory/http/rest"
 	"github.com/sasalatart/quizory/infra"
 	"go.uber.org/fx"
 )
 
 var Module = fx.Module(
 	"test-server",
-	fx.Provide(server.NewServer),
+	fx.Provide(rest.NewServer),
 	fx.Provide(newClientFactory),
 	fx.Invoke(serverLC),
 )
@@ -22,7 +22,7 @@ var Module = fx.Module(
 // serverLC starts the server and a test client, and waits for the server to be ready before
 // returning. It is intended to be used in test suites to ensure that the server is ready before
 // running tests.
-func serverLC(lc fx.Lifecycle, server *server.Server, clientFactory ClientFactory) {
+func serverLC(lc fx.Lifecycle, server *rest.Server, clientFactory ClientFactory) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go server.Start()

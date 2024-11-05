@@ -5,7 +5,7 @@
     "version": "7.5.0",
     "generators": {
       "api": {
-        "inputSpec": "../http/oapi/schema.yaml",
+        "inputSpec": "../http/rest/oapi/schema.yaml",
         "output": "src/generated/api",
         "generatorName": "typescript-fetch"
       }

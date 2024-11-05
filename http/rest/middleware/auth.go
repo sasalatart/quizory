@@ -13,10 +13,10 @@ import (
 
 const userIDKey contextKey = "userID"
 
-// WithAuth validates JWT tokens from HTTP requests and adds the user ID to the request's context.
+// WithJWTAuth validates JWT tokens from HTTP requests and adds the user ID to the request's context.
 // If the token is invalid or missing, and the path is not blacklisted, then it returns a 401
 // Unauthorized response.
-func WithAuth(jwtSecret string, blacklistedPaths []string) func(next http.Handler) http.Handler {
+func WithJWTAuth(jwtSecret string, blacklistedPaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path

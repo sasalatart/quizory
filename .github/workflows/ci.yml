@@ -83,9 +83,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build
+      - name: Build API
         uses: docker/build-push-action@v5
         with:
           push: false
           tags: sasalatart/quizory-api:${{ github.sha }}
-          file: ./infra/docker/Dockerfile
+          file: ./infra/docker/Dockerfile.api
+
+      - name: Build Generator
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          tags: sasalatart/quizory-generator:${{ github.sha }}
+          file: ./infra/docker/Dockerfile.generator

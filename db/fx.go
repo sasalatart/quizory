@@ -5,8 +5,11 @@ import (
 	"database/sql"
 	"time"
 
+	_ "github.com/lib/pq" // PostgreSQL driver
+
 	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/config"
+	"github.com/sasalatart/quizory/db/migrations"
 	"github.com/sasalatart/quizory/infra"
 	"go.uber.org/fx"
 )
@@ -14,6 +17,7 @@ import (
 var Module = fx.Module(
 	"db",
 	fx.Provide(newDB),
+	fx.Invoke(migrationsLC),
 )
 
 // newDB creates a database connection, and adds an fx hook to close it when the application stops.
@@ -45,4 +49,12 @@ func mustOpen(dbURL string) *sql.DB {
 	}
 
 	return db
+}
+
+func migrationsLC(lc fx.Lifecycle, dbCfg config.DBConfig) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			return migrations.Up(dbCfg.URL, dbCfg.MigrationsDir())
+		},
+	})
 }

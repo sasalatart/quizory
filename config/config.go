@@ -21,8 +21,11 @@ type Config struct {
 }
 
 type DBConfig struct {
-	MigrationsDir string `mapstructure:"migrations_dir"`
-	URL           string `mapstructure:"url"`
+	URL string `mapstructure:"url"`
+}
+
+func (c DBConfig) MigrationsDir() string {
+	return mustFindAbsoluteFilePath("db/migrations")
 }
 
 type LLMConfig struct {
@@ -35,16 +38,24 @@ type LLMConfig struct {
 }
 
 type ServerConfig struct {
-	Host          string        `mapstructure:"host"`
-	Port          int           `mapstructure:"port"`
-	ReadTimeout   time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout  time.Duration `mapstructure:"write_timeout"`
-	JWTSecret     string        `mapstructure:"jwt_secret"`
-	OAPISchemaDir string        `mapstructure:"oapi_schema_dir"`
+	Host         string        `mapstructure:"host"`
+	RESTPort     int           `mapstructure:"rest_port"`
+	GRPCPort     int           `mapstructure:"grpc_port"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	JWTSecret    string        `mapstructure:"jwt_secret"`
 }
 
-func (c ServerConfig) Address() string {
-	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+func (c ServerConfig) RESTAddress() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.RESTPort)
+}
+
+func (c ServerConfig) OAPISchemaDir() string {
+	return mustFindAbsoluteFilePath("http/rest/oapi/schema.yaml")
+}
+
+func (c ServerConfig) GRPCAddress() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.GRPCPort)
 }
 
 // NewConfig returns a new Config instance with values loaded from environment variables.
@@ -74,18 +85,16 @@ func NewConfig() Config {
 	if err := decoder.Decode(v.AllSettings()); err != nil {
 		log.Fatal("error decoding config: ", err)
 	}
-
-	config.Server.OAPISchemaDir = mustFindAbsoluteFilePath(config.Server.OAPISchemaDir)
-	config.DB.MigrationsDir = mustFindAbsoluteFilePath(config.DB.MigrationsDir)
-
 	return config
 }
 
 // NewTestConfig returns a Config instance intended for testing.
+// TODO: assign random available ports to avoid conflicts with other tests.
 func NewTestConfig() Config {
 	cfg := NewConfig()
 	cfg.Server.Host = "localhost" // Test can run outside Docker
-	cfg.Server.Port = 8081        // Avoid conflicts with the main server in case it's running in dev mode
+	cfg.Server.RESTPort = 8081    // Avoid conflicts with the main server in case it's running in dev mode
+	cfg.Server.GRPCPort = 8086    // Avoid conflicts with the main server in case it's running in dev mode
 	cfg.LLM.OpenAIKey = "test"
 	return cfg
 }

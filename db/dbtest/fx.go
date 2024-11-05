@@ -40,7 +40,7 @@ func newPostgresContainer(lc fx.Lifecycle, dbCfg config.DBConfig) *postgres.Post
 	connString := container.MustConnectionString(ctx, "sslmode=disable")
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			return migrations.Up(connString, dbCfg.MigrationsDir)
+			return migrations.Up(connString, dbCfg.MigrationsDir())
 		},
 		OnStop: func(context.Context) error {
 			return container.Terminate(ctx)

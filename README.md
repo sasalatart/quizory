@@ -27,6 +27,7 @@ This project requires the following to be installed in your machine:
 2. [Node v20.10][nodejs] + [pnpm][pnpm]
 3. [Docker][docker]
 4. [Docker Compose][docker-compose]
+5. [Protobuf][protobuf]
 
 Also, make sure you have:
 
@@ -66,6 +67,9 @@ $ make install
 #   3. The React (port 5173), with HMR
 #   4. The OTEL stack - Grafana (UI via port 3000), Loki & Prometheus for now
 $ make dev
+
+# In a separate shell, you may seed some questions manually to get started:
+$ make questionsgen
 ```
 
 You should now be able to access http://localhost:5173 and explore the app.
@@ -119,6 +123,7 @@ _Quizory_ is [MIT licensed](./LICENSE).
 [oapi-codegen]: https://github.com/oapi-codegen/oapi-codegen
 [openai]: https://openai.com/
 [pnpm]: https://pnpm.io/
+[protobuf]: https://github.com/protocolbuffers/protobuf
 [sqlboiler-license]: https://github.com/volatiletech/sqlboiler?tab=BSD-3-Clause-1-ov-file
 [sqlboiler]: https://github.com/volatiletech/sqlboiler
 [supabase]: https://supabase.com/

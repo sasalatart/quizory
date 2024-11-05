@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"slices"
@@ -6,7 +6,7 @@ import (
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
-	"github.com/sasalatart/quizory/http/oapi"
+	"github.com/sasalatart/quizory/http/rest/oapi"
 )
 
 func toRemainingTopics(m map[enums.Topic]uint) []oapi.RemainingTopic {
