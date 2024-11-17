@@ -87,7 +87,12 @@ client-dev:
 	cd $(CLIENT_DIR) && $(JSCMD) dev
 
 questionsgen: docker-image-generator
-	docker run --rm --network docker_quizory --env-file .env.quizory sasalatart/quizory-generator
+	docker run --rm \
+		--network docker_quizory \
+		--network docker_telemetry \
+		--env-file .env.quizory \
+		-e OTEL_SERVICE_NAME=quizory-generator \
+		sasalatart/quizory-generator
 
 docker-images: docker-image-api docker-image-generator
 

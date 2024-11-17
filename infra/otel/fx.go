@@ -3,7 +3,6 @@ package otel
 import (
 	"context"
 	"log/slog"
-	"os"
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
@@ -16,8 +15,8 @@ import (
 var Module = fx.Module(
 	"otel",
 	fx.Provide(newProvider),
-	fx.Invoke(providerLC),
 	fx.Provide(fx.Annotate(newMeter, fx.As(new(Meter)))),
+	fx.Invoke(providerLC),
 )
 
 type Provider struct {
@@ -31,7 +30,7 @@ func newProvider() (Provider, error) {
 	ctx := context.Background()
 	provider := Provider{}
 
-	res, err := newResource(ctx, getServiceName(), getServiceVersion())
+	res, err := newResource(ctx)
 	if err != nil {
 		return provider, errors.Wrap(err, "creating resource")
 	}
@@ -56,7 +55,12 @@ func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvide
 		OnStart: func(ctx context.Context) error {
 			global.SetLoggerProvider(lp)
 			slog.SetDefault(newDefaultLogger())
+
 			otel.SetMeterProvider(mp)
+			if err := autoInstrumentRuntime(mp); err != nil {
+				return errors.Wrap(err, "auto-instrumenting runtime")
+			}
+
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
@@ -69,12 +73,4 @@ func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvide
 			return nil
 		},
 	})
-}
-
-func getServiceName() string {
-	return os.Getenv("OTEL_SERVICE_NAME")
-}
-
-func getServiceVersion() string {
-	return "0.1.0" // TODO: make this dynamic (e.g. via env var or similar)
 }

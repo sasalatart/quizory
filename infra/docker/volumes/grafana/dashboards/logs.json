@@ -18,10 +18,14 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
+      "datasource": {
+        "default": false,
+        "type": "loki",
+        "uid": "loki_ds"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -38,10 +42,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -49,8 +49,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -73,15 +73,20 @@
             "uid": "loki_ds"
           },
           "editorMode": "builder",
-          "expr": "{service_name=\"quizory\"} |= ``",
+          "expr": "{service_name=~\"$service_name\"}",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "API Logs",
+      "title": "Logs",
       "type": "table"
     },
     {
+      "datasource": {
+        "default": false,
+        "type": "loki",
+        "uid": "loki_ds"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -109,10 +114,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 7
       },
       "id": 2,
       "options": {
@@ -133,7 +138,7 @@
             "uid": "loki_ds"
           },
           "editorMode": "builder",
-          "expr": "{service_name=\"quizory\", level=\"ERROR\"} |= ``",
+          "expr": "{service_name=~\"$service_name\", level=\"ERROR\"} |= ``",
           "queryType": "range",
           "refId": "B"
         }
@@ -202,10 +207,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 8
+        "y": 14
       },
       "id": 3,
       "options": {
@@ -228,7 +233,7 @@
             "uid": "loki_ds"
           },
           "editorMode": "builder",
-          "expr": "rate({service_name=\"quizory\"}[5m])",
+          "expr": "rate({service_name=~\"$service_name\"}[5m])",
           "queryType": "range",
           "refId": "C"
         }
@@ -244,9 +249,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
         },
         "datasource": {
           "type": "loki",
@@ -275,6 +280,6 @@
   "timezone": "browser",
   "title": "Logs",
   "uid": "fdyf0915frmyob",
-  "version": 28,
+  "version": 1,
   "weekStart": ""
 }

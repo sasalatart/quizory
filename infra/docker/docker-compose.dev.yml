@@ -4,10 +4,7 @@ services:
       dockerfile: ./Dockerfile.api.dev
     container_name: quizory
     environment:
-      - OTEL_SERVICE_NAME=quizory
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 # Metrics and Traces
-      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs # Logs
-      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_SERVICE_NAME=quizory-api
     env_file:
       - ../../.env.quizory
     ports:
