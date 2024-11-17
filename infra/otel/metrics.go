@@ -6,7 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -41,8 +40,6 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 	); err != nil {
 		return nil, errors.Wrap(err, "starting runtime metrics")
 	}
-
-	otel.SetMeterProvider(provider)
 
 	return provider, nil
 }

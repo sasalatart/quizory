@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/fx"
@@ -53,7 +54,9 @@ func newProvider() (Provider, error) {
 func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvider) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			slog.SetDefault(otelslog.NewLogger(getServiceName()))
+			global.SetLoggerProvider(lp)
+			slog.SetDefault(newDefaultLogger())
+			otel.SetMeterProvider(mp)
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
