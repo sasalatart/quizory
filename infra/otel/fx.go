@@ -57,7 +57,10 @@ func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvide
 			slog.SetDefault(newDefaultLogger())
 
 			otel.SetMeterProvider(mp)
-			autoInstrumentRuntime(mp)
+			if err := autoInstrumentRuntime(mp); err != nil {
+				return errors.Wrap(err, "auto-instrumenting runtime")
+			}
+
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
