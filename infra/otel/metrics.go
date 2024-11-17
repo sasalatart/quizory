@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	metricsExportInterval   = 10 * time.Second
+	metricsExportInterval   = 5 * time.Second
 	minReadMemStatsInterval = 5 * time.Second
 )
 
@@ -23,7 +23,7 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 		return nil, errors.Wrap(err, "creating OTLP metrics exporter")
 	}
 
-	provider := sdkmetric.NewMeterProvider(
+	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
 		sdkmetric.WithReader(
 			sdkmetric.NewPeriodicReader(
@@ -32,16 +32,18 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 			),
 		),
 	)
+	return mp, nil
+}
 
-	// Auto-instrument runtime metrics (e.g., memory, CPU, GC stats)
-	if err := runtime.Start(
-		runtime.WithMeterProvider(provider),
+func autoInstrumentRuntime(mp *sdkmetric.MeterProvider) error {
+	err := runtime.Start(
+		runtime.WithMeterProvider(mp),
 		runtime.WithMinimumReadMemStatsInterval(minReadMemStatsInterval),
-	); err != nil {
-		return nil, errors.Wrap(err, "starting runtime metrics")
+	)
+	if err != nil {
+		return errors.Wrap(err, "starting runtime metrics")
 	}
-
-	return provider, nil
+	return nil
 }
 
 type Meter interface {
@@ -57,5 +59,5 @@ type Meter interface {
 }
 
 func newMeter(provider *sdkmetric.MeterProvider) Meter {
-	return provider.Meter("quizory")
+	return provider.Meter(getServiceName())
 }

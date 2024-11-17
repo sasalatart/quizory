@@ -31,7 +31,6 @@ func newLoggerProvider(ctx context.Context, res *resource.Resource) (*sdklog.Log
 			),
 		),
 	)
-
 	return lp, nil
 }
 

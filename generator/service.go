@@ -5,15 +5,17 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/domain/question/enums"
-	"github.com/sasalatart/quizory/generator/internal/metrics"
 	"github.com/sasalatart/quizory/http/grpc/proto"
+	"github.com/sasalatart/quizory/infra/otel"
 	"github.com/sasalatart/quizory/llm"
+	"go.opentelemetry.io/otel/metric"
 )
 
 //go:embed prompt.txt
@@ -25,75 +27,66 @@ const recentlyGeneratedLimit = 100
 
 // Service represents the service that generates questions via LLMs.
 type Service struct {
-	quizoryClient  proto.QuizoryServiceClient
-	llm            llm.ChatCompletioner
-	metricsService metrics.Service
+	durationHistogram metric.Int64Histogram
+	llm               llm.ChatCompletioner
+	quizoryClient     proto.QuizoryServiceClient
 }
 
 // NewService creates a new instance of question.Service.
 func NewService(
 	quizoryClient proto.QuizoryServiceClient,
 	llm llm.ChatCompletioner,
-	metricsService metrics.Service,
+	meter otel.Meter,
 ) *Service {
+	durationHistogram, err := meter.Int64Histogram(
+		"questions_generation_duration",
+		metric.WithUnit("ms"),
+	)
+	if err != nil {
+		log.Fatal("unable to create questions_generation_duration histogram")
+	}
+
 	return &Service{
-		quizoryClient:  quizoryClient,
-		llm:            llm,
-		metricsService: metricsService,
+		durationHistogram: durationHistogram,
+		llm:               llm,
+		quizoryClient:     quizoryClient,
 	}
 }
 
 // GenerateBatch generates and persists a batch of questions about the given topic.
 func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.Topic) (err error) {
-	var questions []question
-	startTime := time.Now()
-
 	slog.Info(
 		"Generating questions",
 		slog.String("topic", topic.String()),
 		slog.Int("batchSize", batchSize),
 	)
 
+	startTime := time.Now()
 	defer func() {
-		if err == nil {
-			s.metricsService.RecordSuccessfulGeneration(ctx, time.Since(startTime))
-		}
-		if len(questions) != batchSize {
-			s.metricsService.RecordFailedValidations(ctx, int64(batchSize-len(questions)))
-		}
+		s.durationHistogram.Record(ctx, time.Since(startTime).Milliseconds())
 	}()
 
-	questions, err = s.newBatchFromLLM(ctx, topic, batchSize)
-	if err != nil {
-		return errors.Wrap(err, "generating questions")
-	}
-
-	for _, q := range questions {
-		var choices []*proto.Choice
-		for _, c := range q.Choices {
-			choices = append(choices, &proto.Choice{
-				Choice:    c.Text,
-				IsCorrect: c.IsCorrect,
-			})
-		}
-		resp, err := s.quizoryClient.CreateQuestion(ctx, &proto.CreateQuestionRequest{
-			Question:   q.Question,
-			Hint:       q.Hint,
-			Topic:      topic.String(),
-			Difficulty: q.parseDifficulty(),
-			MoreInfo:   strings.Join(q.MoreInfo, "\n"),
-			Choices:    choices,
-		})
+	questionsGenResult := make(chan error)
+	go func() {
+		var questions []question
+		questions, err = s.newBatchFromLLM(ctx, topic, batchSize)
 		if err != nil {
-			return errors.Wrap(err, "creating question")
+			questionsGenResult <- errors.Wrap(err, "generating questions")
+			return
 		}
-		slog.Info(
-			"Generated question",
-			slog.String("q", q.Question),
-			slog.String("id", resp.GetId()),
-		)
+		if err := s.persistQuestions(ctx, topic, questions); err != nil {
+			questionsGenResult <- errors.Wrap(err, "persisting questions")
+			return
+		}
+		questionsGenResult <- nil
+	}()
+
+	select {
+	case err := <-questionsGenResult:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-	return nil
 }
 
 // newBatchFromLLM generates a set of unpersisted questions about a given topic using an LLM model.
@@ -143,6 +136,40 @@ func newUserContent(topic enums.Topic, recentlyGenerated []string, amount int) s
 		- %s
 		`, baseMsg, strings.Join(recentlyGenerated, "\n -"),
 	)
+}
+
+// persistQuestions makes the necessary RPCs to persist the given generated questions.
+func (s Service) persistQuestions(
+	ctx context.Context,
+	topic enums.Topic,
+	questions []question,
+) error {
+	for _, q := range questions {
+		var choices []*proto.Choice
+		for _, c := range q.Choices {
+			choices = append(choices, &proto.Choice{
+				Choice:    c.Text,
+				IsCorrect: c.IsCorrect,
+			})
+		}
+		resp, err := s.quizoryClient.CreateQuestion(ctx, &proto.CreateQuestionRequest{
+			Question:   q.Question,
+			Hint:       q.Hint,
+			Topic:      topic.String(),
+			Difficulty: q.parseDifficulty(),
+			MoreInfo:   strings.Join(q.MoreInfo, "\n"),
+			Choices:    choices,
+		})
+		if err != nil {
+			return errors.Wrap(err, "creating question")
+		}
+		slog.Info(
+			"Persisted question",
+			slog.String("q", q.Question),
+			slog.String("id", resp.GetId()),
+		)
+	}
+	return nil
 }
 
 type question struct {
