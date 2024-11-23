@@ -17,6 +17,7 @@ import (
 	"github.com/sasalatart/quizory/domain/question/enums"
 	"github.com/sasalatart/quizory/http/rest/middleware"
 	"github.com/sasalatart/quizory/http/rest/oapi"
+	"github.com/sasalatart/quizory/infra/otel"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -30,20 +31,22 @@ type Server struct {
 	db              *sql.DB
 	answerService   *answer.Service
 	questionService *question.Service
+	meter           otel.Meter
 }
 
-// TODO: instrument
 func NewServer(
 	cfg config.ServerConfig,
 	db *sql.DB,
 	answerService *answer.Service,
 	questionService *question.Service,
+	meter otel.Meter,
 ) *Server {
 	return &Server{
 		cfg:             cfg,
 		db:              db,
 		answerService:   answerService,
 		questionService: questionService,
+		meter:           meter,
 	}
 }
 
@@ -56,7 +59,7 @@ func (s *Server) Start() {
 		Middlewares: []oapi.MiddlewareFunc{
 			middleware.WithJWTAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
 			middleware.WithRecover,
-			middleware.WithLogger,
+			middleware.WithMonitoring(s.meter),
 			otelhttp.NewMiddleware("quizory-server"),
 		},
 	})
