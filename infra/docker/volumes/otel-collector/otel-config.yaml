@@ -19,6 +19,11 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
 
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
 extensions:
   health_check:
 
@@ -35,3 +40,8 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [prometheus]
+
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

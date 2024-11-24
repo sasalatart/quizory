@@ -18,9 +18,71 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 5,
   "links": [],
   "panels": [
+    {
+      "datasource": {
+        "default": false,
+        "type": "jaeger",
+        "uid": "jaeger_ds"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "jaeger",
+            "uid": "jaeger_ds"
+          },
+          "queryType": "search",
+          "refId": "A",
+          "service": "quizory-api"
+        }
+      ],
+      "title": "Traces",
+      "type": "table"
+    },
     {
       "datasource": {
         "default": false,
@@ -82,7 +144,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 9
       },
       "id": 3,
       "options": {
@@ -111,7 +173,7 @@
           "refId": "A"
         }
       ],
-      "title": "AVG Request Duration",
+      "title": "AVG REST Request Duration",
       "type": "timeseries"
     },
     {
@@ -175,7 +237,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 9
       },
       "id": 2,
       "options": {
@@ -260,7 +322,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 18
       },
       "id": 1,
       "options": {
@@ -300,7 +362,7 @@
           "refId": "A"
         }
       ],
-      "title": "Endpoint Calls",
+      "title": "REST Endpoint Calls",
       "type": "barchart"
     }
   ],
@@ -316,7 +378,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "REST API",
+  "title": "API",
   "uid": "ce4tcddf8bke8b",
   "version": 1,
   "weekStart": ""

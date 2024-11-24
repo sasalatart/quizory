@@ -88,6 +88,69 @@
       ],
       "title": "AVG Generation Duration",
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "jaeger",
+        "uid": "jaeger_ds"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "jaeger",
+            "uid": "jaeger_ds"
+          },
+          "queryType": "search",
+          "refId": "A",
+          "service": "quizory-generator"
+        }
+      ],
+      "title": "Traces",
+      "type": "table"
     }
   ],
   "refresh": "5s",
@@ -102,7 +165,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Generator Metrics",
+  "title": "Generator",
   "uid": "ee50xml5yx2bff",
   "version": 1,
   "weekStart": ""

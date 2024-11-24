@@ -10,13 +10,14 @@ import (
 	slogmulti "github.com/samber/slog-multi"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 const logExportInterval = 5 * time.Second
 
-func newLoggerProvider(ctx context.Context, res *resource.Resource) (*sdklog.LoggerProvider, error) {
+func initLoggerProvider(ctx context.Context, res *resource.Resource) (*sdklog.LoggerProvider, error) {
 	logExporter, err := otlploghttp.New(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating OTLP logs exporter")
@@ -31,6 +32,9 @@ func newLoggerProvider(ctx context.Context, res *resource.Resource) (*sdklog.Log
 			),
 		),
 	)
+
+	global.SetLoggerProvider(lp)
+
 	return lp, nil
 }
 

@@ -5,10 +5,9 @@ import (
 	"log/slog"
 
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/fx"
 )
 
@@ -24,6 +23,7 @@ type Provider struct {
 
 	LoggerProvider *log.LoggerProvider
 	MeterProvider  *metric.MeterProvider
+	TracerProvider *trace.TracerProvider
 }
 
 func newProvider() (Provider, error) {
@@ -35,32 +35,36 @@ func newProvider() (Provider, error) {
 		return provider, errors.Wrap(err, "creating resource")
 	}
 
-	lp, err := newLoggerProvider(ctx, res)
+	lp, err := initLoggerProvider(ctx, res)
 	if err != nil {
 		return provider, errors.Wrap(err, "creating logger provider")
 	}
 	provider.LoggerProvider = lp
 
-	mp, err := newMeterProvider(ctx, res)
+	mp, err := initMeterProvider(ctx, res)
 	if err != nil {
 		return provider, errors.Wrap(err, "creating meter provider")
 	}
 	provider.MeterProvider = mp
 
+	tp, err := initTracerProvider(ctx, res)
+	if err != nil {
+		return provider, errors.Wrap(err, "creating tracer provider")
+	}
+	provider.TracerProvider = tp
+
 	return provider, nil
 }
 
-func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvider) {
+func providerLC(
+	lc fx.Lifecycle,
+	lp *log.LoggerProvider,
+	mp *metric.MeterProvider,
+	tp *trace.TracerProvider,
+) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			global.SetLoggerProvider(lp)
 			slog.SetDefault(newDefaultLogger())
-
-			otel.SetMeterProvider(mp)
-			if err := autoInstrumentRuntime(mp); err != nil {
-				return errors.Wrap(err, "auto-instrumenting runtime")
-			}
-
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
@@ -69,6 +73,9 @@ func providerLC(lc fx.Lifecycle, lp *log.LoggerProvider, mp *metric.MeterProvide
 			}
 			if err := mp.Shutdown(ctx); err != nil {
 				return errors.Wrap(err, "shutting down meter provider")
+			}
+			if err := tp.Shutdown(ctx); err != nil {
+				return errors.Wrap(err, "shutting down tracer provider")
 			}
 			return nil
 		},

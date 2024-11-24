@@ -37,3 +37,10 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     editable: false
+
+  - name: Jaeger
+    type: jaeger
+    uid: jaeger_ds
+    access: proxy
+    url: http://jaeger:16686
+    editable: false

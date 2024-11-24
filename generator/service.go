@@ -15,7 +15,9 @@ import (
 	"github.com/sasalatart/quizory/http/grpc/proto"
 	"github.com/sasalatart/quizory/infra/otel"
 	"github.com/sasalatart/quizory/llm"
+	otelsdk "go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 //go:embed prompt.txt
@@ -30,6 +32,7 @@ type Service struct {
 	durationHistogram metric.Int64Histogram
 	llm               llm.ChatCompletioner
 	quizoryClient     proto.QuizoryServiceClient
+	tracer            trace.Tracer
 }
 
 // NewService creates a new instance of question.Service.
@@ -50,11 +53,15 @@ func NewService(
 		durationHistogram: durationHistogram,
 		llm:               llm,
 		quizoryClient:     quizoryClient,
+		tracer:            otelsdk.Tracer("generator.Service"),
 	}
 }
 
 // GenerateBatch generates and persists a batch of questions about the given topic.
 func (s Service) GenerateBatch(ctx context.Context, batchSize int, topic enums.Topic) (err error) {
+	ctx, span := s.tracer.Start(ctx, "GenerateBatch")
+	defer span.End()
+
 	slog.Info(
 		"Generating questions",
 		slog.String("topic", topic.String()),
@@ -95,6 +102,9 @@ func (s Service) newBatchFromLLM(
 	topic enums.Topic,
 	batchSize int,
 ) ([]question, error) {
+	ctx, span := s.tracer.Start(ctx, "newBatchFromLLM")
+	defer span.End()
+
 	recentlyGenerated, err := s.quizoryClient.GetLatestQuestions(
 		ctx,
 		&proto.GetLatestQuestionsRequest{
@@ -144,6 +154,9 @@ func (s Service) persistQuestions(
 	topic enums.Topic,
 	questions []question,
 ) error {
+	ctx, span := s.tracer.Start(ctx, "persistQuestions")
+	defer span.End()
+
 	for _, q := range questions {
 		var choices []*proto.Choice
 		for _, c := range q.Choices {
