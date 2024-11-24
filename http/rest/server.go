@@ -4,12 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/config"
 	"github.com/sasalatart/quizory/domain/answer"
 	"github.com/sasalatart/quizory/domain/pagination"
@@ -49,21 +48,26 @@ func NewServer(
 	}
 }
 
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	slog.Info("Running REST server", slog.String("address", s.cfg.RESTAddress()))
 
 	mux := http.NewServeMux()
+	monitoringMiddleware, err := middleware.WithMonitoring(s.meter)
+	if err != nil {
+		return errors.Wrap(err, "creating monitoring middleware")
+	}
+
 	handler := oapi.HandlerWithOptions(s, oapi.StdHTTPServerOptions{
 		BaseRouter: mux,
 		Middlewares: []oapi.MiddlewareFunc{
 			middleware.WithJWTAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
 			middleware.WithRecover,
-			middleware.WithMonitoring(s.meter),
+			monitoringMiddleware,
 		},
 	})
+
 	if err := registerSwaggerHandlers(mux, s.cfg.OAPISchemaDir()); err != nil {
-		slog.Error("Failed to register Swagger handlers", slog.Any("error", err))
-		os.Exit(1)
+		return errors.Wrap(err, "registering Swagger handlers")
 	}
 
 	s.httpServer = http.Server{
@@ -74,17 +78,14 @@ func (s *Server) Start() {
 	}
 
 	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("Failed to start server", slog.Any("error", err))
-		os.Exit(1)
+		return errors.Wrap(err, "starting server")
 	}
+
+	return nil
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	if err := s.httpServer.Shutdown(ctx); err != nil {
-		slog.Error("Failed to shutdown server", slog.Any("error", err))
-		return err
-	}
-	return nil
+	return s.httpServer.Shutdown(ctx)
 }
 
 // HealthCheck returns a 204 status code if the server is healthy, and a 503 status code otherwise.

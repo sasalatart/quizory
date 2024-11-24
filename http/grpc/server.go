@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"net"
-	"os"
 
+	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/config"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
@@ -41,21 +41,21 @@ func NewServer(
 	}
 }
 
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	slog.Info("Running gRPC server", slog.String("address", s.cfg.GRPCAddress()))
 
 	l, err := net.Listen("tcp", s.cfg.GRPCAddress())
 	if err != nil {
-		slog.Error("Failed to open TCP connection for GRPC", slog.Any("error", err))
-		os.Exit(1)
+		return errors.Wrap(err, "opening TCP connection")
 	}
 
 	proto.RegisterQuizoryServiceServer(s.grpcServer, s)
 
 	if err := s.grpcServer.Serve(l); err != nil {
-		slog.Error("Failed to start GRPC server", slog.Any("error", err))
-		os.Exit(1)
+		return errors.Wrap(err, "serving gRPC")
 	}
+
+	return nil
 }
 
 func (s *Server) Shutdown() {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/sasalatart/quizory/config"
 	"github.com/sasalatart/quizory/db"
@@ -31,19 +29,19 @@ func main() {
 		rest.Module,
 	)
 
-	go func() {
-		if err := app.Start(ctx); err != nil {
-			slog.Error("Error starting app", slog.Any("error", err))
-			os.Exit(1)
-		}
-	}()
+	if err := app.Start(ctx); err != nil {
+		slog.Error("Error starting app", slog.Any("error", err))
+		os.Exit(1)
+	}
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	// Wait for app to finish (handles SIGINT and SIGTERM)
+	sig := <-app.Wait()
 
-	<-sig
+	slog.Info("Shutting down app")
 	if err := app.Stop(ctx); err != nil {
 		slog.Error("Error stopping app", slog.Any("error", err))
 		os.Exit(1)
 	}
+
+	os.Exit(sig.ExitCode)
 }

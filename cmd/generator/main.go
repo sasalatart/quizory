@@ -23,8 +23,8 @@ func main() {
 		fx.Provide(config.NewConfig),
 		otel.Module,
 		llm.Module,
-		generator.Module,
 		grpclient.Module,
+		generator.Module,
 		fx.Invoke(generatorLC),
 	)
 
