@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/infra/otel"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
@@ -25,23 +25,20 @@ func (w *responseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
-// WithMonitoring instruments HTTP handlers with OpenTelemetry metrics. It records the total number
-// of HTTP requests and the duration of each request.
+// WithMonitoring instruments HTTP handlers with OpenTelemetry logs, metrics and traces.
 //
-// Metrics:
+// The following metrics are emitted:
 //   - http_requests_total: A counter that tracks the total number of HTTP requests.
 //   - http_request_duration_ms: A histogram that tracks the duration of HTTP requests in milliseconds.
-func WithMonitoring(meter otel.Meter) func(http.Handler) http.Handler {
+func WithMonitoring(meter otel.Meter) (func(http.Handler) http.Handler, error) {
 	requestCounter, err := meter.Int64Counter("http_requests_total")
 	if err != nil {
-		slog.Error("creating http_requests_total counter", slog.Any("error", err))
-		os.Exit(1)
+		return nil, errors.Wrap(err, "creating http_requests_total counter")
 	}
 
 	requestHistogram, err := meter.Int64Histogram("http_request_duration_ms")
 	if err != nil {
-		slog.Error("creating http_request_duration_ms histogram", slog.Any("error", err))
-		os.Exit(1)
+		return nil, errors.Wrap(err, "creating http_request_duration_ms histogram")
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -76,7 +73,7 @@ func WithMonitoring(meter otel.Meter) func(http.Handler) http.Handler {
 			"http",
 			otelhttp.WithSpanNameFormatter(spanNameFormatter),
 		)
-	}
+	}, nil
 }
 
 // spanNameFormatter generates a span name based on the HTTP method and request path.
