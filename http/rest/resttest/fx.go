@@ -10,6 +10,7 @@ import (
 	"github.com/sasalatart/quizory/http/rest"
 	"github.com/sasalatart/quizory/infra"
 	"go.uber.org/fx"
+	"golang.org/x/exp/slog"
 )
 
 var Module = fx.Module(
@@ -25,7 +26,11 @@ var Module = fx.Module(
 func serverLC(lc fx.Lifecycle, server *rest.Server, clientFactory ClientFactory) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			go server.Start()
+			go func() {
+				if err := server.Start(); err != nil {
+					slog.Error("Failed to start server", slog.Any("error", err))
+				}
+			}()
 
 			client, err := clientFactory(uuid.New())
 			if err != nil {
