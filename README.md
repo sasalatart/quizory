@@ -65,7 +65,7 @@ $ make install
 #   1. A local Postgres database via docker-compose
 #   2. The Go backend (port 8080), with live-reload via air
 #   3. The React (port 5173), with HMR
-#   4. The OTEL stack - Grafana (UI via port 3000), Loki & Prometheus for now
+#   4. The OTel stack - Grafana (UI via port 3000), Loki, Prometheus & Jaeger
 $ make dev
 
 # In a separate shell, you may seed some questions manually to get started:
