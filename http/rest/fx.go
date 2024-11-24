@@ -15,7 +15,7 @@ var Module = fx.Module(
 func serverLC(lc fx.Lifecycle, s *Server) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			s.Start()
+			go s.Start()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {

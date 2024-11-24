@@ -28,7 +28,7 @@ func main() {
 		answer.Module,
 		question.Module,
 		grpc.Module,
-		rest.Module, // TODO: make this module's Invoke non-blocking
+		rest.Module,
 	)
 
 	go func() {
