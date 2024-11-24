@@ -9,6 +9,7 @@ import (
 	"github.com/sasalatart/quizory/config"
 	"github.com/sasalatart/quizory/domain/question"
 	"github.com/sasalatart/quizory/domain/question/enums"
+	"github.com/sasalatart/quizory/http/grpc/interceptor"
 	"github.com/sasalatart/quizory/http/grpc/proto"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -35,8 +36,11 @@ func NewServer(
 		otelgrpc.WithPropagators(otel.GetTextMapPropagator()),
 	)
 	return &Server{
-		cfg:             cfg,
-		grpcServer:      grpc.NewServer(grpc.StatsHandler(statsHandler)),
+		cfg: cfg,
+		grpcServer: grpc.NewServer(
+			grpc.StatsHandler(statsHandler),
+			grpc.UnaryInterceptor(interceptor.UnaryLogging),
+		),
 		questionService: questionService,
 	}
 }
