@@ -18,7 +18,6 @@ import (
 	"github.com/sasalatart/quizory/http/rest/middleware"
 	"github.com/sasalatart/quizory/http/rest/oapi"
 	"github.com/sasalatart/quizory/infra/otel"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // ensure that we've conformed to the `ServerInterface` with a compile-time check.
@@ -60,7 +59,6 @@ func (s *Server) Start() {
 			middleware.WithJWTAuth(s.cfg.JWTSecret, []string{"/openapi", "/health-check"}),
 			middleware.WithRecover,
 			middleware.WithMonitoring(s.meter),
-			otelhttp.NewMiddleware("quizory-server"),
 		},
 	})
 	if err := registerSwaggerHandlers(mux, s.cfg.OAPISchemaDir()); err != nil {

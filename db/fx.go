@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/XSAM/otelsql"
 	_ "github.com/lib/pq" // PostgreSQL driver
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 	"github.com/pkg/errors"
 	"github.com/sasalatart/quizory/config"
@@ -35,9 +37,18 @@ func newDB(lc fx.Lifecycle, cfg config.DBConfig) *sql.DB {
 // It retries up to 5 times with an exponential backoff, starting at 1 second.
 // It panics if the connection cannot be established after the retries.
 func mustOpen(dbURL string) *sql.DB {
-	db, err := sql.Open("postgres", dbURL)
+	otelAttributes := otelsql.WithAttributes(
+		semconv.DBSystemPostgreSQL,
+	)
+
+	db, err := otelsql.Open("postgres", dbURL, otelAttributes)
 	if err != nil {
 		panic(errors.Wrapf(err, "opening database with URL %s", dbURL))
+	}
+
+	err = otelsql.RegisterDBStatsMetrics(db, otelAttributes)
+	if err != nil {
+		panic(errors.Wrap(err, "registering database stats metrics"))
 	}
 
 	check := func() bool {

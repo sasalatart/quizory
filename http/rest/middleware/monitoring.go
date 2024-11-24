@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/sasalatart/quizory/infra/otel"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -43,7 +45,7 @@ func WithMonitoring(meter otel.Meter) func(http.Handler) http.Handler {
 	}
 
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			start := time.Now()
 			rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
@@ -69,5 +71,15 @@ func WithMonitoring(meter otel.Meter) func(http.Handler) http.Handler {
 
 			next.ServeHTTP(rw, r)
 		})
+		return otelhttp.NewHandler(
+			handler,
+			"http",
+			otelhttp.WithSpanNameFormatter(spanNameFormatter),
+		)
 	}
+}
+
+// spanNameFormatter generates a span name based on the HTTP method and request path.
+func spanNameFormatter(_ string, r *http.Request) string {
+	return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
 }

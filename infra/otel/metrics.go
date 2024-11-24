@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -17,7 +18,7 @@ const (
 	minReadMemStatsInterval = 5 * time.Second
 )
 
-func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+func initMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	exporter, err := otlpmetrichttp.New(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating OTLP metrics exporter")
@@ -32,6 +33,12 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 			),
 		),
 	)
+
+	otel.SetMeterProvider(mp)
+	if err := autoInstrumentRuntime(mp); err != nil {
+		return nil, errors.Wrap(err, "auto-instrumenting runtime")
+	}
+
 	return mp, nil
 }
 
