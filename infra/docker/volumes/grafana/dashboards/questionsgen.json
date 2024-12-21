@@ -146,7 +146,7 @@
           },
           "queryType": "search",
           "refId": "A",
-          "service": "quizory-generator"
+          "service": "quizory-questionsgen"
         }
       ],
       "title": "Traces",
@@ -165,7 +165,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Generator",
+  "title": "Questionsgen",
   "uid": "ee50xml5yx2bff",
   "version": 1,
   "weekStart": ""

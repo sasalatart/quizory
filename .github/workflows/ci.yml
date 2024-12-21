@@ -90,9 +90,9 @@ jobs:
           tags: sasalatart/quizory-api:${{ github.sha }}
           file: ./infra/docker/Dockerfile.api
 
-      - name: Build Generator
+      - name: Build Questionsgen
         uses: docker/build-push-action@v5
         with:
           push: false
-          tags: sasalatart/quizory-generator:${{ github.sha }}
-          file: ./infra/docker/Dockerfile.generator
+          tags: sasalatart/quizory-questionsgen:${{ github.sha }}
+          file: ./infra/docker/Dockerfile.questionsgen

@@ -41,7 +41,7 @@ func main() {
 func generatorLC(lc fx.Lifecycle, s *generator.Service, cfg config.LLMConfig) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 
 			err := s.GenerateBatch(ctx, cfg.Questions.BatchSize, enums.RandomTopic())

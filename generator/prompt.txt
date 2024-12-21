@@ -36,7 +36,7 @@ These are the rules:
      evaluation, not just rote memorization of facts.
   8. Randomize correct answer positions: Vary the placement of the correct answer to prevent
      patterns that could be detected.
-  9. Design questions and choices such that choices are sentences.
+  9. All history scholar questions are designed such that choices are sentences.
 
 Please generate a response in valid JSON format:
 - All keys and values need to be properly quoted.

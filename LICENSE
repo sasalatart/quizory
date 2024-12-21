@@ -24,7 +24,7 @@ SOFTWARE.
 
 This project makes use of the following third-party packages:
 
-1. [go-openai](https://github.com/sashabaranov/go-openai) - Licensed under the Apache License, Version 2.0
+1. [openai-go](https://github.com/openai/openai-go) - Licensed under the Apache License, Version 2.0
 2. [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) - Licensed under the Apache License, Version 2.0
 3. [SQLBoiler](https://github.com/volatiletech/sqlboiler) - Licensed under the BSD-3-Clause License
 
