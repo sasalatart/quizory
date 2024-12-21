@@ -1,4 +1,4 @@
-.PHONY: all help install install-client install-go lint lint-client lint-go migrate codegen codegen-client codegen-go codegen-proto build build-client build-go clean test dev docker-dev docker-dev-down client-dev questionsgen docker-images docker-image-api docker-image-generator
+.PHONY: all help install install-client install-go lint lint-client lint-go migrate codegen codegen-client codegen-go codegen-proto build build-client build-go clean test dev docker-dev docker-dev-down client-dev questionsgen docker-images docker-image-api docker-image-questionsgen
 
 GOCMD = go
 JSCMD = pnpm
@@ -86,18 +86,18 @@ docker-dev-down:
 client-dev:
 	cd $(CLIENT_DIR) && $(JSCMD) dev
 
-questionsgen: docker-image-generator
+questionsgen: docker-image-questionsgen
 	docker run --rm \
 		--network docker_quizory \
 		--network docker_telemetry \
 		--env-file .env.quizory \
-		-e OTEL_SERVICE_NAME=quizory-generator \
-		sasalatart/quizory-generator
+		-e OTEL_SERVICE_NAME=quizory-questionsgen \
+		sasalatart/quizory-questionsgen
 
-docker-images: docker-image-api docker-image-generator
+docker-images: docker-image-api docker-image-questionsgen
 
 docker-image-api:
 	docker build -t sasalatart/quizory-api -f ./infra/docker/Dockerfile.api .
 
-docker-image-generator:
-	docker build -t sasalatart/quizory-generator -f ./infra/docker/Dockerfile.generator .
+docker-image-questionsgen:
+	docker build -t sasalatart/quizory-questionsgen -f ./infra/docker/Dockerfile.questionsgen .

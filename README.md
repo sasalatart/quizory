@@ -98,7 +98,7 @@ All has been generated from [OpenAI][openai]'s GPT-4 models. So...
 Furthermore, this project relied heavily on:
 
 1. [DaisyUI][daisyui] - Licensed under the [MIT License][daisyui-license]
-2. [go-openai][go-openai] - Licensed under the [Apache License, Version 2.0][go-openai-license]
+2. [openai-go][openai-go] - Licensed under the [Apache License, Version 2.0][openai-go-license]
 3. [oapi-codegen][oapi-codegen] - Licensed under the [Apache License, Version 2.0][oapi-codegen-license]
 4. [SQLBoiler][sqlboiler] - Licensed under the [BSD-3-Clause License][sqlboiler-license]
 
@@ -114,14 +114,14 @@ _Quizory_ is [MIT licensed](./LICENSE).
 [daisyui]: https://daisyui.com/
 [docker-compose]: https://docs.docker.com/compose/
 [docker]: https://www.docker.com/
-[go-openai-license]: https://github.com/sashabaranov/go-openai?tab=Apache-2.0-1-ov-file
-[go-openai]: https://github.com/sashabaranov/go-openai
 [go]: https://golang.org/
 [mit]: https://opensource.org/licenses/MIT
 [nodejs]: https://nodejs.org/en
 [oapi-codegen-license]: https://github.com/oapi-codegen/oapi-codegen?tab=Apache-2.0-1-ov-file
 [oapi-codegen]: https://github.com/oapi-codegen/oapi-codegen
 [openai]: https://openai.com/
+[openai-go-license]: https://github.com/openai/openai-go?tab=Apache-2.0-1-ov-file
+[openai-go]: https://github.com/openai/openai-go
 [pnpm]: https://pnpm.io/
 [protobuf]: https://github.com/protocolbuffers/protobuf
 [sqlboiler-license]: https://github.com/volatiletech/sqlboiler?tab=BSD-3-Clause-1-ov-file

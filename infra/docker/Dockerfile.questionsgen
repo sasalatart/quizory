@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o generator ./cmd/generator
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o questionsgen ./cmd/questionsgen
 
 ###
 
@@ -16,7 +16,7 @@ LABEL maintainer="Sebastian Salata R-T <sa.salatart@gmail.com>"
 
 WORKDIR /root/
 
-COPY --from=builder /app/generator .
+COPY --from=builder /app/questionsgen .
 COPY --from=builder /app/config/config.yaml ./config/config.yaml
 
-CMD ["./generator"]
+CMD ["./questionsgen"]

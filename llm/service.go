@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 	"github.com/sasalatart/quizory/config"
-	"github.com/sashabaranov/go-openai"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -17,7 +18,7 @@ type Service struct {
 
 func NewService(cfg config.LLMConfig) *Service {
 	return &Service{
-		openaiClient: openai.NewClient(cfg.OpenAIKey),
+		openaiClient: openai.NewClient(option.WithAPIKey(cfg.OpenAIKey)),
 		tracer:       otel.Tracer("llm.Service"),
 	}
 }
@@ -29,23 +30,15 @@ func (s *Service) Chat(
 	ctx, span := s.tracer.Start(ctx, "ChatCompletion")
 	defer span.End()
 
-	var seed int = time.Now().Nanosecond()
-	resp, err := s.openaiClient.CreateChatCompletion(
+	resp, err := s.openaiClient.Chat.Completions.New(
 		ctx,
-		openai.ChatCompletionRequest{
-			Model: openai.GPT4o,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: systemContent,
-				},
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: userContent,
-				},
-			},
-			Seed:      &seed,
-			MaxTokens: 4096,
+		openai.ChatCompletionNewParams{
+			Model: openai.F(openai.ChatModelO1Preview),
+			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+				openai.UserMessage(systemContent), // This model does not support system messages.
+				openai.UserMessage(userContent),
+			}),
+			Seed: openai.Int(time.Now().UnixNano()),
 		},
 	)
 	if err != nil {
