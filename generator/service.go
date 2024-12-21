@@ -30,7 +30,7 @@ const recentlyGeneratedLimit = 100
 // Service represents the service that generates questions via LLMs.
 type Service struct {
 	durationHistogram metric.Int64Histogram
-	llm               llm.ChatCompletioner
+	llm               llm.Chater
 	quizoryClient     proto.QuizoryServiceClient
 	tracer            trace.Tracer
 }
@@ -38,7 +38,7 @@ type Service struct {
 // NewService creates a new instance of question.Service.
 func NewService(
 	quizoryClient proto.QuizoryServiceClient,
-	llm llm.ChatCompletioner,
+	llm llm.Chater,
 	meter otel.Meter,
 ) *Service {
 	durationHistogram, err := meter.Int64Histogram(
@@ -116,7 +116,7 @@ func (s Service) newBatchFromLLM(
 		return nil, errors.Wrapf(err, "getting recently generated questions about %s", topic)
 	}
 
-	llmResp, err := s.llm.ChatCompletion(
+	llmResp, err := s.llm.Chat(
 		ctx,
 		generatorPrompt,
 		newUserContent(topic, recentlyGenerated.GetQuestions(), batchSize),
