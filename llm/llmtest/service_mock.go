@@ -7,18 +7,15 @@ import (
 )
 
 type MockService struct {
-	ChatCompletionFn func(systemContent, userContent string) (string, error)
+	ChatFn func(systemContent, userContent string) (string, error)
 }
 
 func newMockService() *MockService {
 	return &MockService{}
 }
 
-func (s *MockService) ChatCompletion(
-	ctx context.Context,
-	systemContent, userContent string,
-) (string, error) {
-	return s.ChatCompletionFn(systemContent, userContent)
+func (s *MockService) Chat(ctx context.Context, systemContent, userContent string) (string, error) {
+	return s.ChatFn(systemContent, userContent)
 }
 
-var _ llm.ChatCompletioner = &MockService{}
+var _ llm.Chater = &MockService{}

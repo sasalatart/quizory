@@ -7,5 +7,5 @@ import (
 
 var Module = fx.Module(
 	"llm-test",
-	fx.Provide(fx.Annotate(newMockService, fx.As(new(llm.ChatCompletioner)))),
+	fx.Provide(fx.Annotate(newMockService, fx.As(new(llm.Chater)))),
 )

@@ -30,7 +30,7 @@ type testSuiteParams struct {
 	DB                *sql.DB
 	GRPCClient        proto.QuizoryServiceClient
 	RESTClientFactory resttest.ClientFactory
-	LLMService        llm.ChatCompletioner
+	LLMService        llm.Chater
 	GeneratorService  *generator.Service
 	QuestionRepo      *question.Repository
 }
@@ -166,7 +166,7 @@ func (s *TestSuite) assertGenerateBatchOfQuestions(
 
 	previousQuestionsIDs := getCurrentQuestionsIDs()
 
-	s.LLMService.(*llmtest.MockService).ChatCompletionFn = func(_, _ string) (string, error) {
+	s.LLMService.(*llmtest.MockService).ChatFn = func(_, _ string) (string, error) {
 		s.llmCalls++
 		return newMockLLMResult(amount, s.llmCalls), nil
 	}

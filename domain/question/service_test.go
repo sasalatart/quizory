@@ -18,7 +18,7 @@ import (
 type questionServiceTestSuiteParams struct {
 	fx.In
 	DB           *sql.DB
-	LLMService   llm.ChatCompletioner
+	LLMService   llm.Chater
 	AnswerRepo   *answer.Repository
 	QuestionRepo *question.Repository
 	Service      *question.Service

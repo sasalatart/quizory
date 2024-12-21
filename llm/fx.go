@@ -6,5 +6,5 @@ import (
 
 var Module = fx.Module(
 	"llm",
-	fx.Provide(fx.Annotate(NewService, fx.As(new(ChatCompletioner)))),
+	fx.Provide(fx.Annotate(NewService, fx.As(new(Chater)))),
 )

@@ -22,7 +22,7 @@ func NewService(cfg config.LLMConfig) *Service {
 	}
 }
 
-func (s *Service) ChatCompletion(
+func (s *Service) Chat(
 	ctx context.Context,
 	systemContent, userContent string,
 ) (string, error) {
@@ -54,4 +54,4 @@ func (s *Service) ChatCompletion(
 	return resp.Choices[0].Message.Content, nil
 }
 
-var _ ChatCompletioner = &Service{}
+var _ Chater = &Service{}
