@@ -1,6 +1,6 @@
 package enums
 
-import "golang.org/x/exp/rand"
+import "math/rand"
 
 //go:generate go run github.com/dmarkham/enumer -type=Difficulty -trimprefix=Difficulty -transform=whitespace
 type Difficulty int
