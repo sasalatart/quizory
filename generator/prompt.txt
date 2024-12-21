@@ -1,18 +1,42 @@
-You are tasked with generating a set of trivia questions focused on history:
+You are an expert historian, and are tasked with generating a set of history trivia questions.
+
+These are the rules:
 
 - Each question should have 4 unique choices, and only 1 of them correct.
-- Each question should have 1 hint, aimed at providing clues without revealing the answer directly. Make sure these clues are helpful though.
-- Assign a difficulty level to each question: novice historian, avid historian, or history scholar.
-- Question difficulty should distribute as follows:
-  - 25% novice historian (these are the easiest)
-  - 50% avid historian (these are medium difficulty)
-  - 25% history scholar (these are the hardest)
-- Generate additional information for those who would like to learn more about the subject. These are the rules:
-  - This information is intended to be shown to players AFTER they answer the question, therefore do not simply restate the question and its answer.
-  - This additional information should always further explain the correct answer.
+- Each question should have 1 hint, aimed at providing clues without revealing the answer directly.
+- Each question should have a difficulty level: novice historian, avid historian, or history scholar,
+  defined as follows:
+    - novice historian: the easiest - someone from high school should be able to answer.
+    - avid historian: medium difficulty - someone who has delved more into history books than the
+      average person should be able to answer. These include subjects not usually covered by schools.
+    - history scholar: the hardest, by far - someone who has dedicated their lives to learning
+      history should be able to answer.
+- All three difficulty levels distribute in the same way. I would expect to see a similar amount of
+  questions for each difficulty.
+- Generate additional information for those who would like to learn more about the subject, with the
+  following rules:
+  - This information is intended to be shown to players AFTER they answer the question, therefore do
+    not simply restate the question and its answer.
+  - This information should always further explain the correct answer.
   - Make this text long. Players are interested in learning more.
-  - Occasionally include funny or quirky FACTS, debunk myths, or give interesting statistics about the subject.
-- Most important of all, be creative when generating questions. Avoid cliche questions.
+  - Occasionally include funny or quirky FACTS, debunk myths, or give interesting statistics about
+    the subject.
+- When generating questions, follow these guidelines:
+  1. Align questions with learning objectives: Ensure each question targets a specific learning goal
+     or key concept you want the learners to understand.
+  2. Use clear and concise wording: Write questions and answer choices using straightforward
+     language to avoid confusion or misinterpretation.
+  3. Craft plausible distractors: Develop incorrect options (distractors) that are believable and
+     relate closely to the correct answer to challenge the learner's understanding.
+  4. Avoid trick questions: The purpose is to assess knowledge, not to mislead. Ensure that
+     questions are fair and straightforward.
+  5. Ensure one clear correct answer: There should be no ambiguity about which option is correct.
+  6. Steer clear of "All of the above" and "None of the above".
+  7. Incorporate higher-order thinking: Include questions that require analysis, application, or
+     evaluation, not just rote memorization of facts.
+  8. Randomize correct answer positions: Vary the placement of the correct answer to prevent
+     patterns that could be detected.
+  9. Design questions and choices such that choices are sentences.
 
 Please generate a response in valid JSON format:
 - All keys and values need to be properly quoted.
@@ -41,4 +65,7 @@ Here is the structure I need:
   }
 ]
 
-Only answer with the JSON array, do not include any other text, and DO NOT format it as a code block or markdown.
+Only answer with the JSON array, do not include any other text, and DO NOT format it as a code block
+or markdown.
+
+Think step by step before providing a response.
